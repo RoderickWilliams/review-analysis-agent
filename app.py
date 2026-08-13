@@ -322,27 +322,48 @@ def page_product_url():
                         except Exception as e:
                             print(f"[app] 方法3失败: {e}")
                             reviews = []
-                elif detected == "jd" or use_selenium:
-                    if use_selenium:
-                        print("[app] 京东链接: 使用 Selenium 浏览器抓取")
-                        from scrapers.jd_scraper import JDScraper
-                        jd = JDScraper()
-                        ck = scraper._platform_cookies.get("jd", {})
-                        reviews = jd.scrape_with_selenium(url, cookies=ck, max_reviews=max_reviews)
-                    else:
-                        print(f"[app] 京东链接: 使用 API 抓取")
-                        reviews = scraper.scrape_product(url, max_reviews=max_reviews)
-                        # API 抓取失败时自动降级到 Selenium
-                        if not reviews:
-                            print("[app] API 抓取无结果，自动降级到 Selenium 浏览器抓取...")
-                            st.info("API 抓取未获取到评论，正在尝试浏览器抓取（更可靠）...")
-                            try:
-                                from scrapers.jd_scraper import JDScraper
-                                jd = JDScraper()
-                                ck = scraper._platform_cookies.get("jd", {})
-                                reviews = jd.scrape_with_selenium(url, cookies=ck, max_reviews=max_reviews)
-                            except Exception as e2:
-                                print(f"[app] Selenium 降级也失败: {e2}")
+                elif detected == "jd":
+                    ck = scraper._platform_cookies.get("jd", {})
+                    # 方法1: Playwright 浏览器抓取（最抗检测，支持云端 headless）
+                    print("[app] 京东链接: 方法1 - Playwright 浏览器抓取")
+                    st.info("正在启动 Playwright 浏览器抓取京东评论...")
+                    try:
+                        from scrapers.jd_playwright_scraper import JDPlaywrightScraper
+                        jd_pw = JDPlaywrightScraper(headless=False, max_reviews=max_reviews)
+                        reviews = jd_pw.scrape(url, cookies=ck, max_reviews=max_reviews)
+                        if reviews:
+                            print(f"[app] 方法1成功: {len(reviews)} 条评论")
+                    except Exception as e:
+                        print(f"[app] 方法1失败: {e}")
+                        reviews = []
+                    # 方法2: API 抓取
+                    if not reviews:
+                        print("[app] 京东链接: 方法2 - API 抓取")
+                        try:
+                            reviews = scraper.scrape_product(url, max_reviews=max_reviews)
+                            if reviews:
+                                print(f"[app] 方法2成功: {len(reviews)} 条评论")
+                        except Exception as e:
+                            print(f"[app] 方法2失败: {e}")
+                            reviews = []
+                    # 方法3: Selenium 浏览器抓取
+                    if not reviews:
+                        print("[app] 京东链接: 方法3 - Selenium 浏览器抓取")
+                        st.info("正在尝试 Selenium 浏览器抓取...")
+                        try:
+                            from scrapers.jd_scraper import JDScraper
+                            jd = JDScraper()
+                            reviews = jd.scrape_with_selenium(url, cookies=ck, max_reviews=max_reviews)
+                            if reviews:
+                                print(f"[app] 方法3成功: {len(reviews)} 条评论")
+                        except Exception as e:
+                            print(f"[app] 方法3失败: {e}")
+                elif use_selenium:
+                    print("[app] 使用 Selenium 浏览器抓取")
+                    from scrapers.jd_scraper import JDScraper
+                    jd = JDScraper()
+                    ck = scraper._platform_cookies.get("jd", {})
+                    reviews = jd.scrape_with_selenium(url, cookies=ck, max_reviews=max_reviews)
                 else:
                     reviews = scraper.scrape_product(url, max_reviews=max_reviews)
 

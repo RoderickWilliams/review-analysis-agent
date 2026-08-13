@@ -37,6 +37,7 @@ from .base_scraper import BaseScraper
 from .jd_scraper import JDScraper
 from .taobao_scraper import TaobaoScraper
 from .taobao_playwright_scraper import TaobaoPlaywrightScraper
+from .jd_playwright_scraper import JDPlaywrightScraper
 
 
 # 平台与域名的映射表（仅淘宝+京东）
@@ -233,18 +234,28 @@ class MultiPlatformScraper:
                 if not reviews:
                     reviews = scraper.scrape(target, max_reviews=max_reviews)
 
-            # 京东平台：优先 API → Selenium → 基础
+            # 京东平台：优先 Playwright → API → Selenium → 基础
             elif platform == "jd":
-                # 先尝试 API 抓取
-                reviews = scraper.scrape(target, max_reviews=max_reviews)
-                # API 失败时尝试 Selenium
+                # 方法1: Playwright 浏览器抓取（最抗检测，支持云端 headless）
+                try:
+                    print(f"[multi] 京东: 方法1 - Playwright 浏览器抓取")
+                    jd_pw = JDPlaywrightScraper(headless=False, max_reviews=max_reviews)
+                    reviews = jd_pw.scrape(target, cookies=cookies, max_reviews=max_reviews)
+                except Exception as e:
+                    print(f"[multi] 京东: 方法1失败: {e}")
+                    reviews = []
+                # 方法2: API 抓取
+                if not reviews:
+                    print(f"[multi] 京东: 方法2 - API 抓取")
+                    reviews = scraper.scrape(target, max_reviews=max_reviews)
+                # 方法3: Selenium 浏览器抓取
                 if not reviews and hasattr(scraper, 'scrape_with_selenium'):
-                    print(f"[multi] 京东: API 无数据，尝试 Selenium 抓取")
+                    print(f"[multi] 京东: 方法3 - Selenium 抓取")
                     try:
                         reviews = scraper.scrape_with_selenium(
                             target, cookies=cookies, max_reviews=max_reviews)
                     except Exception as e:
-                        print(f"[multi] 京东: Selenium 抓取失败: {e}")
+                        print(f"[multi] 京东: 方法3失败: {e}")
 
             # 统一字段格式 + 溯源验证
             unified = [self._normalize(r, platform) for r in reviews]

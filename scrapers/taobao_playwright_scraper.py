@@ -49,13 +49,33 @@ class TaobaoPlaywrightScraper:
         self._context = None
         self._page = None
 
+    @staticmethod
+    def _is_cloud_env() -> bool:
+        """检测是否运行在云端环境（Streamlit Cloud）"""
+        if os.environ.get("STREAMLIT_SHARING_MODE"):
+            return True
+        if os.environ.get("STREAMLIT_CLOUD"):
+            return True
+        # Streamlit Cloud runs on Linux with /home/appuser
+        if os.name != "nt" and os.path.exists("/home/appuser"):
+            return True
+        return False
+
     # ------------------------------------------------------------------
     # 浏览器管理
     # ------------------------------------------------------------------
 
     def _start_browser(self):
         """启动 Playwright 持久化浏览器上下文"""
+        # 确保浏览器已安装
+        ensure_playwright_browsers()
+
         from playwright.sync_api import sync_playwright
+
+        # 云端环境强制 headless
+        if self._is_cloud_env():
+            self.headless = True
+            print("[playwright] 检测到云端环境，使用 headless 模式")
 
         self._playwright = sync_playwright().start()
         data_dir = self.USER_DATA_DIR
@@ -494,15 +514,22 @@ class TaobaoPlaywrightScraper:
             # Step 4: 检测登录重定向
             current_url = (self._page.url or "").lower()
             if "login.taobao.com" in current_url or "login.m.taobao.com" in current_url:
-                print("[playwright] 检测到登录页面，请在弹出的浏览器中手动登录...")
-                print("[playwright] 等待登录完成（最多180秒）...")
-                logged_in = self._wait_for_login(180)
-                if not logged_in:
-                    print("[playwright] 登录超时")
-                    return []
-                # 登录后重新导航到商品页
-                self._page.goto(product_url, wait_until="domcontentloaded", timeout=60000)
-                self._page.wait_for_timeout(3000)
+                if self._is_cloud_env():
+                    print("[playwright] 云端环境无法手动登录，尝试无登录抓取...")
+                    # 直接导航回商品页，尝试无登录抓取
+                    self._page.goto(product_url, wait_until="domcontentloaded", timeout=60000)
+                    self._page.wait_for_timeout(3000)
+                else:
+                    # 原有的登录等待逻辑
+                    print("[playwright] 检测到登录页面，请在弹出的浏览器中手动登录...")
+                    print("[playwright] 等待登录完成（最多180秒）...")
+                    logged_in = self._wait_for_login(180)
+                    if not logged_in:
+                        print("[playwright] 登录超时")
+                        return []
+                    # 登录后重新导航到商品页
+                    self._page.goto(product_url, wait_until="domcontentloaded", timeout=60000)
+                    self._page.wait_for_timeout(3000)
 
             # Step 5: 获取商品名称
             product_name = ""
@@ -616,6 +643,35 @@ class TaobaoPlaywrightScraper:
             self._close_browser()
 
         return all_reviews[:max_reviews]
+
+
+def ensure_playwright_browsers():
+    """确保 Playwright 浏览器已安装（云端首次运行时自动安装）"""
+    import subprocess
+    import shutil
+    try:
+        # 检查 chromium 是否已安装
+        result = subprocess.run(
+            ["python", "-m", "playwright", "install", "--dry-run", "chromium"],
+            capture_output=True, text=True, timeout=30
+        )
+        if "is already installed" not in result.stdout:
+            print("[playwright] 正在安装 Chromium 浏览器...")
+            subprocess.run(
+                ["python", "-m", "playwright", "install", "chromium"],
+                capture_output=True, text=True, timeout=300
+            )
+            print("[playwright] Chromium 安装完成")
+    except Exception as e:
+        print(f"[playwright] 浏览器安装检查失败: {e}")
+        # 尝试直接安装
+        try:
+            subprocess.run(
+                ["python", "-m", "playwright", "install", "chromium"],
+                capture_output=True, text=True, timeout=300
+            )
+        except Exception:
+            pass
 
 
 # ------------------------------------------------------------------
