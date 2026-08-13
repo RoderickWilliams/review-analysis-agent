@@ -1,4 +1,4 @@
-﻿# 核心
+# 核心
 openai>=1.0.0
 pandas>=2.0.0
 scikit-learn>=1.3.0
@@ -26,9 +26,17 @@ watchdog>=2.1.5
 selenium>=4.15.0
 webdriver-manager>=4.0.0
 
-# OCR 图片识别（3大引擎）
+# Playwright 浏览器自动化（淘宝评论采集首选方案）
+# 首次使用需运行: playwright install chromium
+playwright>=1.40.0
+
+# OCR 图片识别（3大引擎降级: PaddleOCR → Tesseract → LLM Vision）
+# PaddleOCR 精度最高但依赖包体过大(~1GB)，Streamlit Cloud 部署时跳过
+# 本地使用 PaddleOCR: pip install paddleocr paddlepaddle
 Pillow>=10.0.0
 pytesseract>=0.3.10
-paddleocr>=2.7.0
-paddlepaddle>=2.6.0
 numpy>=1.24.0
+
+# DeepSeek 网页端降级（API额度用尽时自动切换，可选）
+curl_cffi>=0.6.0
+wasmtime>=14.0.0
