@@ -23,9 +23,62 @@ OCR 文字识别引擎 (OCREngine) — 增强版
 
 import io
 import logging
+import os
+import sys
+from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _find_tesseract_cmd() -> Optional[str]:
+    """查找 Tesseract 可执行文件路径。
+
+    查找顺序：
+    1. 项目 tools/Tesseract-OCR/tesseract.exe（封装版）
+    2. 环境变量 TESSERACT_CMD
+    3. 系统 PATH 中的 tesseract
+    4. Windows 标准安装路径
+    """
+    # 1. 项目目录下的 tools/Tesseract-OCR
+    project_root = Path(__file__).parent.resolve()
+    candidates = [
+        project_root / "tools" / "Tesseract-OCR" / "tesseract.exe",
+        project_root / "tools" / "Tesseract-OCR" / "tesseract",
+    ]
+    for p in candidates:
+        if p.exists():
+            return str(p)
+
+    # 2. 环境变量
+    env_cmd = os.environ.get("TESSERACT_CMD")
+    if env_cmd and Path(env_cmd).exists():
+        return env_cmd
+
+    # 3. 系统 PATH（which/where）
+    import shutil
+    found = shutil.which("tesseract")
+    if found:
+        return found
+
+    # 4. Windows 标准路径
+    if sys.platform == "win32":
+        for p in [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        ]:
+            if Path(p).exists():
+                return p
+
+    return None
+
+
+def _get_tessdata_dir(tesseract_cmd: str) -> Optional[str]:
+    """获取 tessdata 目录路径。"""
+    tessdata = Path(tesseract_cmd).parent / "tessdata"
+    if tessdata.exists():
+        return str(tessdata)
+    return None
 
 
 class OCREngine:
@@ -68,6 +121,19 @@ class OCREngine:
         """初始化 Tesseract 引擎。"""
         try:
             import pytesseract
+
+            # 自动查找 Tesseract 可执行文件
+            tess_cmd = _find_tesseract_cmd()
+            if tess_cmd:
+                pytesseract.pytesseract.tesseract_cmd = tess_cmd
+                # 设置 tessdata 目录（包含中文语言包）
+                tessdata = _get_tessdata_dir(tess_cmd)
+                if tessdata:
+                    pytesseract.pytesseract.tessdata_dir = tessdata
+                    os.environ["TESSDATA_PREFIX"] = tessdata
+                logger.info(f"[ocr] Tesseract 路径: {tess_cmd}")
+                print(f"[ocr] Tesseract 路径: {tess_cmd}")
+
             pytesseract.get_tesseract_version()
             self._tesseract = pytesseract
             if self._engine_name == "none":

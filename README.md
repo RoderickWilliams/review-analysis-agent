@@ -20,7 +20,7 @@
 | Trust Report | 突发检测、重复检测、异常分析 | 统计分析 + TF-IDF |
 | 红旗引擎 | 促销语言、奖励诱导、空洞重复等模式检测 | 正则匹配 + 模式识别 |
 | Playwright 评论采集 | 持久化登录 + 启发式DOM提取，最抗检测 | Playwright + 网络拦截 |
-| 截图 OCR 分析 | 上传评论截图，OCR+LLM 识别评论 | PaddleOCR + Tesseract + LLM Vision |
+| 截图 OCR 分析 | 上传评论截图，OCR+LLM 识别评论 | Tesseract + LLM Vision |
 | Web UI | 可视化分析界面 | Streamlit |
 
 ### 分类体系
@@ -50,9 +50,12 @@ review-analysis-agent/
 ├── app.py                       # Streamlit Web UI（4种分析模式）
 ├── fallback_client.py           # LLM 自动降级客户端（API → 网页端）
 ├── deepseek_web_client.py       # DeepSeek 网页端访问（PoW求解）
+├── setup.py                     # 一键环境安装脚本
 ├── .env.example                 # 环境变量模板
-├── .env                         # 环境变量（gitignored，含API Key）
 ├── requirements.txt
+│
+├── tools/
+│   └── Tesseract-OCR/           # Tesseract OCR 引擎（已封装，含中文语言包）
 │
 ├── scrapers/                    # 多平台爬虫（5种抓取方式）
 │   ├── __init__.py
@@ -61,10 +64,11 @@ review-analysis-agent/
 │   ├── taobao_comment_v2.py     # rate.taobao.com API 抓取
 │   ├── taobao_scraper.py        # mtop API 签名 + Selenium 浏览器抓取
 │   ├── jd_scraper.py            # 京东评论采集（API + Selenium）
+│   ├── jd_playwright_scraper.py # 京东 Playwright 抓取
 │   ├── multi_platform.py        # 多平台聚合调度
 │   └── login_manager.py         # 自动登录 + Cookie获取
 │
-├── ocr_engine.py                # 多引擎 OCR（PaddleOCR + Tesseract + LLM Vision）
+├── ocr_engine.py                # 多引擎 OCR（Tesseract + LLM Vision）
 ├── screenshot_analyzer.py       # 截图评论分析（OCR → LLM 管道）
 ├── report_generator.py          # HTML可视化报告生成（Chart.js）
 ├── trust_report.py              # Trust Report 引擎（突发/重复/异常检测）
@@ -87,6 +91,55 @@ review-analysis-agent/
 └── output/                      # 输出目录（gitignored）
 ```
 
+## 快速开始
+
+### 一键安装（推荐）
+
+项目已内置 Tesseract OCR 引擎（含中文语言包），无需单独安装系统依赖：
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/RoderickWilliams/review-analysis-agent.git
+cd review-analysis-agent
+
+# 2. 一键安装（自动检测Python版本、安装pip依赖、Playwright浏览器、Tesseract）
+python setup.py
+
+# 3. 配置环境变量
+cp .env.example .env
+# 编辑 .env 填入 API Key
+
+# 4. 启动 Web UI
+streamlit run app.py
+```
+
+### 手动安装
+
+```bash
+# 1. 安装 Python 依赖
+pip install -r requirements.txt
+
+# 2. 安装 Playwright 浏览器
+python -m playwright install chromium
+
+# 3. 配置环境变量
+cp .env.example .env
+
+# 4. 启动 Web UI
+streamlit run app.py
+```
+
+> **注意**：Tesseract OCR 已封装在 `tools/Tesseract-OCR/` 目录中（Windows，含简体中文和繁体中文语言包）。
+> macOS/Linux 用户请通过包管理器安装：
+> - macOS: `brew install tesseract tesseract-lang`
+> - Ubuntu/Debian: `sudo apt install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-chi-tra`
+
+### 验证安装
+
+```bash
+python setup.py --check
+```
+
 ## 评论采集方式
 
 ### 淘宝评论采集（4级降级）
@@ -105,9 +158,15 @@ API 分页抓取为主，Selenium 浏览器抓取为辅。
 ### 截图评论分析
 
 支持上传评论页面截图，通过 OCR 引擎识别文字后进行 LLM 分析：
-- PaddleOCR（首选，精度高）
-- Tesseract（备用，轻量级）
-- LLM Vision（兜底，GPT-4o视觉）
+
+1. **Tesseract OCR**（主力）— 已封装在项目中，支持中英文识别，无需额外安装
+2. **LLM Vision**（兜底）— 调用 GPT-4o/DeepSeek 视觉模型识别截图
+
+> **可选 PaddleOCR**：如需更高精度的中文 OCR，可在 Python 3.10~3.13 环境中安装：
+> ```bash
+> pip install paddlepaddle==3.2.0 paddleocr -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+> ```
+> PaddleOCR 不支持 Python 3.14，安装后将自动作为首选 OCR 引擎。
 
 ## LLM 配置
 
@@ -143,22 +202,12 @@ MODEL=gpt-4o
 BASE_URL=https://api.openai.com/v1
 ```
 
-## 快速开始
+## Python 版本兼容性
 
-```bash
-# 1. 安装依赖
-pip install -r requirements.txt
-
-# 2. 安装 Playwright 浏览器
-python -m playwright install chromium
-
-# 3. 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入 API Key
-
-# 4. 启动 Web UI
-streamlit run app.py
-```
+| Python 版本 | 支持状态 | 说明 |
+|-------------|---------|------|
+| 3.10 ~ 3.13 | ✅ 完全支持 | 所有功能可用，含可选 PaddleOCR |
+| 3.14+ | ✅ 主要功能支持 | Tesseract + LLM Vision 作为 OCR 引擎；PaddleOCR 暂不支持 |
 
 ## 伦理准则
 
@@ -172,7 +221,7 @@ streamlit run app.py
 - Python 3.10+
 - Streamlit（Web UI）
 - Playwright（浏览器自动化）
-- PaddleOCR / Tesseract（OCR）
+- Tesseract OCR（文字识别，已内置）
 - LangChain（Prompt管理）
 - DeepSeek / OpenAI（LLM）
 - Pandas / jieba / scikit-learn（数据处理）
