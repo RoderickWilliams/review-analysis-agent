@@ -1,8 +1,9 @@
 # ===========================================
 # 全平台用户反馈智能分析 Agent - Python 依赖
 # ===========================================
-# Python 版本要求: 3.10 ~ 3.13（PaddleOCR 可选，不支持 3.14）
+# Python 版本要求: 3.10+
 # 安装方式: pip install -r requirements.txt
+# 安装浏览器: patchright install chromium
 # ===========================================
 
 # --- 核心 LLM ---
@@ -22,8 +23,13 @@ curl_cffi>=0.6.0
 selenium>=4.15.0
 webdriver-manager>=4.0.0
 DrissionPage>=4.0.0
+fake-useragent>=1.0.0
 
-# --- Playwright 浏览器自动化 ---
+# --- 浏览器自动化（反检测） ---
+# Patchright 是 Playwright 的反检测 fork，drop-in 替换
+# 安装后执行: patchright install chromium
+patchright>=1.50.0
+# Playwright 作为回退（patchright 不可用时自动降级）
 playwright>=1.40.0
 
 # --- OCR 文字识别 ---

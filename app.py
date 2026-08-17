@@ -31,12 +31,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Force light theme before any rendering
-st._config.set_option("theme.base", "light")
-st._config.set_option("theme.primaryColor", "#667eea")
-st._config.set_option("theme.backgroundColor", "#f0f2f5")
-st._config.set_option("theme.secondaryBackgroundColor", "#ffffff")
-st._config.set_option("theme.textColor", "#1e293b")
+# Spotify dark theme
+st._config.set_option("theme.base", "dark")
+st._config.set_option("theme.primaryColor", "#6366f1")
+st._config.set_option("theme.backgroundColor", "#121212")
+st._config.set_option("theme.secondaryBackgroundColor", "#181818")
+st._config.set_option("theme.textColor", "#ffffff")
 
 # ──────────────────────────────────────────────────────────────
 # 模块导入
@@ -66,334 +66,383 @@ def get_agent():
 
 
 # ──────────────────────────────────────────────────────────────
-# 页面样式 — 八爪鱼/影刀风格
+# 页面样式 — Shadcn/Tailwind 现代 SaaS 风格
 # ──────────────────────────────────────────────────────────────
 
 def apply_styles():
     st.markdown("""
     <style>
-    /* ===== Force light theme root ===== */
+    /* ===== Spotify-Inspired Dark Design System ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
     :root {
-        --background: #f0f2f5;
-        --secondary-background: #ffffff;
-        --text: #1e293b;
-        --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        --bg: #121212;
+        --surface: #181818;
+        --surface-elevated: #1f1f1f;
+        --surface-highlight: #282828;
+        --surface-hover: #2a2a2a;
+        --border: #282828;
+        --border-strong: #4d4d4d;
+        --text: #ffffff;
+        --text-secondary: #b3b3b3;
+        --text-muted: #7c7c7c;
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --primary-dark: #4338ca;
+        --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --gradient-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        --error: #f3727f;
+        --warning: #ffa42b;
+        --info: #539df5;
+        --radius-sm: 4px;
+        --radius: 8px;
+        --radius-lg: 10px;
+        --radius-pill: 9999px;
+        --shadow-card: rgba(0,0,0,0.3) 0px 8px 8px;
+        --shadow-elevated: rgba(0,0,0,0.5) 0px 8px 24px;
+        --inset-border: rgb(18,18,18) 0px 1px 0px, rgb(124,124,124) 0px 0px 0px 1px inset;
     }
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; }
 
     html, body, [class*="css"] {
-        font-family: var(--font) !important;
-        color: #1e293b !important;
+        font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    .stApp { background: var(--bg) !important; }
+    #MainMenu, footer, .stDeployButton { display: none !important; }
+    header[data-testid="stHeader"] {
+        background: var(--bg) !important;
+        border-bottom: none !important;
     }
 
-    .stApp {
-        background: #f0f2f5 !important;
-        color: #1e293b !important;
+    /* Block spacing — Spotify packs content densely */
+    .block-container { padding-top: 1.5rem !important; padding-bottom: 2rem !important; max-width: 1280px !important; }
+    .main .block-container { gap: 0.75rem !important; }
+    .element-container, .stMarkdown { margin-bottom: 0.5rem; }
+    div[data-testid="stVerticalBlock"] > div { margin-bottom: 0.25rem; }
+    .main .stMarkdown p { line-height: 1.5 !important; }
+
+    /* Typography — bold/regular binary, compact */
+    .main h1 {
+        font-size: 28px !important; font-weight: 700 !important; color: var(--text) !important;
+        letter-spacing: -0.02em !important; line-height: 1.2 !important; margin-bottom: 4px !important;
     }
-
-    /* ===== Hide default elements ===== */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header[data-testid="stHeader"] {background: transparent !important;}
-    .stDeployButton {display: none !important;}
-
-    /* ===== ALL text in main area must be dark ===== */
-    .main .stMarkdown, .main .stMarkdown p,
-    .main .stMarkdown span, .main .stMarkdown li,
+    .main h2 {
+        font-size: 22px !important; font-weight: 700 !important; color: var(--text) !important;
+        letter-spacing: -0.02em !important; margin-top: 1rem !important; margin-bottom: 8px !important;
+    }
+    .main h3 {
+        font-size: 16px !important; font-weight: 700 !important; color: var(--text) !important;
+        letter-spacing: normal !important; margin-bottom: 6px !important;
+    }
+    .main, .main .stMarkdown, .main .stMarkdown p,
     .main label, .main .stCaption, .main small,
-    .main .stText, .main p, .main span, .main li {
-        color: #334155 !important;
-    }
-    .main h1, .main h2, .main h3, .main h4, .main h5, .main h6 {
-        color: #0f172a !important;
-    }
+    .main p, .main span, .main li { color: var(--text-secondary) !important; font-size: 14px !important; line-height: 1.5 !important; }
+    .main .stMarkdown strong { color: var(--text) !important; font-weight: 700 !important; }
 
-    /* ===== Brand bar ===== */
-    .brand-bar {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-        padding: 20px 36px;
-        border-radius: 0 0 20px 20px;
-        display: flex; align-items: center; justify-content: space-between;
-        margin: -16px -16px 24px -16px;
-        box-shadow: 0 6px 24px rgba(49, 46, 129, 0.35);
-    }
-    .brand-left { display: flex; align-items: center; gap: 16px; }
-    .brand-logo {
-        width: 48px; height: 48px;
-        background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 4px 16px rgba(129, 140, 248, 0.5);
-    }
-    .brand-title { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
-    .brand-subtitle { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 3px; }
-    .brand-badge {
-        background: rgba(129, 140, 248, 0.2);
-        border: 1px solid rgba(129, 140, 248, 0.5);
-        color: #c7d2fe;
-        padding: 6px 16px; border-radius: 20px;
-        font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
-    }
-
-    /* ===== Sidebar - dark ===== */
-    section[data-testid="stSidebar"],
-    nav[data-testid="stSidebarNav"] {
-        background: #1e1b4b !important;
-        border-right: 1px solid #312e81;
-    }
-    section[data-testid="stSidebar"] * {
-        color: rgba(255,255,255,0.8) !important;
-    }
-    section[data-testid="stSidebar"] h1,
-    section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3 {
-        color: #fff !important;
-    }
-    section[data-testid="stSidebar"] .stSelectbox > div > div,
-    section[data-testid="stSidebar"] .stTextInput > div > div > input,
-    section[data-testid="stSidebar"] .stTextArea > div > div > textarea {
-        background: rgba(255,255,255,0.1) !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        color: #fff !important;
-        border-radius: 8px !important;
-    }
-    section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.12) !important; }
-    section[data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        border: none !important; color: #fff !important; font-weight: 600 !important;
-        border-radius: 8px !important;
-    }
-    section[data-testid="stSidebar"] .stExpander {
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 10px !important;
-    }
-    section[data-testid="stSidebar"] .stCheckbox label {
-        color: rgba(255,255,255,0.8) !important;
-    }
-
-    /* ===== Tabs - clean light ===== */
+    /* Tabs — minimal text only, no fill color */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        background: #fff;
-        padding: 6px;
-        border-radius: 14px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        margin-bottom: 24px;
+        gap: 28px; background: transparent; padding: 0;
+        border: none; border-radius: 0; border-bottom: 1px solid var(--border) !important;
+        box-shadow: none; margin-bottom: 32px;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 10px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        color: #64748b !important;
-        background: transparent !important;
-        transition: all 0.2s ease;
+        padding: 10px 2px !important; font-weight: 600 !important;
+        font-size: 14px !important; color: var(--text-secondary) !important;
+        background: transparent !important; border-radius: 0 !important;
+        border: none !important; border-bottom: 2px solid transparent !important;
+        margin-bottom: -1px !important;
+        transition: color 0.2s ease !important;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        background: #f1f5f9 !important;
-        color: #1e293b !important;
+        background: transparent !important; color: var(--text) !important;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-        color: #fff !important;
-        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        background: transparent !important; color: var(--text) !important;
+        border: none !important; border-bottom: 2px solid var(--text) !important;
+        font-weight: 700 !important; box-shadow: none !important;
     }
 
-    /* ===== Cards ===== */
+    /* Cards — dark surfaces, no visible borders, heavy shadows */
     .ui-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 28px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        border: 1px solid #e8eaf0;
-        margin-bottom: 20px;
+        background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+        box-shadow: var(--shadow-card); transition: background 0.3s ease;
     }
+    .ui-card:hover { background: var(--surface-elevated); }
     .ui-card-title {
-        font-size: 17px; font-weight: 700; color: #0f172a;
-        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+        font-size: 16px; font-weight: 700; color: var(--text);
+        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
     }
 
-    /* ===== Stat cards ===== */
+    /* Stat cards */
     .stat-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 22px 16px;
-        text-align: center;
-        border: 1px solid #e8eaf0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: all 0.2s ease;
+        background: var(--surface); border-radius: var(--radius); padding: 20px; text-align: center;
+        box-shadow: var(--shadow-card); transition: all 0.3s ease;
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    .stat-card .stat-number { font-size: 34px; font-weight: 700; line-height: 1.2; color: #1e293b; }
-    .stat-card .stat-label { font-size: 13px; color: #94a3b8; margin-top: 8px; font-weight: 500; }
-    .stat-card .stat-icon { font-size: 22px; margin-bottom: 10px; }
-    .stat-purple .stat-number { color: #7c3aed; }
-    .stat-blue .stat-number { color: #2563eb; }
-    .stat-green .stat-number { color: #059669; }
-    .stat-orange .stat-number { color: #d97706; }
-    .stat-red .stat-number { color: #dc2626; }
+    .stat-card:hover { background: var(--surface-elevated); transform: translateY(-2px); }
+    .stat-card .stat-number {
+        font-size: 28px; font-weight: 700; color: var(--text); line-height: 1.2;
+    }
+    .stat-card .stat-label {
+        font-size: 12px; color: var(--text-secondary); margin-top: 6px; font-weight: 400;
+        text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .stat-card .stat-icon { font-size: 16px; margin-bottom: 8px; }
+    .stat-purple .stat-number { color: #c4b5fd; }
+    .stat-blue .stat-number { color: #93c5fd; }
+    .stat-green .stat-number { color: #a78bfa; }
+    .stat-orange .stat-number { color: var(--warning); }
+    .stat-red .stat-number { color: var(--error); }
+    .trust-high { color: #a78bfa !important; font-weight: 700; }
+    .trust-medium { color: var(--warning) !important; font-weight: 700; }
+    .trust-low { color: var(--error) !important; font-weight: 700; }
 
-    .trust-high { color: #059669; }
-    .trust-medium { color: #d97706; }
-    .trust-low { color: #dc2626; }
-
-    /* ===== Ethics banner ===== */
+    /* Ethics banner */
     .ethics-banner {
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        border: 1px solid #f59e0b;
-        border-radius: 12px;
-        padding: 14px 20px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        color: #92400e;
-        display: flex; align-items: center; gap: 10px;
+        background: var(--surface); border-radius: var(--radius);
+        padding: 14px 18px; margin-bottom: 20px;
+        font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+        box-shadow: var(--shadow-card);
+        border-left: 3px solid #8b5cf6;
     }
 
-    /* ===== Buttons ===== */
-    .stButton > button[kind="primary"],
-    .stButton > button[data-testid="stBaseButton-primary"] {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 12px 32px !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        color: #fff !important;
-        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+    /* Buttons — pill shape, uppercase labels */
+    .stButton > button[kind="primary"] {
+        background: var(--gradient) !important; border: none !important;
+        border-radius: var(--radius-pill) !important; padding: 10px 32px !important;
+        font-weight: 700 !important; font-size: 14px !important; color: #fff !important;
+        text-transform: none !important; letter-spacing: normal !important;
+        box-shadow: 0 8px 24px rgba(99,102,241,0.35) !important;
         transition: all 0.2s ease !important;
     }
     .stButton > button[kind="primary"]:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+        background: var(--gradient-hover) !important;
+        box-shadow: 0 10px 28px rgba(99,102,241,0.45) !important;
+        transform: scale(1.02) !important;
     }
-    .stButton > button:not([kind="primary"]):not([data-testid="stBaseButton-primary"]) {
-        border-radius: 8px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #fff !important;
-        color: #475569 !important;
-        font-weight: 500 !important;
+    .stButton > button[kind="primary"]:active { transform: scale(0.98) !important; }
+    .stButton > button:not([kind="primary"]) {
+        border-radius: var(--radius-pill) !important; border: 1px solid var(--border-strong) !important;
+        background: var(--surface-elevated) !important; color: var(--text) !important;
+        font-weight: 700 !important; font-size: 14px !important; padding: 8px 24px !important;
+        transition: all 0.2s ease !important;
     }
-    .stButton > button:not([kind="primary"]):not([data-testid="stBaseButton-primary"]):hover {
-        border-color: #6366f1 !important;
-        color: #6366f1 !important;
+    .stButton > button:not([kind="primary"]):hover {
+        border-color: var(--text) !important; color: var(--text) !important;
+        background: var(--surface-highlight) !important;
     }
 
-    /* ===== Inputs - FORCE WHITE BG AND DARK TEXT ===== */
+    /* Inputs — pill search, inset border on focus */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stNumberInput > div > div > input {
-        background: #fff !important;
-        color: #1e293b !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        font-size: 14px !important;
+        background: var(--surface-elevated) !important; color: var(--text) !important;
+        border: none !important; border-radius: var(--radius) !important;
+        padding: 12px 14px !important; font-size: 14px !important; line-height: 1.5 !important;
+        transition: all 0.2s ease !important;
+        box-shadow: var(--inset-border) !important;
     }
     .stTextInput > div > div > input::placeholder,
-    .stTextArea > div > div > textarea::placeholder {
-        color: #94a3b8 !important;
-    }
+    .stTextArea > div > div > textarea::placeholder { color: var(--text-muted) !important; }
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus,
-    .stNumberInput > div > div > input:focus {
-        border-color: #6366f1 !important;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    .stTextArea > div > div > textarea:focus {
+        box-shadow: rgb(255,255,255) 0px 0px 0px 1px inset !important;
+        outline: none !important;
+    }
+    .stTextInput > div > div > input:hover,
+    .stTextArea > div > div > textarea:hover {
+        box-shadow: rgb(255,255,255) 0px 0px 0px 1px inset !important;
     }
 
-    /* ===== Selectbox - force white ===== */
+    /* Selectbox */
     .stSelectbox > div > div,
     .stSelectbox [data-baseweb="select"] > div {
-        background: #fff !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        color: #1e293b !important;
+        background: var(--surface-elevated) !important; border: none !important;
+        border-radius: var(--radius) !important; color: var(--text) !important;
+        min-height: 42px !important;
+        box-shadow: var(--inset-border) !important;
+        transition: all 0.2s ease !important;
     }
-    .stSelectbox [data-baseweb="select"] > div > div {
-        color: #1e293b !important;
+    .stSelectbox > div > div:hover {
+        box-shadow: rgb(255,255,255) 0px 0px 0px 1px inset !important;
     }
+    .stSelectbox [data-baseweb="popover"],
+    .stSelectbox ul {
+        background: var(--surface-elevated) !important; border: none !important;
+        border-radius: var(--radius) !important; box-shadow: var(--shadow-elevated) !important;
+        padding: 4px !important;
+    }
+    .stSelectbox li {
+        color: var(--text-secondary) !important; border-radius: var(--radius-sm) !important;
+        padding: 10px 14px !important; font-size: 14px !important;
+        transition: all 0.15s !important;
+    }
+    .stSelectbox li:hover { background: var(--surface-highlight) !important; color: var(--text) !important; }
 
-    /* ===== Labels - force visible dark ===== */
+    /* Labels */
     .stTextInput label, .stTextArea label, .stSelectbox label,
-    .stNumberInput label, .stCheckbox label, .stFileUploader label,
-    .stDateInput label, .stTimeInput label {
-        color: #334155 !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
+    .stNumberInput label, .stCheckbox label, .stFileUploader label {
+        color: var(--text) !important; font-size: 14px !important;
+        font-weight: 700 !important; margin-bottom: 4px !important;
     }
 
-    /* ===== DataFrame ===== */
-    .stDataFrame {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #e8eaf0;
-    }
-
-    /* ===== Progress ===== */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #6366f1, #8b5cf6) !important;
-        border-radius: 4px;
-    }
-
-    /* ===== Alerts ===== */
-    .stAlert {
-        border-radius: 12px !important;
-    }
-
-    /* ===== Divider ===== */
-    hr {
-        border-color: #e8eaf0 !important;
-    }
-
-    /* ===== File uploader ===== */
+    /* File uploader */
     .stFileUploader > section {
-        background: #fff !important;
-        border: 2px dashed #cbd5e1 !important;
-        border-radius: 12px !important;
+        background: var(--surface) !important;
+        border: 2px dashed var(--border-strong) !important; border-radius: var(--radius) !important;
+        padding: 20px !important; transition: all 0.2s !important;
     }
-    .stFileUploader > section:hover {
-        border-color: #6366f1 !important;
-    }
-    .stFileUploader p, .stFileUploader span {
-        color: #64748b !important;
-    }
+    .stFileUploader > section:hover { border-color: #8b5cf6 !important; background: var(--surface-elevated) !important; }
+    .stFileUploader p, .stFileUploader span { color: var(--text-secondary) !important; font-size: 13px !important; }
 
-    /* ===== Checkbox ===== */
-    .stCheckbox label {
-        color: #334155 !important;
+    /* Data display */
+    .stDataFrame {
+        background: var(--surface); border-radius: var(--radius);
+        box-shadow: var(--shadow-card); overflow: hidden;
     }
+    .stProgress > div > div > div > div {
+        background: var(--gradient) !important; border-radius: var(--radius-pill);
+    }
+    .stAlert {
+        border-radius: var(--radius) !important; border: none !important;
+        box-shadow: var(--shadow-card) !important; padding: 14px 18px !important;
+    }
+    hr { border-color: var(--border) !important; margin: 1rem 0 !important; }
+    .stJson {
+        background: var(--surface-elevated) !important; border-radius: var(--radius) !important;
+        padding: 14px !important; color: var(--text-secondary) !important;
+    }
+    .stCheckbox label { color: var(--text-secondary) !important; }
 
-    /* ===== Page title ===== */
+    /* Page header */
     .page-title {
-        font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 4px;
+        font-size: 28px; font-weight: 700; color: var(--text);
+        margin-bottom: 4px; letter-spacing: -0.02em; line-height: 1.2;
     }
     .page-subtitle {
-        font-size: 14px; color: #94a3b8; margin-bottom: 24px;
+        font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5;
     }
 
-    /* ===== Spinner ===== */
-    .stSpinner > div {
-        border-top-color: #6366f1 !important;
+    /* Brand bar */
+    .brand-bar {
+        background: transparent; padding: 12px 0 20px 0; border-radius: 0;
+        border-bottom: none;
+        display: flex; align-items: center; justify-content: space-between;
+        margin: 0 0 20px 0;
+        box-shadow: none;
+    }
+    .brand-left { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+        width: 40px; height: 40px; background: var(--gradient); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+        box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+    }
+    .brand-title { color: var(--text); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-subtitle { color: var(--text-secondary); font-size: 12px; margin-top: 1px; font-weight: 400; }
+    .brand-badge {
+        background: var(--gradient); color: #fff;
+        padding: 6px 16px; border-radius: var(--radius-pill);
+        font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
     }
 
-    /* ===== Download button ===== */
+    /* Sidebar — same dark family, deeper shade */
+    section[data-testid="stSidebar"] {
+        background: #0a0a0a !important; border-right: none;
+    }
+    section[data-testid="stSidebar"] * { color: var(--text-secondary) !important; }
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 { color: var(--text) !important; font-weight: 700 !important; }
+    section[data-testid="stSidebar"] .stSelectbox > div > div,
+    section[data-testid="stSidebar"] .stTextInput > div > div > input,
+    section[data-testid="stSidebar"] .stTextArea > div > div > textarea {
+        background: var(--surface) !important; border: none !important;
+        color: var(--text) !important; border-radius: var(--radius) !important;
+        box-shadow: var(--inset-border) !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button {
+        background: var(--surface-elevated) !important; border: 1px solid var(--border-strong) !important;
+        color: var(--text) !important; border-radius: var(--radius-pill) !important;
+        font-weight: 700 !important; padding: 8px 20px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background: var(--surface-highlight) !important; border-color: var(--text) !important;
+        transform: none !important; box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] hr { border-color: var(--border) !important; }
+    section[data-testid="stSidebar"] .stExpander {
+        background: var(--surface) !important; border: none !important;
+        border-radius: var(--radius) !important;
+    }
+
+    /* Spinner & download */
+    .stSpinner > div { border-top-color: #8b5cf6 !important; }
     .stDownloadButton > button {
-        border-radius: 8px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #fff !important;
-        color: #475569 !important;
+        border-radius: var(--radius-pill) !important; border: 1px solid var(--border-strong) !important;
+        background: var(--surface-elevated) !important; color: var(--text) !important;
+        font-weight: 700 !important; padding: 8px 24px !important;
+        transition: all 0.2s ease !important;
     }
     .stDownloadButton > button:hover {
-        border-color: #6366f1 !important;
-        color: #6366f1 !important;
+        border-color: var(--text) !important; color: var(--text) !important;
+        background: var(--surface-highlight) !important;
     }
 
-    /* ===== JSON display ===== */
-    .stJson {
-        background: #f8fafc !important;
-        border-radius: 10px !important;
-        border: 1px solid #e8eaf0 !important;
+    /* Code — stays dark on dark */
+    .stCodeBlock, pre {
+        background: #0a0a0a !important; border: 1px solid var(--border) !important;
+        border-radius: var(--radius) !important; color: var(--text-secondary) !important;
+        padding: 14px 18px !important; font-size: 13px !important; line-height: 1.5 !important;
     }
+    code {
+        color: #a78bfa !important; background: var(--surface-elevated) !important;
+        padding: 2px 6px !important; border-radius: var(--radius-sm) !important;
+        font-size: 13px !important; font-weight: 500 !important;
+    }
+    pre code { color: var(--text-secondary) !important; background: transparent !important; padding: 0 !important; }
+
+    /* Expander */
+    .stExpander {
+        background: var(--surface) !important; border: none !important;
+        border-radius: var(--radius) !important; box-shadow: var(--shadow-card) !important;
+        overflow: hidden;
+    }
+    .stExpander summary {
+        padding: 14px 18px !important; font-weight: 700 !important; color: var(--text) !important;
+    }
+    .stExpander [data-testid="stExpanderDetails"] { padding: 0 18px 18px 18px !important; }
+
+    /* Metric */
+    [data-testid="stMetric"] {
+        background: var(--surface); border-radius: var(--radius); padding: 18px 22px;
+        box-shadow: var(--shadow-card);
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 26px !important; font-weight: 700 !important;
+        color: var(--text) !important; letter-spacing: -0.02em !important;
+    }
+    [data-testid="stMetricLabel"] { color: var(--text-secondary) !important; font-weight: 400 !important; font-size: 12px !important; text-transform: uppercase; letter-spacing: 0.02em; }
+    [data-testid="stMetricDelta"] { font-weight: 700 !important; }
+
+    /* Info boxes */
+    [data-baseweb="notification"] {
+        border-radius: var(--radius) !important; border: none !important;
+        box-shadow: var(--shadow-card) !important;
+    }
+
+    /* Scrollbar — Spotify style thin dark */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-highlight); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+    /* Selection */
+    ::selection { background: rgba(139,92,246,0.3); color: #fff; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -433,9 +482,18 @@ def render_stat_card(number, label, color_class="stat-purple", icon=""):
     """, unsafe_allow_html=True)
 
 
-def render_page_header(title, subtitle):
-    st.markdown(f'<div class="page-title">{title}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="page-subtitle">{subtitle}</div>', unsafe_allow_html=True)
+def render_page_header(title, subtitle, right_content=None):
+    if right_content is not None:
+        st.markdown(
+            f'<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">'
+            f'<div><div class="page-title">{title}</div>'
+            f'<div class="page-subtitle">{subtitle}</div></div>'
+            f'<div id="header-right-slot"></div></div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(f'<div class="page-title">{title}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="page-subtitle">{subtitle}</div>', unsafe_allow_html=True)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -446,21 +504,21 @@ def page_single_review():
     """单条评论分析页面"""
     render_page_header("📝 单条评论分析", "粘贴一条用户评论，即时获取情绪识别、有效性检测和综合分析")
 
-    with st.container():
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            review_text = st.text_area(
-                "评论内容",
-                placeholder="在此粘贴用户评论...",
-                height=120,
-                label_visibility="collapsed",
-            )
-        with col2:
-            rating = st.selectbox("评分", [5, 4, 3, 2, 1], index=0)
-            platform = st.selectbox("平台", ["淘宝", "京东", "其他"])
-            product_name = st.text_input("产品名称（可选）", "")
-        st.markdown('</div>', unsafe_allow_html=True)
+    _rcol, _rspacer = st.columns([1, 4])
+    with _rcol:
+        rating = st.selectbox("评分", [5, 4, 3, 2, 1], index=0)
+
+    review_text = st.text_area(
+        "评论内容",
+        placeholder="在此粘贴用户评论...",
+        height=120,
+        label_visibility="collapsed",
+    )
+    _p_col1, _p_col2 = st.columns([1, 1])
+    with _p_col1:
+        platform = st.selectbox("平台", ["淘宝", "京东", "其他"])
+    with _p_col2:
+        product_name = st.text_input("产品名称（可选）", "")
 
     if st.button("🚀 开始深度分析", type="primary"):
         if not review_text.strip():
@@ -502,7 +560,6 @@ def page_single_review():
             risk_label, risk_cls = risk_map.get(risk, (risk, "stat-purple"))
             render_stat_card(risk_label, "风险等级", risk_cls, "⚡")
 
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
         col_a, col_b = st.columns(2)
         with col_a:
             st.markdown('<div class="ui-card-title">🎭 情绪分析</div>', unsafe_allow_html=True)
@@ -510,12 +567,9 @@ def page_single_review():
         with col_b:
             st.markdown('<div class="ui-card-title">🛡️ 有效性检测</div>', unsafe_allow_html=True)
             st.json(va)
-        st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
         st.markdown('<div class="ui-card-title">📊 综合分析</div>', unsafe_allow_html=True)
         st.json(final)
-        st.markdown('</div>', unsafe_allow_html=True)
 
         st.download_button(
             "💾 下载分析结果 (JSON)",
@@ -544,7 +598,6 @@ def page_product_url():
             st.rerun()
         return
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     url = st.text_input(
         "产品链接",
         placeholder="https://item.jd.com/100012345.html 或 https://item.taobao.com/item.htm?id=xxx",
@@ -556,7 +609,6 @@ def page_product_url():
     with col2:
         use_selenium = st.checkbox("使用浏览器抓取（更可靠但较慢）", value=False,
                                     help="勾选后将打开浏览器进行抓取，适合API被反爬拦截时使用")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("🚀 开始采集 + 分析", type="primary"):
         if not url.strip():
@@ -609,20 +661,53 @@ def page_product_url():
                             reviews = []
                 elif detected == "jd":
                     ck = scraper._platform_cookies.get("jd", {})
+                    jd_scraper = None
                     try:
-                        from scrapers.jd_playwright_scraper import JDPlaywrightScraper
-                        reviews = JDPlaywrightScraper(headless=False, max_reviews=max_reviews).scrape(url, cookies=ck, max_reviews=max_reviews)
-                    except Exception:
+                        # 统一降级调度：DrissionPage（真实 Chrome）→ Patchright → API 直连
+                        from scrapers.jd_unified_scraper import JDUnifiedScraper
+                        jd_scraper = JDUnifiedScraper(headless=False, max_reviews=max_reviews)
+                        with st.spinner("正在采集京东评论（真实 Chrome → 反检测浏览器 → API 三级降级）..."):
+                            reviews = jd_scraper.scrape(url, cookies=ck, max_reviews=max_reviews)
+                        # 显示每级结果
+                        for method, result in jd_scraper.method_results.items():
+                            icon = "✅" if "成功" in result else "⚠️"
+                            st.caption(f"{icon} {method}: {result}")
+                    except Exception as e:
+                        st.warning(f"统一抓取器异常: {e}")
                         reviews = []
+                    # 截图兜底：所有方式均未抓到评论时，收集浏览器截图 + OCR
+                    if not reviews and jd_scraper:
+                        screenshots = jd_scraper.get_screenshots()
+                        if screenshots:
+                            st.info(f"📸 自动抓取未成功，已截取 {len(screenshots)} 张评论区截图，正在通过 OCR 识别...")
+                            try:
+                                from screenshot_analyzer import create_screenshot_analyzer
+                                analyzer = create_screenshot_analyzer()
+                                ocr_reviews = []
+                                for sp in screenshots:
+                                    try:
+                                        with open(sp, "rb") as img_f:
+                                            img_bytes = img_f.read()
+                                        parsed, err = analyzer.analyze_screenshot(
+                                            img_bytes, platform="jd", product_url=url
+                                        )
+                                        if parsed and not err:
+                                            ocr_reviews.extend(parsed)
+                                    except Exception:
+                                        continue
+                                if ocr_reviews:
+                                    for r in ocr_reviews:
+                                        r.setdefault("source_platform", "jd")
+                                        r.setdefault("source_url", url)
+                                        r.setdefault("platform", "jd")
+                                        r["extraction_method"] = "screenshot_ocr"
+                                    reviews = ocr_reviews
+                                    st.success(f"✅ OCR 从截图中识别出 {len(reviews)} 条评论")
+                            except Exception as e:
+                                st.warning(f"OCR 识别失败: {e}")
                     if not reviews:
                         try:
                             reviews = scraper.scrape_product(url, max_reviews=max_reviews)
-                        except Exception:
-                            reviews = []
-                    if not reviews:
-                        try:
-                            from scrapers.jd_scraper import JDScraper
-                            reviews = JDScraper().scrape_with_selenium(url, cookies=ck, max_reviews=max_reviews)
                         except Exception:
                             reviews = []
                 elif use_selenium:
@@ -699,7 +784,6 @@ def page_screenshot():
     """截图分析页面"""
     render_page_header("📷 截图评论分析", "上传商品评论页面截图，OCR + LLM 自动识别评论并生成深度分析报告")
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     uploaded_files = st.file_uploader(
         "上传网页截图（支持多张）",
         type=["png", "jpg", "jpeg"],
@@ -720,7 +804,6 @@ def page_screenshot():
         )
     with col2:
         product_url = st.text_input("商品链接（可选，用于溯源）", placeholder="https://item.taobao.com/item.htm?id=xxx")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("🔍 识别截图评论", type="primary", disabled=not uploaded_files):
         from screenshot_analyzer import create_screenshot_analyzer
@@ -803,7 +886,6 @@ def page_csv_upload():
     """CSV上传分析页面"""
     render_page_header("📁 CSV 批量分析", "上传 CSV 文件进行批量评论分析，支持 review_text/rating/platform 字段")
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     uploaded = st.file_uploader("选择 CSV 文件", type="csv")
     if uploaded is not None:
         try:
@@ -813,7 +895,6 @@ def page_csv_upload():
         except Exception as e:
             st.error(f"读取失败: {e}")
             return
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if uploaded is not None and st.button("🔍 开始批量分析", type="primary"):
         agent, err = get_agent()
@@ -865,18 +946,13 @@ def display_results(reviews, results, report, trust_report):
     with c4:
         render_stat_card(f"{avg_trust:.1f}", "平均可信度", "stat-green", "🛡️")
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     st.markdown('<div class="ui-card-title">📋 产品口碑报告</div>', unsafe_allow_html=True)
     st.json(report)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if trust_report:
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
         st.markdown('<div class="ui-card-title">🛡️ Trust Report（统计异常检测）</div>', unsafe_allow_html=True)
         st.json(trust_report)
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     st.markdown('<div class="ui-card-title">🔗 评论溯源信息</div>', unsafe_allow_html=True)
     trace_data = []
     for i, r in enumerate(reviews):
@@ -891,9 +967,7 @@ def display_results(reviews, results, report, trust_report):
     if trace_data:
         st.dataframe(pd.DataFrame(trace_data), use_container_width=True)
         st.caption("✅ 每条评论均可溯源到原始平台")
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="ui-card">', unsafe_allow_html=True)
     st.markdown('<div class="ui-card-title">📝 逐条评论分析</div>', unsafe_allow_html=True)
     table_data = []
     for i, r in enumerate(results):
@@ -911,7 +985,6 @@ def display_results(reviews, results, report, trust_report):
             "风险": final.get("risk_level", "N/A"),
         })
     st.dataframe(pd.DataFrame(table_data), use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -952,12 +1025,12 @@ def display_results(reviews, results, report, trust_report):
 def render_sidebar():
     with st.sidebar:
         st.markdown("""
-        <div style="text-align:center; padding: 16px 0 8px;">
-            <div style="width:56px;height:56px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;
-                        display:inline-flex;align-items:center;justify-content:center;font-size:28px;
-                        box-shadow:0 4px 16px rgba(102,126,234,0.4);">🔍</div>
-            <div style="color:#fff;font-size:18px;font-weight:700;margin-top:12px;">ReviewPilot</div>
-            <div style="color:rgba(255,255,255,0.5);font-size:12px;">v1.0.0</div>
+        <div style="text-align:center; padding: 20px 0 12px;">
+            <div style="width:56px;height:56px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:14px;
+                        display:inline-flex;align-items:center;justify-content:center;font-size:26px;
+                        box-shadow:0 4px 14px rgba(99,102,241,0.35);">🔍</div>
+            <div style="color:#fff;font-size:20px;font-weight:700;margin-top:14px;letter-spacing:-0.02em;">ReviewPilot</div>
+            <div style="color:#b3b3b3;font-size:12px;font-weight:400;margin-top:2px;">v1.0.0</div>
         </div>
         """, unsafe_allow_html=True)
 

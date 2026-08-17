@@ -263,64 +263,138 @@ class TaobaoPlaywrightScraper:
         self._page.wait_for_timeout(1200)
 
     def _extract_comments_from_dom(self) -> List[Dict]:
-        """从渲染后的 DOM 中提取评论（启发式选择器）"""
-        js = """
+        """从渲染后的 DOM 中提取评论（精准定位评论卡片，避免 UI 文本污染）"""
+        js = r"""
         () => {
           const textOf = (el) => (el?.innerText || el?.textContent || '').trim();
           const uniq = (arr) => [...new Set(arr.filter(Boolean))];
-          const out = [];
 
-          // 多组选择器，适配不同页面结构
-          const selectors = [
-            '[class*=comment]', '[class*=Comment]',
-            '[class*=review]', '[class*=Review]',
-            '[class*=rate]', '[class*=Rate]',
-            '[class*=feedback]', '[class*=Feedback]',
+          // ---------- 1. 黑名单关键词：命中则整段丢弃 ----------
+          const BLACKLIST_KEYWORDS = [
+            '账号管理', '退出', '我的淘宝', '购物车', '收藏夹', '卖家中心',
+            '联系客服', '手机逛', '请登录', '免费注册',
+            '为你展示真实评价', '默认排序', '款式筛选', '查看全部评价',
+            '近半年', '默认好评', '最近一条发布于', '累计评价',
+            '全部评价', '写追评', '大家都在问', '宝贝评价',
+            '此用户没有填写评价', '评价方未及时',
+            '图/视频', '追评', '好评', '中评', '差评', '有图',
+            ' Sort', '排序', '筛选',
+          ];
+
+          // ---------- 2. 定位真正的"评论卡片"节点 ----------
+          // 淘宝常见结构：
+          //   .rate-grid > table/tr/td  (旧版)
+          //   [class*="Comment--"] [class*="Content--"]
+          //   [class*="rate-"] .tm-rate-content / .tb-rev-item
+          //   div[data-id] / li[data-id] 且内部含评论文本
+          //   [class*="commentItem"], [class*="reviewItem"], [class*="rate-item"]
+          const CARD_SELECTORS = [
+            '[class*="Comment--"]:not([class*="CommentList"]):not([class*="CommentWrap"])',
+            '[class*="commentItem"]',
+            '[class*="reviewItem"]',
+            '[class*="rate-item"]',
+            '[class*="rate-grid"] tr',
+            '.tb-rev-item',
+            '.tm-rate-item',
+            '[class*="Feedback--"]:not([class*="FeedbackList"])',
             'li[data-id]', 'div[data-id]',
           ];
 
-          let nodes = [];
-          for (const sel of selectors) {
-            const found = document.querySelectorAll(sel);
-            if (found.length > 0) {
-              nodes = [...nodes, ...found];
+          let cardEls = [];
+          for (const sel of CARD_SELECTORS) {
+            try {
+              const found = document.querySelectorAll(sel);
+              if (found && found.length) cardEls = cardEls.concat([...found]);
+            } catch (e) {}
+          }
+          // 去重相同 DOM 节点
+          cardEls = uniq(cardEls);
+
+          // 过滤掉"容器型"节点（只保留最内层的真实卡片）：
+          // 如果一个节点内部还包含另一个候选卡片，就跳过外层容器
+          const leafCards = cardEls.filter(node => {
+            for (const sel of CARD_SELECTORS) {
+              try {
+                if (node.querySelector(sel)) return false;
+              } catch (e) {}
             }
-          }
+            return true;
+          });
+          const cards = leafCards.length ? leafCards : cardEls;
 
-          // 如果没找到，用更宽泛的选择器
-          if (nodes.length === 0) {
-            nodes = [...document.querySelectorAll('li, div[class]')];
-          }
+          // ---------- 3. 精准提取每条评论的字段 ----------
+          const out = [];
+          for (const card of cards) {
+            // 评论正文：优先找专门的内容元素；找不到才退化到卡片文本
+            let content = '';
+            const contentSelectors = [
+              '[class*="Content--"]:not([class*="ContentWrap"]):not([class*="Contents"])',
+              '[class*="comment-content"]',
+              '[class*="review-content"]',
+              '.tm-rate-content', '.tb-r-ev-content',
+              '.rate-content', '[class*="rate-content"]',
+              '[class*="feedback"]', '[class*="Feedback"]',
+              'p[data-content]', 'p.content',
+            ];
+            for (const cs of contentSelectors) {
+              const el = card.querySelector(cs);
+              if (el) {
+                const t = textOf(el);
+                if (t && t.length >= 4 && t.length < 2000) { content = t; break; }
+              }
+            }
+            if (!content) {
+              // 退化：直接取卡片文本，但必须通过后续黑名单/长度过滤
+              content = textOf(card);
+            }
+            content = content.replace(/\s+/g, ' ').trim();
+            if (!content || content.length < 6 || content.length > 2000) continue;
 
-          for (const node of nodes) {
-            const rawText = textOf(node);
-            if (!rawText || rawText.length < 6) continue;
-            // 跳过过长的容器（可能是整个评论区）
-            if (rawText.length > 3000) continue;
+            // 黑名单过滤
+            let blacklisted = false;
+            for (const kw of BLACKLIST_KEYWORDS) {
+              if (content.includes(kw)) { blacklisted = true; break; }
+            }
+            if (blacklisted) continue;
 
-            const imgs = uniq([...node.querySelectorAll('img')]
-              .map(img => img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazyload') || '')
-              .filter(s => s && !s.includes('loading.gif') && !s.includes('placeholder')));
+            // 必须包含中文（过滤掉纯数字/纯符号/纯英文 UI 碎片）
+            if (!/[\u4e00-\u9fa5]/.test(content)) continue;
 
-            const user = textOf(node.querySelector('[class*=user], [class*=nick], [class*=author], [class*=Nick], [class*=User]'));
-            const time = textOf(node.querySelector('[class*=time], time, [class*=Time], [class*=date]'));
-            const sku = textOf(node.querySelector('[class*=sku], [class*=spec], [class*=auction], [class*=Sku]'));
+            // 用户名 / 时间 / sku（各字段独立取，不污染 content）
+            const user = textOf(card.querySelector(
+              '[class*="User--"], [class*="userName"], [class*="user-name"], ' +
+              '[class*="nick"], [class*="Nick"], [class*="author"], .tb-user-info, .rate-user-info'
+            ));
+            const time = textOf(card.querySelector(
+              '[class*="time"], [class*="Time"], [class*="date"], [class*="Date"], time, .tb-rev-date, .col-date'
+            ));
+            const sku = textOf(card.querySelector(
+              '[class*="sku"], [class*="Sku"], [class*="spec"], [class*="auctionSku"], ' +
+              '[class*="SkuInfo"], [class*="skuInfo"], .tm-rate-sku, .tb-sku'
+            ));
 
-            // 提取星级评分
+            // 图片
+            const imgs = uniq([...card.querySelectorAll('img')]
+              .map(img => img.getAttribute('src') || img.getAttribute('data-src') ||
+                          img.getAttribute('data-lazyload') || '')
+              .filter(s => s && !s.includes('loading.gif') && !s.includes('placeholder') &&
+                           !s.includes('avatar') && !s.includes('icon')));
+
+            // 星级
             let rateScore = 5;
-            const starEl = node.querySelector('[class*=star], [class*=Star]');
+            const starEl = card.querySelector('[class*="star"], [class*="Star"], [class*="rateLevel"]');
             if (starEl) {
               const starText = textOf(starEl);
-              const m = starText.match(/(\\d)/);
+              const m = starText.match(/([1-5])/);
               if (m) rateScore = parseInt(m[1]);
             }
 
             out.push({
-              comment_id: node.getAttribute('data-id') || node.getAttribute('id') || '',
+              comment_id: card.getAttribute('data-id') || card.getAttribute('id') || '',
               user_name: user,
               time: time,
               sku: sku,
-              content: rawText.slice(0, 2000),
+              content: content.slice(0, 2000),
               images: imgs,
               rateScore: rateScore,
             });
@@ -551,8 +625,33 @@ class TaobaoPlaywrightScraper:
 
             # Step 7: 滚动加载评论
             seen_keys = set()
+            seen_texts = set()  # 按规范化评论文本去重（兜底，防同评论不同 key）
             stagnant_rounds = 0
             max_rounds = 20  # 最多滚动20轮
+
+            def _norm_text(t: str) -> str:
+                """规范化评论文本，用于跨来源/跨轮次去重。"""
+                if not t:
+                    return ""
+                t = re.sub(r"\s+", "", str(t))
+                # 去掉常见前后缀噪声
+                t = t.strip()
+                return t[:120]  # 取前 120 字符作为指纹，足够区分不同评论
+
+            def _dedup_key(comment: Dict, review: Dict, source: str) -> str:
+                """生成去重 key：优先 comment_id，其次规范化文本指纹。"""
+                cid = ""
+                if source == "api":
+                    cid = str(comment.get("id") or comment.get("rateId") or "")
+                else:
+                    cid = str(comment.get("comment_id") or "")
+                if cid:
+                    return f"id:{cid}"
+                # 没有 id 时，用文本指纹兜底
+                text_fp = _norm_text(review.get("review_text", ""))
+                if text_fp:
+                    return f"txt:{text_fp}"
+                return ""
 
             print(f"[playwright] 开始滚动加载评论（目标: {max_reviews} 条）...")
 
@@ -571,12 +670,19 @@ class TaobaoPlaywrightScraper:
                     review = self._format_review(
                         comment, product_id, product_url, product_name, source="dom"
                     )
-                    if review:
-                        # 去重
-                        key = comment.get("comment_id") or f"{review.get('user_id','')}|{review.get('review_date','')}|{review.get('review_text','')[:50]}"
-                        if key not in seen_keys:
-                            seen_keys.add(key)
-                            all_reviews.append(review)
+                    if not review:
+                        continue
+                    text_fp = _norm_text(review.get("review_text", ""))
+                    if text_fp and text_fp in seen_texts:
+                        continue  # 同一条评论已抓过（无论外层容器/字段顺序如何）
+                    key = _dedup_key(comment, review, "dom")
+                    if key and key in seen_keys:
+                        continue
+                    if key:
+                        seen_keys.add(key)
+                    if text_fp:
+                        seen_texts.add(text_fp)
+                    all_reviews.append(review)
 
                 # 从 API 拦截提取
                 api_comments = self._extract_comments_from_api()
@@ -587,13 +693,19 @@ class TaobaoPlaywrightScraper:
                     review = self._format_review(
                         comment, product_id, product_url, product_name, source="api"
                     )
-                    if review:
-                        key = str(comment.get("id") or comment.get("rateId") or "")
-                        if not key:
-                            key = f"{review.get('user_id','')}|{review.get('review_date','')}|{review.get('review_text','')[:50]}"
-                        if key not in seen_keys:
-                            seen_keys.add(key)
-                            all_reviews.append(review)
+                    if not review:
+                        continue
+                    text_fp = _norm_text(review.get("review_text", ""))
+                    if text_fp and text_fp in seen_texts:
+                        continue
+                    key = _dedup_key(comment, review, "api")
+                    if key and key in seen_keys:
+                        continue
+                    if key:
+                        seen_keys.add(key)
+                    if text_fp:
+                        seen_texts.add(text_fp)
+                    all_reviews.append(review)
 
                 new_count = len(all_reviews) - before_count
                 if new_count == 0:
@@ -627,11 +739,19 @@ class TaobaoPlaywrightScraper:
                                 review = self._format_review(
                                     comment, product_id, product_url, product_name, source="dom"
                                 )
-                                if review:
-                                    key = comment.get("comment_id") or f"{review.get('user_id','')}|{review.get('review_date','')}|{review.get('review_text','')[:50]}"
-                                    if key not in seen_keys:
-                                        seen_keys.add(key)
-                                        all_reviews.append(review)
+                                if not review:
+                                    continue
+                                text_fp = _norm_text(review.get("review_text", ""))
+                                if text_fp and text_fp in seen_texts:
+                                    continue
+                                key = _dedup_key(comment, review, "dom")
+                                if key and key in seen_keys:
+                                    continue
+                                if key:
+                                    seen_keys.add(key)
+                                if text_fp:
+                                    seen_texts.add(text_fp)
+                                all_reviews.append(review)
                 except Exception:
                     pass
 
