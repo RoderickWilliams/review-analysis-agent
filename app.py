@@ -13,6 +13,14 @@ Streamlit Web UI — 跨平台用户反馈智能分析（淘宝+京东专版）
 
 import os
 import sys
+
+# Ensure stdout/stderr use UTF-8 on Windows to prevent
+# UnicodeEncodeError when emoji/symbols are printed to console.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 import json
 import time
 import tempfile
@@ -605,7 +613,8 @@ def page_product_url():
     )
     col1, col2 = st.columns(2)
     with col1:
-        max_reviews = st.number_input("最大采集量", 10, 500, 50)
+        max_reviews = st.number_input("最大采集量（0=无上限）", 0, 100000, 100, help="设为0则持续采集直到没有更多评论")
+        _max_reviews = max_reviews if max_reviews > 0 else 1000000
     with col2:
         use_selenium = st.checkbox("使用浏览器抓取（更可靠但较慢）", value=False,
                                     help="勾选后将打开浏览器进行抓取，适合API被反爬拦截时使用")
@@ -641,14 +650,14 @@ def page_product_url():
                     ck = scraper._platform_cookies.get("taobao", {})
                     try:
                         from scrapers.taobao_playwright_scraper import TaobaoPlaywrightScraper
-                        pw_scraper = TaobaoPlaywrightScraper(headless=False, max_reviews=max_reviews)
-                        reviews = pw_scraper.scrape(url, cookies=ck, max_reviews=max_reviews)
+                        pw_scraper = TaobaoPlaywrightScraper(headless=False, max_reviews=_max_reviews)
+                        reviews = pw_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
                     except Exception:
                         reviews = []
                     if not reviews:
                         try:
                             from scrapers.taobao_comment_v2 import TaobaoCommentScraperV2
-                            reviews = TaobaoCommentScraperV2().scrape(url, cookies=ck, max_reviews=max_reviews)
+                            reviews = TaobaoCommentScraperV2().scrape(url, cookies=ck, max_reviews=_max_reviews)
                         except Exception:
                             reviews = []
                     if not reviews and ck:
@@ -656,7 +665,7 @@ def page_product_url():
                             from scrapers.taobao_scraper import TaobaoScraper
                             tb = TaobaoScraper()
                             tb.set_cookies(ck)
-                            reviews = tb.scrape_with_cookies(url, ck, max_reviews=max_reviews)
+                            reviews = tb.scrape_with_cookies(url, ck, max_reviews=_max_reviews)
                         except Exception:
                             reviews = []
                 elif detected == "jd":
@@ -665,9 +674,9 @@ def page_product_url():
                     try:
                         # 统一降级调度：DrissionPage（真实 Chrome）→ Patchright → API 直连
                         from scrapers.jd_unified_scraper import JDUnifiedScraper
-                        jd_scraper = JDUnifiedScraper(headless=False, max_reviews=max_reviews)
+                        jd_scraper = JDUnifiedScraper(headless=False, max_reviews=_max_reviews)
                         with st.spinner("正在采集京东评论（真实 Chrome → 反检测浏览器 → API 三级降级）..."):
-                            reviews = jd_scraper.scrape(url, cookies=ck, max_reviews=max_reviews)
+                            reviews = jd_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
                         # 显示每级结果
                         for method, result in jd_scraper.method_results.items():
                             icon = "✅" if "成功" in result else "⚠️"
@@ -707,14 +716,14 @@ def page_product_url():
                                 st.warning(f"OCR 识别失败: {e}")
                     if not reviews:
                         try:
-                            reviews = scraper.scrape_product(url, max_reviews=max_reviews)
+                            reviews = scraper.scrape_product(url, max_reviews=_max_reviews)
                         except Exception:
                             reviews = []
                 elif use_selenium:
                     from scrapers.jd_scraper import JDScraper
-                    reviews = JDScraper().scrape_with_selenium(url, max_reviews=max_reviews)
+                    reviews = JDScraper().scrape_with_selenium(url, max_reviews=_max_reviews)
                 else:
-                    reviews = scraper.scrape_product(url, max_reviews=max_reviews)
+                    reviews = scraper.scrape_product(url, max_reviews=_max_reviews)
 
             except Exception as e:
                 st.error(f"采集失败: {e}")

@@ -491,7 +491,7 @@ class TaobaoScraper(BaseScraper):
         appKey = "12574478"
 
         # 评论API请求
-        for page in range(1, min(max_reviews // 20 + 2, 6)):  # 最多5页
+        for page in range(1, max_reviews // 20 + 5):  # 按目标量动态计算页数
             data_str = _json.dumps({
                 "auctionNumId": item_id,
                 "currentPageNum": page,

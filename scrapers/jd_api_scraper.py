@@ -116,6 +116,9 @@ class JDAPIScraper:
 
         self.session = requests.Session()
         self.session.verify = False
+        # 绕过系统代理，防止代理篡改响应编码或跳转港澳版
+        self.session.trust_env = False
+        self.session.proxies = {"http": None, "https": None}
 
         if cookie_str:
             self.session.headers["Cookie"] = cookie_str
@@ -130,6 +133,10 @@ class JDAPIScraper:
 
     @staticmethod
     def _extract_product_id(url: str) -> str:
+        # 港澳版 jd.hk
+        m = re.search(r"jd\.hk/[^\d]*(\d{5,})", url)
+        if m:
+            return m.group(1)
         m = re.search(r"item\.jd\.com/(\d+)", url)
         if m:
             return m.group(1)
@@ -137,6 +144,9 @@ class JDAPIScraper:
         if m:
             return m.group(1)
         m = re.search(r"/(\d{5,})\.html", url)
+        if m:
+            return m.group(1)
+        m = re.search(r"(\d{6,})", url)
         if m:
             return m.group(1)
         return ""
@@ -402,7 +412,7 @@ class JDAPIScraper:
             empty_pages = 0
             print("[jd-api] 开始 score=%d 筛选方式" % score_mode)
 
-            while len(reviews) < self.max_reviews and page < 100:
+            while len(reviews) < self.max_reviews and page < 10000:
                 # 按当前 score 构造 variant
                 variant = {
                     "use_callback": True,

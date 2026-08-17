@@ -445,6 +445,10 @@ class JDPlaywrightScraper:
             return ""
         if url.isdigit():
             return url
+        # 港澳版 jd.hk
+        m = re.search(r'jd\.hk/[^\d]*(\d{5,})', url)
+        if m:
+            return m.group(1)
         m = re.search(r'/(\d{4,})\.html', url)
         if m:
             return m.group(1)
@@ -674,10 +678,15 @@ class JDPlaywrightScraper:
             "text=累计评价",
             "text=评价",
             "text=全部评价",
+            "text=用户评价",
+            "text=商品评论",
             "#detail .tab-main li:has-text('评价')",
             "[href*='comment']",
             "[class*='comment']",
             "[class*='Comment']",
+            "[class*='review']",
+            "[class*='Review']",
+            "[class*='evaluation']",
             "[data-tab='comments']",
         ]
 
@@ -720,6 +729,9 @@ class JDPlaywrightScraper:
                 'div.comment-item', 'li.comment-item',
                 '[class*=review-item]', '[class*=ReviewItem]',
                 '[class*=Comment--]',
+                '[class*=CommentContent]', '[class*=comment-content]',
+                '[class*=rate-content]', '[class*=evaluation-content]',
+                '.J_commentsList .comment-con',
             ];
 
             let nodes = [];
@@ -1032,8 +1044,8 @@ class JDPlaywrightScraper:
 
             # Step 10: 滚动加载并提取评论
             stagnant_rounds = 0
-            max_rounds = 25
             target = min(max_reviews, self.max_reviews) if max_reviews else self.max_reviews
+            max_rounds = max(25, target // 5 + 10)
 
             print(f"[jd-pw] 开始滚动加载评论（目标: {target} 条）...")
 

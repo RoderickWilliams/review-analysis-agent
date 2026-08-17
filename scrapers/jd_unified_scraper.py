@@ -48,6 +48,7 @@ class JDUnifiedScraper:
         self._screenshots: List[str] = []
         self._last_method: Optional[str] = None
         self._method_results: Dict[str, str] = {}
+        self._active_scrapers: List = []  # 保持实例引用，防止GC回收导致浏览器秒关
 
     # ------------------------------------------------------------------
     # 各级抓取器（懒加载）
@@ -60,13 +61,14 @@ class JDUnifiedScraper:
             headless=self.headless,
             login_timeout=self.login_timeout,
         )
+        self._active_scrapers.append(scraper)  # 保持引用，防止GC关闭浏览器
         try:
             reviews = scraper.scrape(url, cookies=cookies, max_reviews=self.max_reviews)
             self._screenshots.extend(scraper.get_screenshots())
             return reviews
         finally:
             # DrissionPage 浏览器保持打开给用户看，不强制关闭
-            pass
+            print("[jd-unified] DrissionPage 浏览器保持打开（可手动关闭）")
 
     def _scrape_playwright(self, url: str, cookies: Optional[Dict]) -> List[Dict]:
         from scrapers.jd_playwright_scraper import JDPlaywrightScraper
@@ -74,15 +76,14 @@ class JDUnifiedScraper:
             headless=self.headless,
             max_reviews=self.max_reviews,
         )
+        self._active_scrapers.append(scraper)  # 保持引用
         try:
             reviews = scraper.scrape(url, cookies=cookies, max_reviews=self.max_reviews)
             self._screenshots.extend(scraper.get_screenshots())
             return reviews
         finally:
-            try:
-                scraper._close_browser()
-            except Exception:
-                pass
+            # Playwright 抓取结束后也保持浏览器打开，方便用户查看/手动操作
+            print("[jd-unified] Playwright 浏览器保持打开（可手动关闭）")
 
     def _scrape_api(self, url: str, cookies: Optional[Dict]) -> List[Dict]:
         from scrapers.jd_api_scraper import JDAPIScraper
@@ -104,6 +105,7 @@ class JDUnifiedScraper:
         self._screenshots = []
         self._last_method = None
         self._method_results = {}
+        self._active_scrapers = []
 
         method_map = {
             "drissionpage": self._scrape_drissionpage,

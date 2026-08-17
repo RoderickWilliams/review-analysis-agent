@@ -91,3 +91,5 @@ packages.txt
 # Streamlit
 # ===========================================
 .streamlit/
+# Debug output
+debug/

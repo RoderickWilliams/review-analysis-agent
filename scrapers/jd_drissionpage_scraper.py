@@ -78,11 +78,18 @@ RATE_DESC_CSS_FALLBACKS = [
     "css:span.jdc-pc-rate-card-main-desc",
     "css:.comment-con",
     "css:p.comment-con",
+    "css:.comment-item p",
+    "css:.J_commentsList .comment-con",
+    "css:[class*='comment-con']",
+    "css:[class*='CommentContent']",
+    "css:[class*='review-content']",
+    "css:.rate-content",
+    "css:.evaluation-content",
 ]
 
 # 虚拟滚动稳定判定
 MAX_STALL_ROUNDS = 3
-MAX_SCROLL_ROUNDS = 200
+MAX_SCROLL_ROUNDS = 2000
 
 # 快速验证滑块检测
 VERIFY_TEXT_KEYWORDS = (
@@ -156,6 +163,14 @@ class JDDrissionPageScraper:
         co.set_argument("--disable-features=PrivacySandboxSettings4")
         co.set_argument("--no-first-run")
         co.set_argument("--disable-infobars")
+        # 强制中文语言环境，防止 AJAX 动态内容出现 GBK 乱码
+        co.set_argument("--lang=zh-CN")
+        co.set_argument("--accept-lang=zh-CN,zh;q=0.9,en;q=0.8")
+        # 京东域名直连绕过系统代理（逗号分隔，Chrome 规范）：
+        #   1) 代理不碰京东流量 → 不会篡改 HTTPS 响应 charset → 解决"锟斤拷"乱码
+        #   2) 浏览器出口 IP 即用户真实 IP → 内地自动进大陆版、港澳自动进港澳版
+        #   3) 其他网站流量仍走系统代理，不受影响
+        co.set_argument("--proxy-bypass-list=jd.com,*.jd.com,jd.hk,*.jd.hk,360buyimg.com,*.360buyimg.com,jdcdn.com,*.jdcdn.com,jcloudcs.com,*.jcloudcs.com,jcloud.com,*.jcloud.com,<local>")
         if self.headless:
             co.headless()
 
@@ -177,34 +192,87 @@ class JDDrissionPageScraper:
     # 登录检测
     # ------------------------------------------------------------------
 
-    def _is_logged_in(self) -> bool:
-        """检测当前页面是否已登录京东。"""
+    def _detect_region(self) -> str:
+        """检测当前是大陆版还是港澳版。返回 'mainland' 或 'hk'。"""
         try:
-            if self._tab.wait.ele_displayed(LOGIN_USER_XPATH, timeout=2):
-                logout = self._tab.ele(LOGOUT_LINK_XPATH, timeout=1)
-                if logout:
-                    return True
+            url = self._tab.url or ""
+            if "jd.hk" in url or "hk.jd.com" in url:
+                return "hk"
         except Exception:
             pass
-        # Cookie 兜底检测
+        return "mainland"
+
+    def _is_logged_in(self) -> bool:
+        """检测当前页面是否已登录京东（支持大陆版和港澳版）。"""
+        # 1. Cookie 检测（两版本通用，最可靠）
         try:
             cookies = self._tab.cookies(all_domains=True)
             for c in cookies:
                 name = c.get("name", "")
-                if name in ("pt_key", "pt_pin", "thor"):
+                value = c.get("value", "")
+                if name in ("pt_key", "pt_pin", "thor") and value:
                     return True
         except Exception:
             pass
+
+        # 2. 大陆版 DOM 检测
+        if self._detect_region() == "mainland":
+            try:
+                if self._tab.wait.ele_displayed(LOGIN_USER_XPATH, timeout=2):
+                    logout = self._tab.ele(LOGOUT_LINK_XPATH, timeout=1)
+                    if logout:
+                        return True
+            except Exception:
+                pass
+        else:
+            # 3. 港澳版 DOM 检测：检查是否有用户昵称/我的账户等元素
+            try:
+                for xpath in (
+                    "x://a[contains(@class,'nickname')]",
+                    "x://span[contains(@class,'user-name')]",
+                    "x://a[contains(text(),'我的订单')]",
+                    "x://a[contains(text(),'我的京东')]",
+                    "x://div[contains(@class,'userinfo')]//a",
+                ):
+                    ele = self._tab.ele(xpath, timeout=1)
+                    if ele and ele.text.strip():
+                        txt = ele.text.strip()
+                        if "登录" not in txt and "注册" not in txt and len(txt) > 0:
+                            return True
+            except Exception:
+                pass
         return False
 
     def _ensure_logged_in(self) -> bool:
-        """确保已登录，未登录则打开登录页等待用户扫码。"""
+        """确保已登录，未登录则打开登录页等待用户扫码（支持大陆/港澳版）。"""
         if self._is_logged_in():
             print("[jd-dp] 已检测到登录态")
             return True
 
-        print("[jd-dp] 未登录，打开京东登录页...")
-        self._tab.get("https://passport.jd.com/new/login.aspx")
+        region = self._detect_region()
+        print("[jd-dp] 未登录，当前版本: %s，打开登录页..." % ("港澳版" if region == "hk" else "大陆版"))
+
+        # 两版本都用统一的 passport.jd.com 登录
+        login_urls = [
+            "https://passport.jd.com/new/login.aspx",
+            "https://passport.jd.com/uc/login",
+        ]
+        if region == "hk":
+            # 港澳版可能有自己的登录入口
+            login_urls.insert(0, "https://passport.jd.com/new/login.aspx?ReturnURL=https%3A%2F%2Fwww.jd.hk%2F")
+
+        for login_url in login_urls:
+            try:
+                self._tab.get(login_url)
+                time.sleep(3)
+                # 检查页面是否正常加载（非空白/非乱码）
+                title = self._tab.title or ""
+                if "京东" in title or "登录" in title or "login" in title.lower():
+                    break
+                print("[jd-dp] 登录页加载异常，尝试下一个地址...")
+            except Exception as e:
+                print("[jd-dp] 打开登录页失败: %s" % e)
+                continue
 
         start = time.time()
         while time.time() - start < self.login_timeout:
@@ -273,8 +341,15 @@ class JDDrissionPageScraper:
 
     @staticmethod
     def _extract_product_id(url: str) -> str:
-        """从京东商品 URL 提取商品 ID。"""
+        """从京东商品 URL 提取商品 ID（支持大陆版 jd.com 和港澳版 jd.hk）。"""
+        # 港澳版: hk.jd.com/Product-100012345678.html 或 www.jd.hk/product/...
+        m = re.search(r"jd\.hk/[^\d]*(\d{5,})", url)
+        if m:
+            return m.group(1)
         m = re.search(r"item\.jd\.com/(\d+)", url)
+        if m:
+            return m.group(1)
+        m = re.search(r"hk\.jd\.com/(\d+)", url)
         if m:
             return m.group(1)
         m = re.search(r"/(\d{5,})\.html", url)
@@ -284,6 +359,9 @@ class JDDrissionPageScraper:
         if m:
             return m.group(1)
         m = re.search(r"product/(\d+)", url)
+        if m:
+            return m.group(1)
+        m = re.search(r"(\d{6,})", url)
         if m:
             return m.group(1)
         return ""
@@ -361,7 +439,7 @@ class JDDrissionPageScraper:
                                 except Exception:
                                     continue
 
-                            if not text or len(text) < 3:
+                            if not text or len(text) < 8:
                                 continue
 
                             # 尝试提取评分（星级）
@@ -465,7 +543,7 @@ class JDDrissionPageScraper:
                 except Exception:
                     pass
 
-        return list(reviews.values())
+        return list(reviews.values())[:self.max_reviews]
 
     # ------------------------------------------------------------------
     # 截图兜底
@@ -590,14 +668,31 @@ class JDDrissionPageScraper:
             self._tab.get(product_url)
             time.sleep(random.uniform(2.0, 4.0))
 
+            # 检测是否被重定向到港澳版
+            region = self._detect_region()
+            if region == "hk":
+                print("[jd-dp] 当前为港澳版京东，适配港澳版页面结构")
+
             # 处理可能的滑块
             self._handle_verify()
 
-            # 5. 尝试获取商品名称
+            # 5. 尝试获取商品名称（大陆版 + 港澳版选择器）
             try:
-                title_ele = self._tab.ele("css:.sku-name, #name h1, .product-intro .sku-name", timeout=5)
-                if title_ele:
-                    self._product_name = title_ele.text.strip()
+                title_selectors = (
+                    "css:.sku-name, #name h1, .product-intro .sku-name",
+                    "css:.itemInfo-wrap .sku-name",
+                    "css:[class*='goodsName']",
+                    "css:[class*='product-name']",
+                    "css:.product-intro .sku-name",
+                    "css:h1",
+                )
+                for ts in title_selectors:
+                    title_ele = self._tab.ele(ts, timeout=2)
+                    if title_ele:
+                        txt = title_ele.text.strip()
+                        if txt and len(txt) > 2:
+                            self._product_name = txt.split("\n")[0]
+                            break
             except Exception:
                 pass
 
@@ -610,15 +705,33 @@ class JDDrissionPageScraper:
                     pass
                 time.sleep(random.uniform(0.8, 1.5))
 
-            # 7. 等待评论区出现
+            # 7. 等待评论区出现（大陆版 + 港澳版多种选择器）
             comment_root = None
-            try:
-                comment_root = self._tab.ele(COMMENT_ROOT_XPATH, timeout=10)
-            except Exception:
-                pass
+            for cr_xpath in (
+                COMMENT_ROOT_XPATH,
+                "x://div[@id='comment']",
+                "x://div[contains(@class,'comment')]",
+                "x://div[contains(@class,'Comment')]",
+                "x://div[contains(@id,'comment')]",
+                "x://div[contains(@class,'review')]",
+                "x://div[contains(@class,'evaluation')]",
+            ):
+                try:
+                    comment_root = self._tab.ele(cr_xpath, timeout=3)
+                    if comment_root:
+                        break
+                except Exception:
+                    continue
 
             if not comment_root:
-                print("[jd-dp] 未找到评论区，尝试截图兜底")
+                print("[jd-dp] 未找到评论区，保存页面HTML用于诊断...")
+                self._dump_page_html(product_id)
+                print("[jd-dp] 尝试从页面全局提取评论...")
+                reviews = self._extract_reviews_global(product_url, product_id)
+                if reviews:
+                    print("[jd-dp] 全局提取到 %d 条评论" % len(reviews))
+                    return reviews
+                print("[jd-dp] 全局提取失败，截图兜底")
                 self._capture_screenshots(product_url, product_id)
                 return []
 
@@ -629,6 +742,21 @@ class JDDrissionPageScraper:
                 all_btn = self._tab.ele(ALL_BTN_XPATH, timeout=5)
             except Exception:
                 pass
+
+            if not all_btn:
+                for btn_xpath in (
+                    "x://a[contains(text(),'全部评价')]",
+                    "x://a[contains(text(),'查看全部')]",
+                    "x://a[contains(text(),'更多评价')]",
+                    "x://span[contains(text(),'全部评价')]",
+                    "x://a[contains(@class,'all-btn')]",
+                ):
+                    try:
+                        all_btn = self._tab.ele(btn_xpath, timeout=2)
+                        if all_btn:
+                            break
+                    except Exception:
+                        continue
 
             if all_btn:
                 try:
@@ -681,19 +809,197 @@ class JDDrissionPageScraper:
             # 浏览器会在 Streamlit session 结束时由 GC 清理
             pass
 
-        return reviews
+        # 最终去重 + 截断（不凑数，有多少返回多少）
+        final = []
+        _seen_text = set()
+        for r in reviews:
+            t = (r.get("review_text") or "").strip()
+            if not t or len(t) < 5 or t in _seen_text:
+                continue
+            _seen_text.add(t)
+            final.append(r)
+        return final[:self.max_reviews]
+
+    def _dump_page_html(self, product_id: str):
+        """保存当前页面 HTML 到 debug/ 目录，用于诊断页面结构。"""
+        try:
+            debug_dir = PROJECT_ROOT / "debug"
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            import datetime
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            html_file = debug_dir / f"jd_dp_{product_id}_{ts}.html"
+            html = self._tab.html or ""
+            html_file.write_text(html, encoding="utf-8")
+            print("[jd-dp] 页面HTML已保存: %s (%d 字符)" % (html_file, len(html)))
+            # 同时保存当前URL
+            url_file = debug_dir / f"jd_dp_{product_id}_{ts}_url.txt"
+            url_file.write_text(self._tab.url or "", encoding="utf-8")
+        except Exception as e:
+            print("[jd-dp] 保存HTML失败: %s" % e)
+
+    def _extract_reviews_global(self, product_url: str, product_id: str) -> List[Dict]:
+        """全局兜底：用JS扫描页面中所有可能是评论的元素。
+        严格过滤：必须有星级图标 + 中文文本 >= 15字 + 非黑名单内容。"""
+        try:
+            js = r"""
+            (function() {
+                var results = [];
+                var seen = {};
+                var blacklist = [
+                    'header', 'nav', 'footer', '.header', '.footer', '.nav',
+                    '.crumb', '.breadcrumb', '.filter', '.sort', '.tab',
+                    '.sku-name', '#name', '.product-intro', '.itemInfo-wrap',
+                    '.shop-name', '.price', '.btn-special1',
+                    '.comment-filter', '.comment-sort', '.comment-tab',
+                    '.comment-header', '.comment-score', '.comment-percent',
+                    '.comments-info', '.comment-column', '#comment-form',
+                    '.mc', '.mt', '.tb', '.tc', '.tm'
+                ];
+                function isBlacklisted(el) {
+                    for (var b = 0; b < blacklist.length; b++) {
+                        try { if (el.closest(blacklist[b])) return true; } catch(e) {}
+                    }
+                    return false;
+                }
+                var selectors = [
+                    '.comment-item',
+                    '.J-comments-list .comment-item',
+                    '#comment .comment-item',
+                    '.comments-list .comment-item',
+                    '.J_commentsList .comment-item',
+                    '.comment-list .comment-item',
+                    'li.comment-item',
+                    'div[class*="commentItem"]',
+                    'div[class*="comment-item"]',
+                    'div[class*="CommentItem"]',
+                    'div[class*="review-item"]',
+                    'div[class*="ReviewItem"]',
+                    'div[class*="evaluation-item"]',
+                    '[class*="commentList"] li',
+                    '[class*="CommentList"] li',
+                    '[class*="reviewList"] li',
+                    '.rate-list li',
+                    'ul[class*="comment"] li',
+                    'ul[class*="Comment"] li'
+                ];
+                var nodes = [];
+                var nodeSet = new Set();
+                for (var s = 0; s < selectors.length; s++) {
+                    try {
+                        var found = document.querySelectorAll(selectors[s]);
+                        for (var i = 0; i < found.length; i++) {
+                            if (!nodeSet.has(found[i])) {
+                                nodeSet.add(found[i]);
+                                nodes.push(found[i]);
+                            }
+                        }
+                    } catch(e) {}
+                }
+                var skipWords = ['登录', '注册', '购物车', '配送至', '优惠券', '满减',
+                                 '秒杀', '加入购物车', '商品评价', '好评率', '晒图',
+                                 '视频购买', '降价通知', '促销', '增值服务', '京豆',
+                                 '白条', '免邮', '搜本店', '搜全站'];
+                for (var n = 0; n < nodes.length; n++) {
+                    var el = nodes[n];
+                    if (isBlacklisted(el)) continue;
+                    var text = (el.innerText || el.textContent || '').trim();
+                    if (!text || text.length < 15 || text.length > 2000) continue;
+                    if (seen[text]) continue;
+                    if (!/[\u4e00-\u9fa5]/.test(text)) continue;
+                    var rating = 0;
+                    var cls = el.className || '';
+                    var starMatch = cls.match(/star(\d)/) || cls.match(/star-(\d)/);
+                    if (starMatch) {
+                        rating = parseInt(starMatch[1]);
+                    } else {
+                        var starEl = el.querySelector('[class*="star"]');
+                        if (starEl) {
+                            var sc = starEl.className || '';
+                            var m = sc.match(/star(\d)/) || sc.match(/star-(\d)/);
+                            if (m) rating = parseInt(m[1]);
+                        }
+                    }
+                    if (rating === 0) continue;
+                    var content = text;
+                    var contentEl = el.querySelector('[class*="comment-con"],[class*="commentCon"],[class*="commentContent"],[class*="comment_content"],[class*="review-content"],[class*="reviewContent"],[class*="rate-content"],[class*="evaluation-content"]');
+                    if (contentEl) {
+                        content = (contentEl.innerText || '').trim();
+                    } else {
+                        var pEl = el.querySelector('p');
+                        if (pEl) content = (pEl.innerText || '').trim();
+                    }
+                    if (!content || content.length < 10) continue;
+                    var head = content.substring(0, 20);
+                    var skip = false;
+                    for (var k = 0; k < skipWords.length; k++) {
+                        if (head.indexOf(skipWords[k]) !== -1) { skip = true; break; }
+                    }
+                    if (skip) continue;
+                    var userEl = el.querySelector('[class*="user-info"],[class*="u-name"],[class*="nickname"],[class*="userName"]');
+                    var userName = userEl ? (userEl.innerText || '').trim().substring(0, 50) : '匿名用户';
+                    if (!userName) userName = '匿名用户';
+                    var dateEl = el.querySelector('[class*="date"],[class*="time"],time,.order-info span');
+                    var dateStr = dateEl ? (dateEl.innerText || '').trim() : '';
+                    seen[text] = true;
+                    results.push({content: content.substring(0, 500), rating: rating, user: userName, date: dateStr});
+                }
+                return JSON.stringify(results.slice(0, 100));
+            })();
+            """
+            raw = self._tab.run_js(js)
+            if not raw:
+                return []
+            import json as _json
+            items = _json.loads(raw) if isinstance(raw, str) else raw
+            reviews = []
+            seen = set()
+            for item in items:
+                text = item.get("content", "").strip()
+                if not text or text in seen or len(text) < 10:
+                    continue
+                seen.add(text)
+                reviews.append(self._format_review(
+                    text=text,
+                    rating=item.get("rating", 5),
+                    user_name=item.get("user", "匿名用户"),
+                    review_date=item.get("date", ""),
+                    sku="",
+                    product_id=product_id,
+                    product_url=product_url,
+                ))
+            print("[jd-dp] 全局提取: JS扫描到 %d 条，有效 %d 条" % (len(items), len(reviews)))
+            return reviews[:self.max_reviews]
+        except Exception as e:
+            print("[jd-dp] 全局提取异常: %s" % e)
+            return []
 
     def _extract_reviews_from_page(self, product_url: str, product_id: str) -> List[Dict]:
+
         """兜底：从商品页面直接提取评论（非弹窗模式）。"""
         reviews = []
         seen_texts = set()
 
-        # 尝试多种评论容器选择器
+        # 尝试多种评论容器选择器（大陆版 + 港澳版 + 通用）
         selectors = [
             "css:.comment-item",
             "css:.J-comments-list .comment-item",
             "css:#comment .comment-item",
             "css:.comments-list .comment-item",
+            "css:.J_commentsList .comment-item",
+            "css:.comment-list .comment-item",
+            "css:li.comment-item",
+            "css:div[class*='commentItem']",
+            "css:div[class*='comment-item']",
+            "css:div[class*='CommentItem']",
+            "css:div[class*='review-item']",
+            "css:div[class*='ReviewItem']",
+            "css:div[class*='evaluation-item']",
+            "css:[class*='commentList'] li",
+            "css:[class*='CommentList'] li",
+            "css:[class*='reviewList'] li",
+            "css:.rate-list li",
+            "css:ul[class*='comment'] li",
+            "css:ul[class*='Comment'] li",
         ]
 
         for sel in selectors:
@@ -705,7 +1011,15 @@ class JDDrissionPageScraper:
                 for item in items:
                     try:
                         text = ""
-                        for desc_sel in ["css:.comment-con", "css:p.comment-con", RATE_DESC_CSS]:
+                        for desc_sel in [
+                            "css:.comment-con", "css:p.comment-con",
+                            "css:[class*='comment-con']", "css:[class*='commentCon']",
+                            "css:[class*='commentContent']", "css:[class*='comment_content']",
+                            "css:[class*='review-content']", "css:[class*='reviewContent']",
+                            "css:[class*='rate-content']", "css:[class*='evaluation-content']",
+                            "css:.J_commentsList .comment-con",
+                            "css:p", RATE_DESC_CSS,
+                        ]:
                             try:
                                 ele = item.ele(desc_sel, timeout=0.5)
                                 if ele:
@@ -715,7 +1029,17 @@ class JDDrissionPageScraper:
                             except Exception:
                                 continue
 
-                        if not text or len(text) < 3 or text in seen_texts:
+                        if not text or len(text) < 10 or text in seen_texts:
+                            continue
+                        # 必须包含中文字符
+                        if not re.search(r"[\u4e00-\u9fa5]", text):
+                            continue
+                        # 黑名单关键词
+                        _skip_kw = ("登录", "注册", "购物车", "配送至", "优惠券", "满减",
+                                    "秒杀", "加入购物车", "商品评价", "好评率",
+                                    "视频购买", "降价通知", "促销", "增值服务",
+                                    "白条", "免邮", "搜本店", "搜全站")
+                        if text.startswith(_skip_kw):
                             continue
                         seen_texts.add(text)
 
