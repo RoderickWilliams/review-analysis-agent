@@ -648,19 +648,64 @@ def page_product_url():
 
                 if detected == "taobao":
                     ck = scraper._platform_cookies.get("taobao", {})
-                    try:
-                        from scrapers.taobao_playwright_scraper import TaobaoPlaywrightScraper
-                        pw_scraper = TaobaoPlaywrightScraper(headless=False, max_reviews=_max_reviews)
-                        reviews = pw_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
-                    except Exception:
-                        reviews = []
-                    if not reviews:
+                    tb_stage_key = "_tb_confirm_stage"
+                    tb_stage = st.session_state.get(tb_stage_key, "pw")
+                    pw_scraper = st.session_state.get("_tb_pw_scraper")
+
+                    if tb_stage == "pw":
+                        try:
+                            from scrapers.taobao_playwright_scraper import TaobaoPlaywrightScraper
+                            pw_scraper = TaobaoPlaywrightScraper(headless=False, max_reviews=_max_reviews)
+                            st.session_state["_tb_pw_scraper"] = pw_scraper
+                            with st.spinner("正在启动浏览器采集淘宝评论..."):
+                                reviews = pw_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
+                        except Exception:
+                            reviews = []
+                        if reviews:
+                            st.session_state[tb_stage_key] = "done"
+                        else:
+                            st.session_state[tb_stage_key] = "pw_confirm"
+                            st.rerun()
+
+                    elif tb_stage == "pw_retry":
+                        # 用户在浏览器中手动滚动/登录后，重新运行同一 scraper
+                        with st.spinner("正在重新提取淘宝评论..."):
+                            try:
+                                reviews = pw_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
+                            except Exception:
+                                reviews = []
+                        if reviews:
+                            st.session_state[tb_stage_key] = "done"
+                        else:
+                            st.session_state[tb_stage_key] = "v2"
+                            st.rerun()
+
+                    elif tb_stage == "pw_confirm":
+                        st.warning("🤖 浏览器未能自动提取到淘宝评论。请查看已打开的浏览器窗口：")
+                        st.info("👉 如果页面上**能看到评论**，请先滚动评论区/完成登录，然后点击「我已看到评论，重新提取」。\n\n"
+                                "👉 如果页面上**确实没有评论**（需要登录/被反爬/商品无评论），点击「继续降级」。")
+                        col_a, col_b = st.columns(2)
+                        if col_a.button("✅ 我已看到评论，重新提取", type="primary", key="btn_tb_pw_retry"):
+                            st.session_state[tb_stage_key] = "pw_retry"
+                            st.rerun()
+                        if col_b.button("⏭️ 继续降级", key="btn_tb_pw_continue"):
+                            st.session_state[tb_stage_key] = "v2"
+                            st.rerun()
+                        st.stop()
+
+                    elif tb_stage == "v2":
                         try:
                             from scrapers.taobao_comment_v2 import TaobaoCommentScraperV2
                             reviews = TaobaoCommentScraperV2().scrape(url, cookies=ck, max_reviews=_max_reviews)
                         except Exception:
                             reviews = []
-                    if not reviews and ck:
+                        if reviews:
+                            st.session_state[tb_stage_key] = "done"
+                        elif ck:
+                            st.session_state[tb_stage_key] = "tb_api"
+                            st.rerun()
+
+                    elif tb_stage == "tb_api":
                         try:
                             from scrapers.taobao_scraper import TaobaoScraper
                             tb = TaobaoScraper()
@@ -668,19 +713,129 @@ def page_product_url():
                             reviews = tb.scrape_with_cookies(url, ck, max_reviews=_max_reviews)
                         except Exception:
                             reviews = []
+                        st.session_state[tb_stage_key] = "done"
+
+                    if st.session_state.get(tb_stage_key) == "done":
+                        if "_tb_confirm_stage" in st.session_state:
+                            del st.session_state["_tb_confirm_stage"]
+                        st.session_state.pop("_tb_pw_scraper", None)
                 elif detected == "jd":
                     ck = scraper._platform_cookies.get("jd", {})
                     jd_scraper = None
                     try:
-                        # 统一降级调度：DrissionPage（真实 Chrome）→ Patchright → API 直连
                         from scrapers.jd_unified_scraper import JDUnifiedScraper
                         jd_scraper = JDUnifiedScraper(headless=False, max_reviews=_max_reviews)
-                        with st.spinner("正在采集京东评论（真实 Chrome → 反检测浏览器 → API 三级降级）..."):
-                            reviews = jd_scraper.scrape(url, cookies=ck, max_reviews=_max_reviews)
-                        # 显示每级结果
-                        for method, result in jd_scraper.method_results.items():
-                            icon = "✅" if "成功" in result else "⚠️"
-                            st.caption(f"{icon} {method}: {result}")
+                        st.session_state["_jd_scraper_ref"] = jd_scraper
+                        st.session_state["_jd_url"] = url
+
+                        # 阶段1: DrissionPage
+                        confirm_key = "_jd_confirm_stage"
+                        stage = st.session_state.get(confirm_key, "dp")
+
+                        if stage == "dp":
+                            with st.spinner("正在启动真实 Chrome 采集京东评论..."):
+                                dp_reviews = jd_scraper._scrape_drissionpage(url, ck)
+                            jd_scraper._method_results["drissionpage"] = (
+                                "成功 %d 条" % len(dp_reviews) if dp_reviews else "返回 0 条"
+                            )
+                            if dp_reviews:
+                                reviews = dp_reviews
+                                jd_scraper._last_method = "drissionpage"
+                                st.session_state[confirm_key] = "done"
+                            else:
+                                st.session_state[confirm_key] = "dp_confirm"
+                                st.rerun()
+
+                        elif stage == "dp_reextract":
+                            with st.spinner("正在从浏览器重新提取评论..."):
+                                reviews = jd_scraper.reextract_last(url)
+                            if reviews:
+                                jd_scraper._method_results["drissionpage"] = "重新提取成功 %d 条" % len(reviews)
+                                jd_scraper._last_method = "drissionpage"
+                                st.session_state[confirm_key] = "done"
+                            else:
+                                st.session_state[confirm_key] = "pw"
+                                st.rerun()
+
+                        elif stage == "dp_confirm":
+                            st.warning("🤖 Chrome 浏览器未能自动提取到评论。请查看已打开的浏览器窗口：")
+                            st.info("👉 如果页面上**能看到评论**，请先滚动评论区确保内容加载完毕，然后点击「我已看到评论，重新提取」。\n\n"
+                                    "👉 如果页面上**确实没有评论**（需要登录/被反爬/商品无评论），点击「继续降级」尝试下一种方式。")
+                            col_a, col_b = st.columns(2)
+                            if col_a.button("✅ 我已看到评论，重新提取", type="primary", key="btn_dp_reextract"):
+                                st.session_state[confirm_key] = "dp_reextract"
+                                st.rerun()
+                            if col_b.button("⏭️ 继续降级到反检测浏览器", key="btn_dp_continue"):
+                                st.session_state[confirm_key] = "pw"
+                                st.rerun()
+                            # 显示已尝试的方法状态
+                            for method, result in jd_scraper._method_results.items():
+                                icon = "✅" if "成功" in result else "⚠️"
+                                st.caption(f"{icon} {method}: {result}")
+                            st.stop()
+
+                        elif stage == "pw":
+                            with st.spinner("正在启动反检测浏览器采集..."):
+                                pw_reviews = jd_scraper._scrape_playwright(url, ck)
+                            jd_scraper._method_results["playwright"] = (
+                                "成功 %d 条" % len(pw_reviews) if pw_reviews else "返回 0 条"
+                            )
+                            if pw_reviews:
+                                reviews = pw_reviews
+                                jd_scraper._last_method = "playwright"
+                                st.session_state[confirm_key] = "done"
+                            else:
+                                st.session_state[confirm_key] = "pw_confirm"
+                                st.rerun()
+
+                        elif stage == "pw_reextract":
+                            with st.spinner("正在从反检测浏览器重新提取..."):
+                                reviews = jd_scraper.reextract_last(url)
+                            if reviews:
+                                jd_scraper._method_results["playwright"] = "重新提取成功 %d 条" % len(reviews)
+                                jd_scraper._last_method = "playwright"
+                                st.session_state[confirm_key] = "done"
+                            else:
+                                st.session_state[confirm_key] = "api"
+                                st.rerun()
+
+                        elif stage == "pw_confirm":
+                            st.warning("🤖 反检测浏览器也未能自动提取到评论。请查看已打开的浏览器窗口：")
+                            st.info("👉 如果页面上**能看到评论**，请先滚动评论区确保内容加载完毕，然后点击「我已看到评论，重新提取」。\n\n"
+                                    "👉 如果页面上**确实没有评论**，点击「继续降级」尝试 API 直连。")
+                            col_a, col_b = st.columns(2)
+                            if col_a.button("✅ 我已看到评论，重新提取", type="primary", key="btn_pw_reextract"):
+                                st.session_state[confirm_key] = "pw_reextract"
+                                st.rerun()
+                            if col_b.button("⏭️ 继续降级到 API 直连", key="btn_pw_continue"):
+                                st.session_state[confirm_key] = "api"
+                                st.rerun()
+                            for method, result in jd_scraper._method_results.items():
+                                icon = "✅" if "成功" in result else "⚠️"
+                                st.caption(f"{icon} {method}: {result}")
+                            st.stop()
+
+                        elif stage == "api":
+                            with st.spinner("正在通过 API 直连采集..."):
+                                reviews = jd_scraper._scrape_api(url, ck)
+                            jd_scraper._method_results["api"] = (
+                                "成功 %d 条" % len(reviews) if reviews else "返回 0 条"
+                            )
+                            if reviews:
+                                jd_scraper._last_method = "api"
+                            st.session_state[confirm_key] = "done"
+
+                        elif stage == "done":
+                            pass  # reviews already set
+
+                        # 显示每级结果（完成后）
+                        if st.session_state.get(confirm_key) == "done":
+                            for method, result in jd_scraper._method_results.items():
+                                icon = "✅" if "成功" in result else "⚠️"
+                                st.caption(f"{icon} {method}: {result}")
+                            # 清理确认状态
+                            del st.session_state[confirm_key]
+
                     except Exception as e:
                         st.warning(f"统一抓取器异常: {e}")
                         reviews = []
@@ -753,10 +908,15 @@ def page_product_url():
             st.error(f"Agent初始化失败: {err}")
             return
 
-        with st.spinner(f"正在分析 {len(reviews)} 条评论..."):
+        with st.spinner(f"正在分析 {len(reviews)} 条评论（并发处理）..."):
+            from concurrent.futures import ThreadPoolExecutor, as_completed
             progress = st.progress(0)
-            results = []
-            for i, review in enumerate(reviews):
+            results = [None] * len(reviews)
+            done_count = 0
+            auth_failed = False
+
+            def _analyze_one(idx_review):
+                idx, review = idx_review
                 try:
                     result = agent.comprehensive_analysis(
                         review_text=review.get("review_text", ""),
@@ -766,12 +926,29 @@ def page_product_url():
                     )
                     sa = result.get("sentiment_analysis", {})
                     if sa.get("error") and sa.get("error_type") == "auth":
-                        st.error("API Key 认证失败！请检查 .env 配置。")
-                        st.stop()
-                    results.append(result)
+                        return idx, None, "auth"
+                    return idx, result, None
                 except Exception as e:
-                    st.warning(f"第 {i+1} 条分析失败: {str(e)[:100]}")
-                progress.progress((i + 1) / len(reviews))
+                    return idx, None, str(e)[:100]
+
+            max_workers = min(8, max(2, len(reviews)))
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(_analyze_one, (i, r)): i for i, r in enumerate(reviews)}
+                for future in as_completed(futures):
+                    idx, result, err = future.result()
+                    done_count += 1
+                    if err == "auth":
+                        auth_failed = True
+                    elif err:
+                        st.warning(f"第 {idx+1} 条分析失败: {err}")
+                    else:
+                        results[idx] = result
+                    progress.progress(done_count / len(reviews))
+
+            if auth_failed:
+                st.error("API Key 认证失败！请检查 .env 配置。")
+                st.stop()
+            results = [r for r in results if r is not None]
 
         with st.spinner("正在生成口碑报告..."):
             report = agent.generate_report(results, product_name=reviews[0].get("product_name", "产品"))
@@ -867,10 +1044,14 @@ def page_screenshot():
                 st.error(f"Agent 初始化失败: {err}")
                 return
 
-            with st.spinner(f"正在分析 {len(reviews)} 条评论..."):
+            with st.spinner(f"正在分析 {len(reviews)} 条评论（并发处理）..."):
+                from concurrent.futures import ThreadPoolExecutor, as_completed
                 progress = st.progress(0)
-                results = []
-                for i, review in enumerate(reviews):
+                results = [None] * len(reviews)
+                done_count = 0
+
+                def _analyze_one(idx_review):
+                    idx, review = idx_review
                     try:
                         result = agent.comprehensive_analysis(
                             review_text=review.get("review_text", ""),
@@ -878,10 +1059,22 @@ def page_screenshot():
                             platform=review.get("platform", "未知"),
                             product_name=review.get("product_name", ""),
                         )
-                        results.append(result)
+                        return idx, result, None
                     except Exception as e:
-                        st.warning(f"第 {i+1} 条失败: {str(e)[:100]}")
-                    progress.progress((i + 1) / len(reviews))
+                        return idx, None, str(e)[:100]
+
+                max_workers = min(8, max(2, len(reviews)))
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    futures = {executor.submit(_analyze_one, (i, r)): i for i, r in enumerate(reviews)}
+                    for future in as_completed(futures):
+                        idx, result, err = future.result()
+                        done_count += 1
+                        if err:
+                            st.warning(f"第 {idx+1} 条失败: {err}")
+                        else:
+                            results[idx] = result
+                        progress.progress(done_count / len(reviews))
+                results = [r for r in results if r is not None]
 
             report = agent.generate_report(results, product_name=reviews[0].get("product_name", "截图分析"))
             try:

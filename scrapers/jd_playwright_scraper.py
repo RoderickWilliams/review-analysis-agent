@@ -1161,6 +1161,37 @@ class JDPlaywrightScraper:
 
         return all_reviews[:target]
 
+
+    def reextract_current(self, product_url: str = "", product_id: str = "") -> List[Dict]:
+        """从当前已打开的浏览器页面重新提取评论。"""
+        if not self._browser or not self._page:
+            return []
+        reviews = []
+        try:
+            # 尝试 DOM 提取
+            dom_reviews = self._extract_comments_from_dom()
+            if dom_reviews:
+                reviews = dom_reviews
+        except Exception:
+            pass
+        if not reviews:
+            try:
+                # 尝试 XHR 拦截数据
+                xhr_reviews = self._get_xhr_comments()
+                if xhr_reviews:
+                    reviews = xhr_reviews
+            except Exception:
+                pass
+        # 去重截断
+        final = []
+        seen = set()
+        for r in reviews:
+            t = (r.get("review_text") or "").strip()
+            if t and len(t) >= 5 and t not in seen:
+                seen.add(t)
+                final.append(r)
+        return final[:self.max_reviews]
+
     def get_screenshots(self) -> List[str]:
         """返回截图兜底模式生成的截图路径列表"""
         return self._screenshots

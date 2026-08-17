@@ -49,6 +49,7 @@ class JDUnifiedScraper:
         self._last_method: Optional[str] = None
         self._method_results: Dict[str, str] = {}
         self._active_scrapers: List = []  # 保持实例引用，防止GC回收导致浏览器秒关
+        self._scraper_instances: Dict[str, object] = {}  # method -> scraper，供 reextract 使用
 
     # ------------------------------------------------------------------
     # 各级抓取器（懒加载）
@@ -62,6 +63,7 @@ class JDUnifiedScraper:
             login_timeout=self.login_timeout,
         )
         self._active_scrapers.append(scraper)  # 保持引用，防止GC关闭浏览器
+        self._scraper_instances["drissionpage"] = scraper
         try:
             reviews = scraper.scrape(url, cookies=cookies, max_reviews=self.max_reviews)
             self._screenshots.extend(scraper.get_screenshots())
@@ -77,6 +79,7 @@ class JDUnifiedScraper:
             max_reviews=self.max_reviews,
         )
         self._active_scrapers.append(scraper)  # 保持引用
+        self._scraper_instances["playwright"] = scraper
         try:
             reviews = scraper.scrape(url, cookies=cookies, max_reviews=self.max_reviews)
             self._screenshots.extend(scraper.get_screenshots())
@@ -137,6 +140,19 @@ class JDUnifiedScraper:
                 traceback.print_exc()
 
         print("[jd-unified] 所有方式均失败，共收集 %d 张截图可供 OCR" % len(self._screenshots))
+        return []
+
+
+    def reextract_last(self, product_url: str = "", product_id: str = "") -> List[Dict]:
+        """从最后一次使用的浏览器实例重新提取评论（用户手动确认后调用）。"""
+        for method in reversed(self.methods):
+            inst = self._scraper_instances.get(method)
+            if inst and hasattr(inst, "reextract_current"):
+                print("[jd-unified] 从 %s 浏览器重新提取..." % method)
+                try:
+                    return inst.reextract_current(product_url, product_id)
+                except Exception as e:
+                    print("[jd-unified] reextract 异常: %s" % e)
         return []
 
     def get_screenshots(self) -> List[str]:

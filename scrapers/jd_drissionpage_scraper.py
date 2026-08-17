@@ -530,9 +530,9 @@ class JDDrissionPageScraper:
                 pass
 
             # 等待推进
-            wait_until = time.time() + 3
+            wait_until = time.time() + 1.5
             while time.time() < wait_until:
-                time.sleep(0.2)
+                time.sleep(0.1)
                 # 简单检查：卡片数量是否变化
                 try:
                     overlay = self._tab.ele(RATE_LIST_XPATH, timeout=0.5)
@@ -575,7 +575,7 @@ class JDDrissionPageScraper:
                         self._tab.scroll.down(3)
                     except Exception:
                         pass
-                time.sleep(1)
+                time.sleep(0.4)
         except Exception as e:
             print("[jd-dp] 截图兜底异常: %s" % e)
 
@@ -656,7 +656,7 @@ class JDDrissionPageScraper:
             # 2. 先访问京东首页
             print("[jd-dp] 打开京东首页...")
             self._tab.get(JD_HOMEPAGE)
-            time.sleep(random.uniform(1.5, 3.0))
+            time.sleep(random.uniform(0.3, 0.6))
 
             # 3. 确保已登录
             if not self._ensure_logged_in():
@@ -666,7 +666,7 @@ class JDDrissionPageScraper:
             # 4. 访问商品详情页
             print("[jd-dp] 打开商品页: %s" % product_url)
             self._tab.get(product_url)
-            time.sleep(random.uniform(2.0, 4.0))
+            time.sleep(random.uniform(1.0, 2.0))
 
             # 检测是否被重定向到港澳版
             region = self._detect_region()
@@ -698,12 +698,12 @@ class JDDrissionPageScraper:
 
             # 6. 滚动页面触发评论区加载
             print("[jd-dp] 滚动页面加载评论区...")
-            for _ in range(3):
+            for _ in range(2):
                 try:
                     self._tab.scroll.down(5)
                 except Exception:
                     pass
-                time.sleep(random.uniform(0.8, 1.5))
+                time.sleep(random.uniform(0.3, 0.6))
 
             # 7. 等待评论区出现（大陆版 + 港澳版多种选择器）
             comment_root = None
@@ -717,7 +717,7 @@ class JDDrissionPageScraper:
                 "x://div[contains(@class,'evaluation')]",
             ):
                 try:
-                    comment_root = self._tab.ele(cr_xpath, timeout=3)
+                    comment_root = self._tab.ele(cr_xpath, timeout=1.5)
                     if comment_root:
                         break
                 except Exception:
@@ -739,7 +739,7 @@ class JDDrissionPageScraper:
             print("[jd-dp] 尝试打开全部评论弹窗...")
             all_btn = None
             try:
-                all_btn = self._tab.ele(ALL_BTN_XPATH, timeout=5)
+                all_btn = self._tab.ele(ALL_BTN_XPATH, timeout=3)
             except Exception:
                 pass
 
@@ -762,7 +762,7 @@ class JDDrissionPageScraper:
                 try:
                     all_btn.click()
                     print("[jd-dp] 已点击'全部评论'")
-                    time.sleep(random.uniform(2.0, 3.0))
+                    time.sleep(random.uniform(0.8, 1.5))
                 except Exception as e:
                     print("[jd-dp] 点击全部评论失败: %s" % e)
 
@@ -772,7 +772,7 @@ class JDDrissionPageScraper:
             # 9. 等待评论弹窗出现
             popup_appeared = False
             try:
-                popup_appeared = self._tab.wait.ele_displayed(RATE_LIST_XPATH, timeout=10)
+                popup_appeared = self._tab.wait.ele_displayed(RATE_LIST_XPATH, timeout=6)
             except Exception:
                 pass
 
@@ -818,6 +818,46 @@ class JDDrissionPageScraper:
                 continue
             _seen_text.add(t)
             final.append(r)
+        return final[:self.max_reviews]
+
+
+    def reextract_current(self, product_url: str = "", product_id: str = "") -> List[Dict]:
+        """从当前已打开的浏览器页面重新提取评论（用于用户手动确认后重试）。
+        不重新打开浏览器，不重新导航，直接从当前 DOM 提取。
+        """
+        if not self._tab:
+            return []
+        if not product_id:
+            product_id = self._extract_product_id(product_url or self._tab.url or "")
+        if not product_url:
+            product_url = self._tab.url or ""
+
+        # 检测弹窗是否存在
+        reviews = []
+        try:
+            popup = self._tab.ele(RATE_LIST_XPATH, timeout=1)
+            if popup:
+                print("[jd-dp-reextract] 弹窗存在，从弹窗提取...")
+                reviews = self._extract_reviews_from_popup(product_url, product_id)
+        except Exception:
+            pass
+
+        if not reviews:
+            print("[jd-dp-reextract] 从页面全局提取...")
+            reviews = self._extract_reviews_global(product_url, product_id)
+
+        if not reviews:
+            print("[jd-dp-reextract] 从页面直接提取...")
+            reviews = self._extract_reviews_from_page(product_url, product_id)
+
+        # 去重截断
+        final = []
+        seen = set()
+        for r in reviews:
+            t = (r.get("review_text") or "").strip()
+            if t and len(t) >= 5 and t not in seen:
+                seen.add(t)
+                final.append(r)
         return final[:self.max_reviews]
 
     def _dump_page_html(self, product_id: str):
