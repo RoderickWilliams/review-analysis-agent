@@ -25,11 +25,18 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="用户反馈智能分析 Agent",
+    page_title="ReviewPilot - 用户反馈智能分析",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Force light theme before any rendering
+st._config.set_option("theme.base", "light")
+st._config.set_option("theme.primaryColor", "#667eea")
+st._config.set_option("theme.backgroundColor", "#f0f2f5")
+st._config.set_option("theme.secondaryBackgroundColor", "#ffffff")
+st._config.set_option("theme.textColor", "#1e293b")
 
 # ──────────────────────────────────────────────────────────────
 # 模块导入
@@ -65,111 +72,119 @@ def get_agent():
 def apply_styles():
     st.markdown("""
     <style>
-    /* ===== 全局字体与背景 ===== */
+    /* ===== Force light theme root ===== */
+    :root {
+        --background: #f0f2f5;
+        --secondary-background: #ffffff;
+        --text: #1e293b;
+        --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-family: var(--font) !important;
+        color: #1e293b !important;
     }
 
     .stApp {
-        background: #f0f2f5;
+        background: #f0f2f5 !important;
+        color: #1e293b !important;
     }
 
-    /* ===== 隐藏 Streamlit 默认元素 ===== */
+    /* ===== Hide default elements ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header[data-testid="stHeader"] {background: transparent;}
+    header[data-testid="stHeader"] {background: transparent !important;}
+    .stDeployButton {display: none !important;}
 
-    /* ===== 顶部品牌栏 ===== */
+    /* ===== ALL text in main area must be dark ===== */
+    .main .stMarkdown, .main .stMarkdown p,
+    .main .stMarkdown span, .main .stMarkdown li,
+    .main label, .main .stCaption, .main small,
+    .main .stText, .main p, .main span, .main li {
+        color: #334155 !important;
+    }
+    .main h1, .main h2, .main h3, .main h4, .main h5, .main h6 {
+        color: #0f172a !important;
+    }
+
+    /* ===== Brand bar ===== */
     .brand-bar {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        padding: 18px 32px;
-        border-radius: 0 0 16px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        padding: 20px 36px;
+        border-radius: 0 0 20px 20px;
+        display: flex; align-items: center; justify-content: space-between;
         margin: -16px -16px 24px -16px;
-        box-shadow: 0 4px 20px rgba(15, 52, 96, 0.3);
+        box-shadow: 0 6px 24px rgba(49, 46, 129, 0.35);
     }
-    .brand-left { display: flex; align-items: center; gap: 14px; }
+    .brand-left { display: flex; align-items: center; gap: 16px; }
     .brand-logo {
-        width: 44px; height: 44px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
+        width: 48px; height: 48px;
+        background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+        border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 22px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        font-size: 24px;
+        box-shadow: 0 4px 16px rgba(129, 140, 248, 0.5);
     }
-    .brand-title { color: #fff; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
-    .brand-subtitle { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
+    .brand-title { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+    .brand-subtitle { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 3px; }
     .brand-badge {
-        background: rgba(102, 126, 234, 0.2);
-        border: 1px solid rgba(102, 126, 234, 0.4);
-        color: #a5b4fc;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
+        background: rgba(129, 140, 248, 0.2);
+        border: 1px solid rgba(129, 140, 248, 0.5);
+        color: #c7d2fe;
+        padding: 6px 16px; border-radius: 20px;
+        font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
     }
 
-    /* ===== 侧边栏深色主题 ===== */
-    section[data-testid="stSidebar"] {
-        background: #1a1a2e !important;
-        border-right: 1px solid #2a2a4a;
+    /* ===== Sidebar - dark ===== */
+    section[data-testid="stSidebar"],
+    nav[data-testid="stSidebarNav"] {
+        background: #1e1b4b !important;
+        border-right: 1px solid #312e81;
     }
-    section[data-testid="stSidebar"] .stMarkdown,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] .stCaption {
-        color: rgba(255,255,255,0.75) !important;
+    section[data-testid="stSidebar"] * {
+        color: rgba(255,255,255,0.8) !important;
     }
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
     section[data-testid="stSidebar"] h3 {
         color: #fff !important;
     }
-    section[data-testid="stSidebar"] .stSelectbox > div > div {
-        background: rgba(255,255,255,0.08) !important;
-        border-color: rgba(255,255,255,0.12) !important;
-        color: #fff !important;
-    }
+    section[data-testid="stSidebar"] .stSelectbox > div > div,
     section[data-testid="stSidebar"] .stTextInput > div > div > input,
     section[data-testid="stSidebar"] .stTextArea > div > div > textarea {
-        background: rgba(255,255,255,0.08) !important;
-        border-color: rgba(255,255,255,0.12) !important;
+        background: rgba(255,255,255,0.1) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
         color: #fff !important;
+        border-radius: 8px !important;
     }
-    section[data-testid="stSidebar"] hr {
-        border-color: rgba(255,255,255,0.1) !important;
-    }
+    section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.12) !important; }
     section[data-testid="stSidebar"] .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        border: none !important;
-        color: #fff !important;
-        font-weight: 600 !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button:hover {
-        background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%) !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        border: none !important; color: #fff !important; font-weight: 600 !important;
+        border-radius: 8px !important;
     }
     section[data-testid="stSidebar"] .stExpander {
-        background: rgba(255,255,255,0.05) !important;
-        border-color: rgba(255,255,255,0.1) !important;
-        border-radius: 8px;
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 10px !important;
+    }
+    section[data-testid="stSidebar"] .stCheckbox label {
+        color: rgba(255,255,255,0.8) !important;
     }
 
-    /* ===== 导航 Tab 样式 ===== */
+    /* ===== Tabs - clean light ===== */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
+        gap: 6px;
         background: #fff;
-        padding: 8px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        margin-bottom: 20px;
+        padding: 6px;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        margin-bottom: 24px;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 8px !important;
-        padding: 10px 20px !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
         font-weight: 600 !important;
         font-size: 14px !important;
         color: #64748b !important;
@@ -181,184 +196,203 @@ def apply_styles():
         color: #1e293b !important;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
         color: #fff !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
 
-    /* ===== 卡片组件 ===== */
+    /* ===== Cards ===== */
     .ui-card {
         background: #fff;
-        border-radius: 14px;
-        padding: 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        border: 1px solid #eef0f4;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e8eaf0;
         margin-bottom: 20px;
-        transition: box-shadow 0.2s ease;
     }
-    .ui-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     .ui-card-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        font-size: 17px; font-weight: 700; color: #0f172a;
+        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
     }
 
-    /* ===== 数据统计卡片 ===== */
+    /* ===== Stat cards ===== */
     .stat-card {
         background: #fff;
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 14px;
+        padding: 22px 16px;
         text-align: center;
-        border: 1px solid #eef0f4;
+        border: 1px solid #e8eaf0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         transition: all 0.2s ease;
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-    .stat-card .stat-number { font-size: 32px; font-weight: 700; line-height: 1.2; }
-    .stat-card .stat-label { font-size: 13px; color: #94a3b8; margin-top: 6px; font-weight: 500; }
-    .stat-card .stat-icon { font-size: 20px; margin-bottom: 8px; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .stat-card .stat-number { font-size: 34px; font-weight: 700; line-height: 1.2; color: #1e293b; }
+    .stat-card .stat-label { font-size: 13px; color: #94a3b8; margin-top: 8px; font-weight: 500; }
+    .stat-card .stat-icon { font-size: 22px; margin-bottom: 10px; }
+    .stat-purple .stat-number { color: #7c3aed; }
+    .stat-blue .stat-number { color: #2563eb; }
+    .stat-green .stat-number { color: #059669; }
+    .stat-orange .stat-number { color: #d97706; }
+    .stat-red .stat-number { color: #dc2626; }
 
-    .stat-purple .stat-number { color: #764ba2; }
-    .stat-blue .stat-number { color: #3b82f6; }
-    .stat-green .stat-number { color: #10b981; }
-    .stat-orange .stat-number { color: #f59e0b; }
-    .stat-red .stat-number { color: #ef4444; }
+    .trust-high { color: #059669; }
+    .trust-medium { color: #d97706; }
+    .trust-low { color: #dc2626; }
 
-    /* ===== 可信度颜色 ===== */
-    .trust-high { color: #10b981; }
-    .trust-medium { color: #f59e0b; }
-    .trust-low { color: #ef4444; }
-
-    /* ===== 伦理提示条 ===== */
+    /* ===== Ethics banner ===== */
     .ethics-banner {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: 1px solid #fbbf24;
-        border-radius: 10px;
-        padding: 12px 18px;
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 1px solid #f59e0b;
+        border-radius: 12px;
+        padding: 14px 20px;
         margin-bottom: 20px;
         font-size: 13px;
         color: #92400e;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        display: flex; align-items: center; gap: 10px;
     }
 
-    /* ===== 功能入口卡片（首页） ===== */
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .feature-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 24px 20px;
-        text-align: center;
-        border: 2px solid #eef0f4;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        text-decoration: none;
-    }
-    .feature-card:hover {
-        border-color: #667eea;
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-    }
-    .feature-icon {
-        width: 56px; height: 56px;
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 26px;
-        margin: 0 auto 14px;
-    }
-    .fi-1 { background: linear-gradient(135deg, #667eea20, #764ba220); }
-    .fi-2 { background: linear-gradient(135deg, #3b82f620, #06b6d420); }
-    .fi-3 { background: linear-gradient(135deg, #10b98120, #34d39920); }
-    .fi-4 { background: linear-gradient(135deg, #f59e0b20, #fbbf2420); }
-    .feature-name { font-size: 15px; font-weight: 700; color: #1e293b; }
-    .feature-desc { font-size: 12px; color: #94a3b8; margin-top: 6px; }
-
-    /* ===== Streamlit 按钮美化 ===== */
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    /* ===== Buttons ===== */
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid="stBaseButton-primary"] {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
         border: none !important;
         border-radius: 10px !important;
-        padding: 10px 28px !important;
+        padding: 12px 32px !important;
         font-weight: 600 !important;
         font-size: 15px !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
         transition: all 0.2s ease !important;
     }
     .stButton > button[kind="primary"]:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5) !important;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
     }
-    .stButton > button:not([kind="primary"]) {
+    .stButton > button:not([kind="primary"]):not([data-testid="stBaseButton-primary"]) {
         border-radius: 8px !important;
         border: 1px solid #e2e8f0 !important;
         background: #fff !important;
         color: #475569 !important;
         font-weight: 500 !important;
     }
+    .stButton > button:not([kind="primary"]):not([data-testid="stBaseButton-primary"]):hover {
+        border-color: #6366f1 !important;
+        color: #6366f1 !important;
+    }
 
-    /* ===== 输入框美化 ===== */
+    /* ===== Inputs - FORCE WHITE BG AND DARK TEXT ===== */
     .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea {
-        border-radius: 10px !important;
+    .stTextArea > div > div > textarea,
+    .stNumberInput > div > div > input {
+        background: #fff !important;
+        color: #1e293b !important;
         border: 1.5px solid #e2e8f0 !important;
-        transition: border-color 0.2s ease !important;
+        border-radius: 10px !important;
+        font-size: 14px !important;
+    }
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea > div > div > textarea::placeholder {
+        color: #94a3b8 !important;
     }
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+    .stTextArea > div > div > textarea:focus,
+    .stNumberInput > div > div > input:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
     }
 
-    /* ===== 数据表格美化 ===== */
+    /* ===== Selectbox - force white ===== */
+    .stSelectbox > div > div,
+    .stSelectbox [data-baseweb="select"] > div {
+        background: #fff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        color: #1e293b !important;
+    }
+    .stSelectbox [data-baseweb="select"] > div > div {
+        color: #1e293b !important;
+    }
+
+    /* ===== Labels - force visible dark ===== */
+    .stTextInput label, .stTextArea label, .stSelectbox label,
+    .stNumberInput label, .stCheckbox label, .stFileUploader label,
+    .stDateInput label, .stTimeInput label {
+        color: #334155 !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+
+    /* ===== DataFrame ===== */
     .stDataFrame {
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
-        border: 1px solid #eef0f4;
+        border: 1px solid #e8eaf0;
     }
 
-    /* ===== 进度条美化 ===== */
+    /* ===== Progress ===== */
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #667eea, #764ba2) !important;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6) !important;
         border-radius: 4px;
     }
 
-    /* ===== 信息提示框 ===== */
+    /* ===== Alerts ===== */
     .stAlert {
-        border-radius: 10px !important;
+        border-radius: 12px !important;
     }
 
-    /* ===== 配置状态指示器 ===== */
-    .status-dot {
-        display: inline-block;
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        margin-right: 8px;
+    /* ===== Divider ===== */
+    hr {
+        border-color: #e8eaf0 !important;
     }
-    .status-ok { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
-    .status-warn { background: #f59e0b; }
-    .status-err { background: #ef4444; }
 
-    /* ===== 页面标题 ===== */
+    /* ===== File uploader ===== */
+    .stFileUploader > section {
+        background: #fff !important;
+        border: 2px dashed #cbd5e1 !important;
+        border-radius: 12px !important;
+    }
+    .stFileUploader > section:hover {
+        border-color: #6366f1 !important;
+    }
+    .stFileUploader p, .stFileUploader span {
+        color: #64748b !important;
+    }
+
+    /* ===== Checkbox ===== */
+    .stCheckbox label {
+        color: #334155 !important;
+    }
+
+    /* ===== Page title ===== */
     .page-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 4px;
+        font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 4px;
     }
     .page-subtitle {
-        font-size: 14px;
-        color: #94a3b8;
-        margin-bottom: 24px;
+        font-size: 14px; color: #94a3b8; margin-bottom: 24px;
+    }
+
+    /* ===== Spinner ===== */
+    .stSpinner > div {
+        border-top-color: #6366f1 !important;
+    }
+
+    /* ===== Download button ===== */
+    .stDownloadButton > button {
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #fff !important;
+        color: #475569 !important;
+    }
+    .stDownloadButton > button:hover {
+        border-color: #6366f1 !important;
+        color: #6366f1 !important;
+    }
+
+    /* ===== JSON display ===== */
+    .stJson {
+        background: #f8fafc !important;
+        border-radius: 10px !important;
+        border: 1px solid #e8eaf0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
