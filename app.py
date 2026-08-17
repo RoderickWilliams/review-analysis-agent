@@ -31,6 +31,11 @@ sys.path.insert(0, PROJECT_ROOT)
 
 import streamlit as st
 import pandas as pd
+from history_manager import (
+    save_history_record, load_history, delete_record,
+    clear_all_history, get_cache_size, clear_cache,
+)
+from trust_report import TrustReportEngine
 
 st.set_page_config(
     page_title="ReviewPilot - 用户反馈智能分析",
@@ -579,6 +584,17 @@ def page_single_review():
         st.markdown('<div class="ui-card-title">📊 综合分析</div>', unsafe_allow_html=True)
         st.json(final)
 
+        # Save to history
+        try:
+            save_history_record(
+                source="single", platform=platform, url="",
+                product_name=product_name or "单条评论",
+                reviews=[{"review_text": review_text, "rating": rating, "platform": platform}],
+                results=[result], report={}, trust_report={},
+            )
+        except Exception:
+            pass
+
         st.download_button(
             "💾 下载分析结果 (JSON)",
             data=json.dumps(result, ensure_ascii=False, indent=2),
@@ -959,6 +975,18 @@ def page_product_url():
             except Exception:
                 trust_report = {}
 
+        # Save to history
+        try:
+            _detected = "jd" if "jd." in url or "jd.com" in url else ("taobao" if "taobao" in url or "tmall" in url else "unknown")
+            _plat = reviews[0].get("source_platform", reviews[0].get("platform", _detected)) if reviews else _detected
+            save_history_record(
+                source="product_url", platform=_plat, url=url,
+                product_name=reviews[0].get("product_name", "") if reviews else "",
+                reviews=reviews, results=results, report=report, trust_report=trust_report,
+            )
+        except Exception:
+            pass
+
         st.session_state["product_reviews"] = reviews
         st.session_state["product_results"] = results
         st.session_state["product_report"] = report
@@ -1081,6 +1109,15 @@ def page_screenshot():
                 trust_report = TrustReportEngine().generate_report(reviews, results)
             except Exception:
                 trust_report = {}
+            # Save to history
+            try:
+                save_history_record(
+                    source="screenshot", platform=platform, url=product_url or "",
+                    product_name=reviews[0].get("product_name", "截图分析") if reviews else "截图分析",
+                    reviews=reviews, results=results, report=report, trust_report=trust_report,
+                )
+            except Exception:
+                pass
             display_results(reviews, results, report, trust_report)
 
 
@@ -1125,6 +1162,16 @@ def page_csv_upload():
             trust_report = TrustReportEngine().generate_report(reviews, results)
         except Exception:
             trust_report = {}
+        # Save to history
+        try:
+            _csv_plat = str(reviews[0].get("platform", "unknown")) if reviews else "unknown"
+            save_history_record(
+                source="csv", platform=_csv_plat, url="",
+                product_name="CSV批量分析",
+                reviews=reviews, results=results, report=report, trust_report=trust_report,
+            )
+        except Exception:
+            pass
         display_results(reviews, results, report, trust_report)
 
 
@@ -1334,10 +1381,171 @@ def render_sidebar():
                     st.warning("请先粘贴 Cookie")
 
         st.divider()
+
+        # Cache management
+        st.markdown("### 🧹 缓存管理")
+        try:
+            _cache_bytes = get_cache_size()
+            _cache_mb = _cache_bytes / 1024 / 1024
+            if _cache_mb > 0.1:
+                st.caption(f"可清理缓存: {_cache_mb:.1f} MB")
+            else:
+                st.caption("缓存已是干净状态")
+        except Exception:
+            _cache_mb = 0
+        if st.button("🧹 一键清理缓存", use_container_width=True):
+            try:
+                freed = clear_cache()
+                st.success(f"✅ 已清理 {freed/1024/1024:.1f} MB 缓存（不影响历史记录和登录状态）")
+            except Exception as e:
+                st.warning(f"清理部分失败: {e}")
+
+        st.divider()
         st.markdown("### 📖 关于")
         st.caption("AI 驱动的跨平台评论分析工具")
         st.caption("支持淘宝/天猫/京东 · OCR截图识别")
         st.caption("情绪识别 · 反讽检测 · 可信度评估")
+
+
+# ──────────────────────────────────────────────────────────────
+# 历史记录
+# ──────────────────────────────────────────────────────────────
+
+def page_history():
+    """历史记录页面"""
+    render_page_header("📜 分析历史", "查看所有历史分析记录，支持重新查看和导出报告")
+
+    records = load_history()
+
+    # Top action bar
+    col_info, col_clear = st.columns([3, 1])
+    with col_info:
+        if records:
+            st.caption(f"共 {len(records)} 条历史记录")
+        else:
+            st.caption("暂无历史记录")
+    with col_clear:
+        if records and st.button("🗑️ 清除历史记录", type="secondary", use_container_width=True):
+            st.session_state["_history_confirm_clear"] = True
+
+    if st.session_state.get("_history_confirm_clear"):
+        st.warning("⚠️ 确定要清除所有历史记录吗？此操作不可恢复！")
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("✅ 确认清除", type="primary", use_container_width=True):
+                n = clear_all_history()
+                st.session_state["_history_confirm_clear"] = False
+                st.success(f"已清除 {n} 条历史记录")
+                st.rerun()
+        with c2:
+            if st.button("取消", use_container_width=True):
+                st.session_state["_history_confirm_clear"] = False
+                st.rerun()
+
+    if not records:
+        st.info("📭 还没有分析记录。去「产品链接」或「截图分析」开始一次分析吧。")
+        return
+
+    platform_icons = {"jd": "🛒 京东", "taobao": "🛍️ 淘宝", "tmall": "🛍️ 天猫", "unknown": "❓ 未知"}
+    source_labels = {
+        "single": "📝 单条评论", "product_url": "🔗 产品链接",
+        "screenshot": "📷 截图分析", "csv": "📁 CSV批量",
+    }
+
+    for rec in records:
+        plat = rec.get("platform", "unknown")
+        plat_label = platform_icons.get(plat, f"🌐 {plat}")
+        src_label = source_labels.get(rec.get("source", ""), "📊 分析")
+        trust = rec.get("avg_trust_score", 0)
+        trust_color = "#22c55e" if trust >= 71 else "#eab308" if trust >= 31 else "#ef4444"
+        pname = rec.get("product_name", "未命名产品")[:60]
+
+        with st.expander(
+            f"{plat_label}  |  {src_label}  |  {pname}  |  "
+            f"📊 {rec.get('review_count', 0)} 条  |  🛡️ {trust}  |  "
+            f"🕐 {rec.get('timestamp_display', '')}",
+            expanded=False,
+        ):
+            # Stats row
+            mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+            with mc1:
+                st.metric("评论数", rec.get("review_count", 0))
+            with mc2:
+                st.metric("平均可信度", f"{trust}")
+            with mc3:
+                st.metric("反讽评论", rec.get("sarcastic_count", 0))
+            with mc4:
+                st.metric("可疑评论", rec.get("suspicious_count", 0))
+            dist = rec.get("sentiment_distribution", {})
+            with mc5:
+                pos = dist.get("positive", dist.get("正面", 0))
+                neg = dist.get("negative", dist.get("负面", 0))
+                st.metric("正/负面", f"{pos}/{neg}")
+
+            if rec.get("url"):
+                st.caption(f"🔗 {rec['url']}")
+
+            # Report data
+            if rec.get("report"):
+                st.markdown('<div class="ui-card-title">📋 口碑报告</div>', unsafe_allow_html=True)
+                st.json(rec["report"])
+
+            if rec.get("trust_report"):
+                st.markdown('<div class="ui-card-title">🛡️ Trust Report</div>', unsafe_allow_html=True)
+                st.json(rec["trust_report"])
+
+            if rec.get("results"):
+                st.markdown('<div class="ui-card-title">📝 逐条分析</div>', unsafe_allow_html=True)
+                table_data = []
+                for i, r in enumerate(rec["results"]):
+                    final = r.get("final_analysis", {})
+                    sa = r.get("sentiment_analysis", {})
+                    va = r.get("validity_analysis", {})
+                    table_data.append({
+                        "#": i + 1,
+                        "评论摘要": r.get("review_text", "")[:60] + "..." if len(r.get("review_text", "")) > 60 else r.get("review_text", ""),
+                        "评分": r.get("rating", "-"),
+                        "情绪": sa.get("sentiment_label", "N/A"),
+                        "反讽": "是" if sa.get("is_sarcastic") else "否",
+                        "有效性": va.get("validity_label", "N/A"),
+                        "可信度": final.get("trust_score", "N/A"),
+                        "风险": final.get("risk_level", "N/A"),
+                    })
+                st.dataframe(pd.DataFrame(table_data), use_container_width=True)
+
+            # Action buttons
+            ac1, ac2, ac3 = st.columns(3)
+            with ac1:
+                st.download_button(
+                    "💾 下载 JSON",
+                    data=json.dumps(
+                        {"report": rec.get("report", {}), "results": rec.get("results", []),
+                         "trust_report": rec.get("trust_report", {})},
+                        ensure_ascii=False, indent=2,
+                    ),
+                    file_name=f"history_{rec['id']}.json",
+                    mime="application/json",
+                    use_container_width=True,
+                    key=f"dl_json_{rec['id']}",
+                )
+            with ac2:
+                html_path = rec.get("html_report_path")
+                if html_path and os.path.exists(html_path):
+                    with open(html_path, "r", encoding="utf-8") as f:
+                        st.download_button(
+                            "📄 下载 HTML 报告",
+                            data=f.read(),
+                            file_name=f"report_{rec['id']}.html",
+                            mime="text/html",
+                            use_container_width=True,
+                            key=f"dl_html_{rec['id']}",
+                        )
+                else:
+                    st.button("📄 HTML 不可用", disabled=True, use_container_width=True, key=f"no_html_{rec['id']}")
+            with ac3:
+                if st.button("🗑️ 删除此记录", use_container_width=True, key=f"del_{rec['id']}"):
+                    delete_record(rec["id"])
+                    st.rerun()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1350,11 +1558,12 @@ def main():
     render_ethics_banner()
     render_sidebar()
 
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝  单条评论",
         "🔗  产品链接",
         "📷  截图分析",
         "📁  CSV批量",
+        "📜  历史记录",
     ])
 
     with tab1:
@@ -1365,6 +1574,8 @@ def main():
         page_screenshot()
     with tab4:
         page_csv_upload()
+    with tab5:
+        page_history()
 
 
 if __name__ == "__main__":

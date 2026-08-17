@@ -93,3 +93,14 @@ packages.txt
 .streamlit/
 # Debug output
 debug/
+
+# ===========================================
+# Local history & reports
+# ===========================================
+data/history.json
+data/reports/
+
+# ===========================================
+# Desktop app (local only)
+# ===========================================
+desktop_app.py
