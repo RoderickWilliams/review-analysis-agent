@@ -276,7 +276,7 @@ class JDAPIScraper:
         return None
 
     def _fetch_product_name(self, product_id: str) -> str:
-        """尝试从商品页抓取商品名称（轻量，不严格要求成功）。"""
+        """尝试从商品页抓取商品名称（优先 title 标签，最可靠）。"""
         try:
             resp = self.session.get(
                 PRODUCT_PAGE_API.format(sku=product_id),
@@ -288,19 +288,27 @@ class JDAPIScraper:
                 timeout=self.timeout,
             )
             if resp.status_code == 200:
+                # 修复编码（京东返回的页面可能被误判为 ISO-8859-1）
+                if resp.apparent_encoding and resp.encoding != resp.apparent_encoding:
+                    resp.encoding = resp.apparent_encoding
+                # 方式1：从 <title> 标签提取（最可靠）
+                m = re.search(r"<title>(.*?)</title>", resp.text, re.DOTALL)
+                if m:
+                    title = m.group(1).strip()
+                    # 京东 title 格式：商品名【图片 价格 品牌 报价】-京东
+                    name = title.split("-京东")[0].split("-")[0].split("·")[0].strip()
+                    name = re.sub(r'【.*?】.*$', '', name).strip()
+                    if name and len(name) >= 2:
+                        return name
+                # 方式2：从 sku-name 提取（兜底）
                 m = re.search(
                     r'<div\s+class="sku-name"[^>]*>(.*?)</div>',
                     resp.text, re.DOTALL,
                 )
                 if m:
                     name = re.sub(r"<[^>]+>", "", m.group(1)).strip()
-                    return name
-                m = re.search(r"<title>(.*?)</title>", resp.text, re.DOTALL)
-                if m:
-                    title = m.group(1).strip()
-                    # 京东 title 通常是 "商品名【图片 价格 品牌 报价】-京东"
-                    title = re.sub(r"【.*?】.*$", "", title).strip()
-                    return title
+                    if name and len(name) >= 2:
+                        return name
         except Exception as e:
             print("[jd-api] 获取商品名称失败: %s" % e)
         return ""

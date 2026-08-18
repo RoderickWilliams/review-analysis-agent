@@ -90,9 +90,24 @@ packages.txt
 # ===========================================
 # Streamlit
 # ===========================================
-.streamlit/
+.streamlit/*
+!.streamlit/config.toml
 # Debug output
 debug/
+
+# ===========================================
+# LLM Cache
+# ===========================================
+.llm_cache/
+
+# ===========================================
+# Backup & temp files
+# ===========================================
+*.bak
+*_backup_*.py
+_patch_*.py
+jd_dp_debug.log
+jd_popup_dump.html
 
 # ===========================================
 # Local history & reports

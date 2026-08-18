@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可信度评分细则 - ReviewPilot</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Microsoft YaHei','微软雅黑',-apple-system,sans-serif;background:#F8F9FC;color:#1A1A2E;line-height:1.8;}
+.container{max-width:900px;margin:0 auto;padding:40px 24px;}
+header{background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);color:#fff;padding:40px 24px;border-radius:0 0 24px 24px;box-shadow:0 8px 32px rgba(99,102,241,0.3);margin-bottom:40px;}
+header h1{font-size:28px;font-weight:700;margin-bottom:8px;}
+header p{font-size:14px;opacity:0.9;}
+section{background:#fff;border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+section h2{font-size:20px;font-weight:700;color:#1A1A2E;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E5E7EB;display:flex;align-items:center;gap:8px;}
+section h3{font-size:16px;font-weight:600;color:#4F46E5;margin:18px 0 10px;}
+p{font-size:14px;color:#374151;margin-bottom:10px;}
+.score-bar{display:inline-block;width:60px;height:24px;border-radius:6px;color:#fff;font-size:12px;font-weight:700;text-align:center;line-height:24px;margin-right:8px;}
+.score-high{background:#10B981;}
+.score-mid{background:#F59E0B;}
+.score-low{background:#EF4444;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;}
+th{background:#EEF2FF;color:#4338CA;padding:10px 14px;text-align:left;font-weight:600;border-bottom:2px solid #C7D2FE;}
+td{padding:10px 14px;border-bottom:1px solid #E5E7EB;color:#374151;}
+tr:hover td{background:#F9FAFB;}
+.highlight-box{background:#EEF2FF;border-left:4px solid #6366F1;padding:14px 18px;border-radius:0 10px 10px 0;margin:14px 0;}
+.highlight-box strong{color:#4338CA;}
+.formula-box{background:#F3F4F6;border:1px dashed #D1D5DB;border-radius:10px;padding:16px;margin:12px 0;font-family:'Consolas','Courier New',monospace;font-size:13px;color:#1F2937;}
+.penalty-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #F3F4F6;}
+.penalty-row:last-child{border-bottom:none;}
+.penalty-name{flex:1;font-size:14px;color:#374151;}
+.penalty-value{font-size:13px;font-weight:700;color:#EF4447;min-width:80px;text-align:right;}
+.rule-card{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:16px;margin:10px 0;}
+.rule-card .rule-title{font-weight:600;color:#1A1A2E;font-size:14px;margin-bottom:6px;}
+.rule-card .rule-desc{font-size:13px;color:#6B7280;}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+.badge-red{background:#FEE2E2;color:#DC2626;}
+.badge-yellow{background:#FEF3C7;color:#D97706;}
+.badge-green{background:#D1FAE5;color:#059669;}
+.badge-blue{background:#DBEAFE;color:#2563EB;}
+.flow-diagram{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:16px 0;}
+.flow-step{background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;}
+.flow-arrow{color:#9CA3AF;font-size:18px;}
+.note{font-size:12px;color:#9CA3AF;margin-top:6px;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <h1>可信度评分细则</h1>
+    <p>ReviewPilot v4.1.6 | 更新日期：2026-08-19</p>
+</header>
+
+<section>
+    <h2>1. 评分体系概览</h2>
+    <p>ReviewPilot 的可信度评分由 <strong>两个层级</strong> 组成，从单条评论到整体商品口碑，逐层聚合：</p>
+    <div class="flow-diagram">
+        <div class="flow-step">单条评论分析</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">LLM 交叉验证</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">单条可信度 (0-100)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">统计异常检测</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">整体可信度 (0-100)</div>
+    </div>
+    <div class="highlight-box">
+        <strong>核心原则：</strong>所有评分基于 LLM 语义分析 + TF-IDF 统计检测，temperature=0 确保相同输入产生相同结果。LLM 结果通过文件缓存保证一致性。
+    </div>
+</section>
+
+<section>
+    <h2>2. 单条评论可信度评分（LLM 交叉验证）</h2>
+    <p>每条评论经过 <strong>三步分析</strong> 后，由 LLM 进行交叉验证并给出 0-100 的可信度分数：</p>
+
+    <h3>2.1 分析流程</h3>
+    <table>
+        <tr><th>步骤</th><th>分析维度</th><th>输入</th><th>输出</th></tr>
+        <tr><td>1</td><td>情绪识别</td><td>评论内容、评分、平台</td><td>9类情绪分类 + 反讽检测</td></tr>
+        <tr><td>2</td><td>有效性检测</td><td>评论内容、产品名、相似评论数</td><td>8类有效性分类（1真实+7无效）</td></tr>
+        <tr><td>3</td><td>交叉验证</td><td>情绪结果 + 有效性结果</td><td>可信度分数 + 风险等级</td></tr>
+    </table>
+
+    <h3>2.2 评分区间</h3>
+    <table>
+        <tr><th>分数区间</th><th>等级</th><th>含义</th></tr>
+        <tr>
+            <td><span class="score-bar score-high">80-100</span></td>
+            <td><span class="badge badge-green">低风险</span></td>
+            <td>真实有效的好评，情绪正面且内容具体</td>
+        </tr>
+        <tr>
+            <td><span class="score-bar score-high">60-79</span></td>
+            <td><span class="badge badge-yellow">中风险</span></td>
+            <td>真实有效的差评，虽然负面但信息有价值</td>
+        </tr>
+        <tr>
+            <td><span class="score-bar score-mid">30-59</span></td>
+            <td><span class="badge badge-yellow">中风险</span></td>
+            <td>反讽/隐性情绪，情绪真实但需关注产品问题</td>
+        </tr>
+        <tr>
+            <td><span class="score-bar score-low">0-29</span></td>
+            <td><span class="badge badge-red">高风险</span></td>
+            <td>模板化/AI生成/高度可疑，无效评论</td>
+        </tr>
+    </table>
+
+    <h3>2.3 交叉验证规则</h3>
+    <div class="rule-card">
+        <div class="rule-title">规则1：反讽 + 模板化 → 高风险</div>
+        <div class="rule-desc">疑似水军使用模板批量刷差评，评分极低（0-30分）</div>
+    </div>
+    <div class="rule-card">
+        <div class="rule-title">规则2：真诚好评 + AI生成 → 高风险</div>
+        <div class="rule-desc">AI生成的虚假好评，虽有正面情绪但非真实用户（0-30分）</div>
+    </div>
+    <div class="rule-card">
+        <div class="rule-title">规则3：高分低评 + 具体性低 → 中风险</div>
+        <div class="rule-desc">刷好评但内容随意，评分与内容矛盾（30-50分）</div>
+    </div>
+    <div class="rule-card">
+        <div class="rule-title">规则4：正面情绪 + 真实有效 → 低风险</div>
+        <div class="rule-desc">正常好评，情绪正面且内容真实（80-100分）</div>
+    </div>
+    <div class="rule-card">
+        <div class="rule-title">规则5：直接差评 + 真实有效 → 中风险</div>
+        <div class="rule-desc">真实用户表达不满，虽负面但信息有价值（60-80分）</div>
+    </div>
+</section>
+
+<section>
+    <h2>3. 情绪分类体系（9类）</h2>
+    <p>情绪识别是可信度评分的第一步，分为三大类九个子类：</p>
+    <table>
+        <tr><th>大类</th><th>子类</th><th>说明</th></tr>
+        <tr><td rowspan="3">显性情绪</td><td>真诚好评</td><td>评分高，评论正面且包含具体使用体验</td></tr>
+        <tr><td>直接差评</td><td>评分低，评论直接表达不满</td></tr>
+        <tr><td>客观中性</td><td>评分中等，评论客观描述优缺点</td></tr>
+        <tr><td rowspan="3">隐性情绪</td><td>反讽/阴阳怪气</td><td>文字表面正面，实际表达不满或嘲讽</td></tr>
+        <tr><td>明褒暗贬</td><td>表面夸某方面，实则暗示其他方面差</td></tr>
+        <tr><td>隐性抱怨</td><td>不直接说不好，通过细节描述暗示不满</td></tr>
+        <tr><td rowspan="3">评分-评论矛盾</td><td>高分低评</td><td>评分4-5星，但评论内容负面</td></tr>
+        <tr><td>低分高评</td><td>评分1-2星，但评论内容正面</td></tr>
+        <tr><td>评分极端文本中性</td><td>评分1星或5星，但评论平淡无情绪</td></tr>
+    </table>
+</section>
+
+<section>
+    <h2>4. 有效性分类体系（8类）</h2>
+    <p>有效性检测判断评论是否来自真实用户，分为1类真实+7类无效：</p>
+    <table>
+        <tr><th>分类</th><th>类别</th><th>判定依据</th></tr>
+        <tr><td><span class="badge badge-green">真实</span></td><td>真实有效</td><td>包含具体使用体验，语言自然口语化</td></tr>
+        <tr><td><span class="badge badge-red">无效</span></td><td>模板化好评</td><td>高度同质化，如"好评好评好评好评"</td></tr>
+        <tr><td><span class="badge badge-red">无效</span></td><td>套话堆砌</td><td>堆砌通用赞美词，缺乏具体体验</td></tr>
+        <tr><td><span class="badge badge-red">无效</span></td><td>批量复制</td><td>多条评论高度相似，疑似复制粘贴</td></tr>
+        <tr><td><span class="badge badge-yellow">无效</span></td><td>时间集中异常</td><td>短时间内批量发布</td></tr>
+        <tr><td><span class="badge badge-yellow">无效</span></td><td>内容偏移</td><td>评论与产品核心功能无关</td></tr>
+        <tr><td><span class="badge badge-yellow">无效</span></td><td>用户行为异常</td><td>新注册账号、高频评价等</td></tr>
+        <tr><td><span class="badge badge-red">无效</span></td><td>AI生成</td><td>语言过于规范，缺乏口语化表达</td></tr>
+    </table>
+    <div class="highlight-box">
+        <strong>相似评论数（similar_count）：</strong>由 TF-IDF + 余弦相似度计算（阈值 0.7），统计当前评论与同批次其他评论的相似度。相似度越高，有效性检测中越可能被判为"批量复制"。
+    </div>
+</section>
+
+<section>
+    <h2>5. 整体可信度评分（TrustReportEngine 统计检测）</h2>
+    <p>在单条评论分析完成后，TrustReportEngine 对全部评论进行 <strong>6维统计异常检测</strong>，从 100 分开始扣分：</p>
+
+    <div class="formula-box">
+    整体可信度 = 100 - 时间突发扣分 - 重复组扣分 - 评分异常扣分 - 长度均匀度扣分 - 短语重复扣分 - 评分矛盾扣分
+    </div>
+
+    <h3>5.1 扣分明细</h3>
+    <table>
+        <tr><th>检测维度</th><th>扣分规则</th><th>上限</th></tr>
+        <tr>
+            <td>时间突发检测</td>
+            <td>若某日评论数超过日均 3 倍，扣 15 分</td>
+            <td>-15</td>
+        </tr>
+        <tr>
+            <td>TF-IDF 重复检测</td>
+            <td>每组重复评论扣 10 分</td>
+            <td>-25</td>
+        </tr>
+        <tr>
+            <td>评分分布异常</td>
+            <td>5星或1星占比超过 80%，扣 15 分</td>
+            <td>-15</td>
+        </tr>
+        <tr>
+            <td>长度均匀度</td>
+            <td>评论长度越均匀（疑似模板），扣分越多</td>
+            <td>-15</td>
+        </tr>
+        <tr>
+            <td>短语重复检测</td>
+            <td>每条重复短语扣 5 分（4-gram 分析）</td>
+            <td>-20</td>
+        </tr>
+        <tr>
+            <td>评分-情感矛盾</td>
+            <td>每条矛盾评论扣 3 分</td>
+            <td>-15</td>
+        </tr>
+    </table>
+
+    <h3>5.2 风险等级映射</h3>
+    <table>
+        <tr><th>整体可信度</th><th>风险等级</th><th>建议</th></tr>
+        <tr><td>≥ 70 分</td><td><span class="badge badge-green">low</span></td><td>评论整体可信，可正常参考</td></tr>
+        <tr><td>40-69 分</td><td><span class="badge badge-yellow">medium</span></td><td>存在可疑评论，需关注</td></tr>
+        <tr><td>&lt; 40 分</td><td><span class="badge badge-red">high</span></td><td>大量可疑评论，建议深入调查</td></tr>
+    </table>
+</section>
+
+<section>
+    <h2>6. 关键技术参数</h2>
+    <table>
+        <tr><th>参数</th><th>值</th><th>说明</th></tr>
+        <tr><td>LLM temperature</td><td>0.0</td><td>确保分析结果确定性</td></tr>
+        <tr><td>LLM 结果缓存</td><td>文件级缓存（.llm_cache/）</td><td>相同 prompt 永远返回相同结果</td></tr>
+        <tr><td>重复检测阈值</td><td>0.85（余弦相似度）</td><td>TrustReport 重复组判定</td></tr>
+        <tr><td>相似度邻居阈值</td><td>0.7（余弦相似度）</td><td>单条评论 similar_count 计算</td></tr>
+        <tr><td>时间突发倍数</td><td>3.0</td><td>超过日均评论数 3 倍视为突发</td></tr>
+        <tr><td>评分异常占比</td><td>80%</td><td>单档评分占比超过 80% 视为异常</td></tr>
+        <tr><td>n-gram 大小</td><td>4</td><td>短语重复检测的 token 级窗口</td></tr>
+    </table>
+</section>
+
+<section>
+    <h2>7. 平均可信度展示</h2>
+    <p>界面上展示的"平均可信度"是所有单条评论 trust_score 的算术平均值：</p>
+    <div class="formula-box">
+    平均可信度 = Σ(每条评论 trust_score) / 评论总数
+    </div>
+    <p class="note">注：平均可信度反映单条评论层面的可信程度；Trust Report 的整体可信度则从群体统计角度检测异常模式，两者维度互补。</p>
+</section>
+
+</div>
+</body>
+</html>

@@ -21,10 +21,11 @@ ReviewPilot 利用大语言模型（LLM）的深度语义理解能力，结合 T
 | Trust Report | 突发检测、重复检测、异常分析 | 统计分析 + TF-IDF |
 | 红旗引擎 | 促销语言、奖励诱导、空洞重复等模式检测 | 正则匹配 + 模式识别 |
 | 淘宝评论采集 | 持久化登录 + 精准 DOM 提取 + 指纹去重 | Patchright + 网络拦截 |
-| 京东评论采集 | 五级降级抓取（DrissionPage → Patchright → API → OCR） | 融合 5 个开源项目 |
+| 京东评论采集 | 五级降级抓取（DrissionPage → Patchright → API → OCR） | 融合多个开源项目 |
 | 截图 OCR 分析 | 上传评论截图，OCR + LLM 识别评论 | Tesseract + LLM Vision |
+| CSV 批量分析 | 上传 CSV 文件批量分析评论 | Pandas + 并发 LLM |
 | HTML 报告 | 可视化分析报告（Chart.js 图表） | Jinja2 模板 |
-| Web UI | Spotify 风格深色主题可视化界面 | Streamlit |
+| Web UI | 浅色 SaaS 风格侧边栏导航界面 | Streamlit |
 
 ### 分类体系
 
@@ -47,11 +48,27 @@ ReviewPilot 利用大语言模型（LLM）的深度语义理解能力，结合 T
 
 每条评论包含 15 个标准化字段，其中 6 个为必填溯源字段：`source_platform`、`source_url`、`product_id`、`reviewer_name`、`review_date`、`sku`，确保分析结果可追溯到原始平台。
 
+## Web UI 功能
+
+ReviewPilot 采用浅色 SaaS 设计风格，侧边栏导航，包含 6 个功能页面：
+
+| 页面 | 功能 |
+|------|------|
+| 🏠 首页 | 仪表盘概览：Hero 横幅、核心指标卡片、情绪分布环形图、最近分析记录 |
+| 💬 单条评论分析 | 输入单条评论 + 评分，即时获得情绪/有效性/交叉验证结果 |
+| 🔗 链接采集分析 | 输入淘宝/京东商品链接，自动采集评论并全链路分析 |
+| 🖼️ 截图识别分析 | 上传评论截图，OCR 识别文字后进行 LLM 分析 |
+| 📁 批量 CSV 分析 | 上传 CSV 文件，并发批量分析，导出结果 |
+| 📜 分析历史 | 查看历史分析记录，一键重新分析或删除 |
+
+侧边栏还提供 Cookie 管理（淘宝/京东登录）、LLM 缓存清理和版本信息。
+
 ## 项目结构
 
 ```
 review-analysis-agent/
-├── app.py                       # Streamlit Web UI（4 种分析模式）
+├── app.py                       # Streamlit Web UI（浅色 SaaS 风格）
+├── _ui_styles.py                # UI 样式模块（CSS 主题）
 ├── main.py                      # CLI 主入口（--url / --csv / --demo / --web）
 ├── config.py                    # 全局配置（多 Key 轮换、.env 加载、伦理校验）
 ├── sentiment_agent_core.py      # 核心分析引擎（9 情绪 + 8 有效性 + 交叉验证）
@@ -59,17 +76,17 @@ review-analysis-agent/
 ├── deepseek_web_client.py       # DeepSeek 网页端访问（PoW 求解）
 ├── web_llm_client.py            # Web 模式 LLM 客户端
 ├── ocr_engine.py                # 多引擎 OCR（Tesseract + LLM Vision）
-├── screenshot_analyzer.py       # 截图评论分析（OCR → LLM 管道）
 ├── report_generator.py          # HTML 可视化报告生成（Chart.js）
 ├── trust_report.py              # Trust Report 引擎（突发/重复/异常检测）
-├── red_flags.py                 # 红旗引擎（模式检测）
+├── history_manager.py           # 分析历史记录管理
 ├── data_collector.py            # 数据采集
 ├── data_preprocessor.py         # 数据预处理（清洗 + 去重 + 分词）
 ├── auto_login.py                # 自动登录
 ├── login_subprocess.py          # 登录子进程
 ├── web_proxy_server.py          # Web 代理服务器
-├── setup.py                     # 一键环境安装脚本
+├── desktop_app.py               # 桌面应用入口（pywebview）
 ├── .env.example                 # 环境变量模板
+├── .streamlit/config.toml       # Streamlit 浅色主题配置
 ├── requirements.txt
 │
 ├── scrapers/                    # 多平台爬虫
@@ -80,7 +97,7 @@ review-analysis-agent/
 │   ├── taobao_comment_v2.py         # 淘宝 rate.taobao.com API 抓取
 │   ├── taobao_jsonp_scraper.py      # 淘宝 JSONP API 抓取
 │   ├── taobao_scraper.py            # 淘宝 mtop API 签名抓取
-│   ├── jd_unified_scraper.py        # 京东三级降级调度器
+│   ├── jd_unified_scraper.py        # 京东降级调度器
 │   ├── jd_drissionpage_scraper.py   # 京东 DrissionPage 真实 Chrome 抓取
 │   ├── jd_playwright_scraper.py     # 京东 Patchright 反检测抓取
 │   ├── jd_api_scraper.py            # 京东 club.jd.com JSONP API 直连
@@ -94,15 +111,13 @@ review-analysis-agent/
 ├── chains/                      # LangChain 集成
 │   └── review_chain.py
 │
-├── utils/                       # 工具函数
-│   └── helpers.py
-│
-├── tools/
-│   └── Tesseract-OCR/           # Tesseract OCR 引擎（已封装，含中文语言包）
-│
-├── cookies/                     # Cookie 持久化
 ├── data/                        # 示例数据
-└── output/                      # 分析报告输出
+│   ├── sample_reviews.csv
+│   └── test_reviews.csv
+│
+├── cookies/                     # Cookie 持久化（gitignore）
+├── output/                      # 分析报告输出（gitignore）
+└── .llm_cache/                  # LLM 响应缓存（gitignore）
 ```
 
 ## 快速开始
@@ -113,39 +128,24 @@ review-analysis-agent/
 - Windows / macOS / Linux
 - 淘宝/京东采集需要 Chrome 浏览器（DrissionPage 调用系统 Chrome）
 
-### 一键安装（推荐）
-
-项目已内置 Tesseract OCR 引擎（Windows 版，含简体中文和繁体中文语言包），无需单独安装系统依赖：
+### 安装
 
 ```bash
 # 1. 克隆项目
 git clone https://github.com/RoderickWilliams/review-analysis-agent.git
 cd review-analysis-agent
 
-# 2. 一键安装（自动检测 Python 版本、安装 pip 依赖、Patchright 浏览器、Tesseract）
-python setup.py
-
-# 3. 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入 API Key
-
-# 4. 启动 Web UI
-streamlit run app.py
-```
-
-### 手动安装
-
-```bash
-# 1. 安装 Python 依赖
+# 2. 安装 Python 依赖
 pip install -r requirements.txt
 
-# 2. 安装 Patchright 浏览器（反检测自动化）
+# 3. 安装 Patchright 浏览器（反检测自动化）
 patchright install chromium
 
-# 3. 配置环境变量
+# 4. 配置环境变量
 cp .env.example .env
+# 编辑 .env 填入 DeepSeek API Key
 
-# 4. 启动 Web UI
+# 5. 启动 Web UI
 streamlit run app.py
 ```
 
@@ -165,7 +165,7 @@ python main.py --web                     # 启动 Streamlit Web 界面
 
 ## 评论采集
 
-### 淘宝评论采集
+### 淘宝评论采集（四级降级）
 
 | 优先级 | 方法 | 技术 | 说明 |
 |--------|------|------|------|
@@ -178,17 +178,22 @@ python main.py --web                     # 启动 Streamlit Web 界面
 
 ### 京东评论采集（五级降级）
 
-融合 5 个开源项目的抓取策略，按反爬能力从强到弱自动降级：
+融合多个开源项目的抓取策略，按反爬能力从强到弱自动降级：
 
-| 级别 | 方法 | 技术来源 | 说明 |
-|------|------|----------|------|
-| L1 | DrissionPage 真实 Chrome | [JD_Spider](https://github.com/LacYCle/JD_Spider) | 调用系统 Chrome，持久化 profile，手动扫码登录，DOM 虚拟滚动 |
-| L2 | Patchright 反检测浏览器 | 自研 | 反检测浏览器 + API 网络拦截 + DOM 提取，登录优先 + 截图兜底 |
-| L3 | requests JSONP API | [JDComment_Spider](https://github.com/YuleZhang/JDComment_Spider) + [rupu-product-analysis](https://github.com/jameszhi2/rupu-product-analysis) | 直连 club.jd.com JSONP 接口，遍历 score=0~5 |
-| L4 | requests API（增强） | [JRAS](https://github.com/Liuliu2333/JRAS) + [XiaoBai-Data](https://github.com/...) | fake-useragent 随机 UA、指数退避重试、排序方式遍历 |
-| L5 | 截图 OCR 兜底 | 自研 | 收集前序浏览器截图，Tesseract + LLM Vision 识别 |
+| 级别 | 方法 | 说明 |
+|------|------|------|
+| L1 | DrissionPage 真实 Chrome | 调用系统 Chrome，持久化 profile，手动扫码登录，DOM 虚拟滚动 |
+| L2 | Patchright 反检测浏览器 | 反检测浏览器 + API 网络拦截 + DOM 提取，登录优先 + 截图兜底 |
+| L3 | requests JSONP API | 直连 club.jd.com JSONP 接口，遍历 score=0~5 |
+| L4 | requests API（增强） | 随机 UA、指数退避重试、排序方式遍历 |
+| L5 | 截图 OCR 兜底 | 收集前序浏览器截图，Tesseract + LLM Vision 识别 |
 
 任意一级成功抓到评论即返回；全部失败时，截图交由 OCR 管道兜底识别。
+
+**DrissionPage 关键修复**：
+- 页面加载策略设为 `eager()`，避免京东第三方资源（广告/统计脚本）加载不完导致 `tab.get()` 卡死
+- 评论弹窗虚拟滚动不依赖硬编码 class 名，改为从评论卡片向上遍历 DOM 树查找可滚动祖先容器
+- `run_js()` 使用显式 `return` 语句确保 JS 返回值被正确接收
 
 ### 截图评论分析
 
@@ -197,82 +202,67 @@ python main.py --web                     # 启动 Streamlit Web 界面
 1. **Tesseract OCR**（主力）— 已封装在项目中，支持中英文识别
 2. **LLM Vision**（兜底）— 调用 DeepSeek/OpenAI 视觉模型识别截图
 
-> **可选 PaddleOCR**：在 Python 3.10~3.13 环境中可安装更高精度的中文 OCR：
-> ```bash
-> pip install paddlepaddle==3.2.0 paddleocr -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-> ```
+### CSV 批量分析
 
-## Web UI 功能
-
-| 模式 | 说明 |
-|------|------|
-| 📝 单条评论分析 | 粘贴一条评论，即时获取情绪识别、有效性检测和综合分析 |
-| 🔍 截图评论识别 | 上传评论截图，OCR 识别后自动分析 |
-| 📁 CSV 批量分析 | 上传 CSV 文件（支持 review_text/rating/platform 字段）批量分析 |
-| 🌐 链接采集分析 | 输入淘宝/京东商品链接，自动采集评论并全链路分析 |
-
-UI 采用 Spotify 官网风格深色设计：近黑背景（#121212）、深色卡片（#181818）、蓝紫渐变强调色（#6366f1 → #8b5cf6）、药丸按钮、重阴影分层。
+上传包含评论内容的 CSV 文件（需有 `review_text` 列，可选 `rating`、`platform` 列），系统会：
+- 自动清洗去重
+- 并发调用 LLM 分析（控制速率）
+- 实时展示分析进度
+- 支持导出结果为 CSV
 
 ## LLM 配置
 
-### 方式一：DeepSeek API（推荐）
-
-在 `.env` 文件中配置：
+复制 `.env.example` 为 `.env`，填入以下配置：
 
 ```env
-LLM_MODE=api
-LLM_API_KEYS=sk-your-deepseek-api-key
-MODEL=deepseek-chat
-BASE_URL=https://api.deepseek.com/v1
+# DeepSeek API（推荐）
+DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+
+# 可选：OpenAI 兼容 API
+OPENAI_API_KEY=
+OPENAI_BASE_URL=
+OPENAI_MODEL=
+
+# 可选：DeepSeek 网页端 Token（API 不可用时自动降级）
+DEEPSEEK_USER_TOKEN=
 ```
 
-支持多 Key 轮换（逗号分隔），自动负载均衡和故障转移。获取免费 API Key: https://platform.deepseek.com/
+支持多 API Key 轮换，当某个 Key 触发限流时自动切换。API 不可用时自动降级到网页端模式。
 
-### 方式二：DeepSeek 网页端（免费备用）
+## 分析报告
 
-无需 API Key，通过 DeepSeek 网页端 Token 调用。当 API Key 额度用尽时自动降级：
+每次分析完成后可生成 HTML 可视化报告，包含：
 
-```env
-DEEPSEEK_USER_TOKEN=your-web-token
-```
+- **情绪分布**：9 类情绪占比环形图
+- **评分分布**：1-5 星评分柱状图
+- **有效性分布**：真实/无效评论比例
+- **Trust Report**：突发检测、重复检测、异常时间分布
+- **红旗检测**：促销语言、奖励诱导、空洞重复等警示
+- **评论详情**：每条评论的情绪标签、有效性标签、交叉验证结果
 
-### 方式三：OpenAI 兼容 API
-
-```env
-LLM_MODE=api
-LLM_API_KEYS=sk-your-api-key
-MODEL=gpt-4o
-BASE_URL=https://api.openai.com/v1
-```
-
-## Python 版本兼容性
-
-| Python 版本 | 支持状态 | 说明 |
-|-------------|---------|------|
-| 3.10 ~ 3.13 | ✅ 完全支持 | 所有功能可用，含可选 PaddleOCR |
-| 3.14+ | ✅ 主要功能支持 | Tesseract + LLM Vision 作为 OCR 引擎；PaddleOCR 暂不支持 |
-
-## 伦理准则
-
-- **严禁使用 AI 生成虚假评论进行虚假分析**（强制开启，不可关闭）
-- 所有评论必须来自真实平台抓取
-- 每条评论包含完整溯源字段（source_platform / source_url / product_id 等）
-- 爬取失败时如实告知，不得用虚假数据替代
-- 演示数据标注为 DEMO，不得冒充真实评论
+报告使用 Chart.js 渲染，可在浏览器中独立打开。
 
 ## 技术栈
 
 | 类别 | 技术 |
 |------|------|
-| LLM | DeepSeek / OpenAI 兼容 API |
 | Web UI | Streamlit |
-| 浏览器自动化 | Patchright（反检测 Playwright fork）、DrissionPage、Playwright |
-| OCR | Tesseract 5.5.3（内置中文语言包）、LLM Vision、可选 PaddleOCR |
-| 数据处理 | Pandas、scikit-learn（TF-IDF）、jieba 分词 |
+| LLM | DeepSeek API / OpenAI 兼容 API |
+| 浏览器自动化 | DrissionPage、Patchright（Playwright 反检测分支） |
+| OCR | Tesseract + LLM Vision |
+| 数据分析 | Pandas、scikit-learn（TF-IDF） |
 | 报告生成 | Jinja2 + Chart.js |
-| LLM 编排 | LangChain |
-| HTTP | requests、curl_cffi（TLS 指纹模拟）、fake-useragent |
+| 桌面应用 | pywebview |
+
+## 伦理准则
+
+- AI 无法自主生成虚假评论并进行虚假分析
+- 每条用于分析的评论都有可追溯的来源
+- 不编造评论，不抓取非评论内容凑数
+- 若网页实际评论数小于用户输入的最大采集数，直接返回全部真实评论
 
 ## License
 
-[MIT](LICENSE)
+MIT License — 详见 [LICENSE](LICENSE) 文件。

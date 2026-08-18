@@ -190,6 +190,7 @@ _CACHE_DIRS = [
     r"playwright-data\Crashpad",
     r"playwright-data\extensions_crx_cache",
     r"debug",
+    r".llm_cache",
 ]
 
 

@@ -1018,16 +1018,35 @@ class JDPlaywrightScraper:
                 else:
                     print("[jd-pw] headless 模式下无法手动验证，尝试继续...")
 
-            # Step 7: 获取商品名称
+            # Step 7: 获取商品名称 — 优先用页面 title（最可靠）
             product_name = ""
             try:
                 product_name = self._page.evaluate("""
                     () => {
-                        const el = document.querySelector(
-                            '.sku-name, .itemInfo-wrap .sku-name, [class*="product-name"], [class*="goodsName"]'
-                        );
-                        if (el) return (el.innerText || el.textContent || '').trim().split('\\n')[0];
-                        return document.title.split('-')[0].trim();
+                        // 方式1：从 document.title 提取（京东格式：商品名【...】-京东）
+                        const title = document.title || '';
+                        if (title) {
+                            let name = title.split('-京东')[0].split('-')[0].split('·')[0].trim();
+                            name = name.replace(/【.*?】.*$/, '').trim();
+                            if (name.length >= 2) return name;
+                        }
+                        // 方式2：DOM 选择器兜底
+                        const selectors = [
+                            '#name h1',
+                            '.itemInfo-wrap .sku-name',
+                            '.product-intro .sku-name',
+                            '[class*="goodsName"]',
+                            '[class*="product-name"]',
+                            'h1'
+                        ];
+                        for (const sel of selectors) {
+                            const el = document.querySelector(sel);
+                            if (el) {
+                                const txt = (el.innerText || el.textContent || '').trim().split('\\n')[0].trim();
+                                if (txt.length >= 4) return txt;
+                            }
+                        }
+                        return title.split('-')[0].split('·')[0].trim();
                     }
                 """)
                 print(f"[jd-pw] 商品名: {product_name}")

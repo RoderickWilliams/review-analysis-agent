@@ -15,9 +15,16 @@
 
 import json
 import re
+import os
+import hashlib
+import threading
 from enum import Enum
 from typing import Dict, List, Optional
 from datetime import datetime
+
+# LLM 结果缓存（确保 temperature=0 时相同 prompt 产生相同结果）
+_LLM_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".llm_cache")
+_LLM_CACHE_LOCK = threading.Lock()
 
 
 # =============================================================================
@@ -313,29 +320,61 @@ class ReviewAnalysisAgent:
                 print("错误：请先安装 openai 库：pip install openai")
                 self.client = None
 
-    def _call_llm(self, prompt: str, temperature: float = 0.3) -> str:
+    _LLM_SYSTEM_MSG = "你是一位专业的中文NLP分析专家。请严格按照要求的JSON格式输出，不要输出其他内容。"
+
+    def _cache_key(self, prompt: str, temperature: float) -> str:
+        """生成缓存键（model + system + prompt + temperature 的哈希）"""
+        raw = f"{self.model}|{self._LLM_SYSTEM_MSG}|{prompt}|{temperature}"
+        return hashlib.md5(raw.encode("utf-8")).hexdigest()
+
+    def _call_llm(self, prompt: str, temperature: float = 0.0) -> str:
         """
         调用大模型，返回文本响应
-        
+
         参数:
             prompt:      用户提示词
-            temperature: 温度参数（分类任务建议0.2，报告生成0.5）
+            temperature: 温度参数（分析任务设为0确保结果一致性）
+
+        temperature=0 时启用文件缓存，确保相同 prompt 永远返回相同结果，
+        消除 LLM API 在 temperature=0 下仍可能存在的微小非确定性。
         """
         if not self.client:
             return '{"error": "LLM client not initialized"}'
+
+        # temperature=0 时检查缓存
+        if temperature == 0.0:
+            cache_key = self._cache_key(prompt, temperature)
+            cache_path = os.path.join(_LLM_CACHE_DIR, f"{cache_key}.txt")
+            with _LLM_CACHE_LOCK:
+                if os.path.exists(cache_path):
+                    try:
+                        with open(cache_path, "r", encoding="utf-8") as f:
+                            return f.read()
+                    except Exception:
+                        pass  # 缓存读取失败，继续调用 LLM
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system",
-                     "content": "你是一位专业的中文NLP分析专家。"
-                                "请严格按照要求的JSON格式输出，不要输出其他内容。"},
+                    {"role": "system", "content": self._LLM_SYSTEM_MSG},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=temperature,
             )
-            return response.choices[0].message.content
+            result = response.choices[0].message.content
+
+            # temperature=0 时写入缓存
+            if temperature == 0.0:
+                with _LLM_CACHE_LOCK:
+                    os.makedirs(_LLM_CACHE_DIR, exist_ok=True)
+                    try:
+                        with open(cache_path, "w", encoding="utf-8") as f:
+                            f.write(result)
+                    except Exception:
+                        pass  # 缓存写入失败不影响正常流程
+
+            return result
         except Exception as e:
             error_type = type(e).__name__
             error_msg = str(e)
@@ -404,7 +443,7 @@ class ReviewAnalysisAgent:
             review_text=review_text,
             platform=platform
         )
-        raw = self._call_llm(prompt, temperature=0.2)
+        raw = self._call_llm(prompt, temperature=0.0)
         return self._parse_json(raw)
 
     # -------------------------------------------------------------------------
@@ -432,7 +471,7 @@ class ReviewAnalysisAgent:
             product_name=product_name,
             similar_count=similar_count
         )
-        raw = self._call_llm(prompt, temperature=0.2)
+        raw = self._call_llm(prompt, temperature=0.0)
         return self._parse_json(raw)
 
     # -------------------------------------------------------------------------
@@ -472,7 +511,7 @@ class ReviewAnalysisAgent:
             rating=rating,
             review_text=review_text
         )
-        raw = self._call_llm(prompt, temperature=0.3)
+        raw = self._call_llm(prompt, temperature=0.0)
         final_result = self._parse_json(raw)
         print(f"    [3/3] 交叉验证完成: 可信度={final_result.get('trust_score', 'N/A')}")
 
@@ -597,7 +636,7 @@ class ReviewAnalysisAgent:
             batch_results=json.dumps(batch_summary,
                                      ensure_ascii=False, indent=2)
         )
-        raw = self._call_llm(prompt, temperature=0.5)
+        raw = self._call_llm(prompt, temperature=0.0)
         report = self._parse_json(raw)
 
         # 补充统计信息

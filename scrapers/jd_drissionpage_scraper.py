@@ -24,6 +24,17 @@ import random
 import re
 import tempfile
 import time
+
+# 文件日志（用于调试卡死问题）
+import os as _os
+_LOG_FILE = "jd_dp_debug.log"
+def _dlog(msg):
+    try:
+        with open(_LOG_FILE, "a", encoding="utf-8") as _f:
+            _f.write("[%s] %s\n" % (time.strftime("%H:%M:%S"), msg))
+    except Exception:
+        pass
+    print("[jd-dp] %s" % msg)
 import winsound
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -61,21 +72,32 @@ LOGOUT_LINK_XPATH = "x://div[@id='J_user']//a[contains(@class,'user_logout')][1]
 # 商品详情页评论区
 COMMENT_ROOT_XPATH = "x://div[@id='comment-root']"
 ALL_BTN_XPATH = 'x://div[@id="comment-root"]//div[@class="all-btn"]'
-RATE_LIST_XPATH = 'x://div[@class="jdc-page-overlay _rateListBox_1ygkr_1"]'
+# 弹窗选择器：匹配 rateListBox（CSS hash 可能变动），不含过宽的 comment-list
+RATE_LIST_XPATH = 'x://div[contains(@class,"_rateListBox_") or contains(@class,"rateListBox")]'
+# 兜底弹窗选择器（多个备选）
+RATE_LIST_XPATH_FALLBACKS = [
+    'x://div[contains(@class,"_rateListBox_")]',
+    'x://div[contains(@class,"rateListBox")]',
+    'x://div[contains(@class,"jdc-page-overlay")]',
+    'x://div[contains(@class,"comment-list") and contains(@class,"overlay")]',
+]
 
-# 评论卡片
+# 评论卡片 — 优先带 data-index 的，但也接受其他评论卡片
 RATE_CARD_CSS = "css:div[data-index]"
 RATE_DESC_CSS = "css:span.jdc-pc-rate-card-main-desc"
 
 # 也尝试更通用的选择器（京东可能改版）
 RATE_CARD_CSS_FALLBACKS = [
     "css:div[data-index]",
+    "css:div[class*='rate-card']",
     "css:.comment-item",
-    "css:.comment-con",
+    "css:div[class*='comment-item']",
     "css:.J-comments-list .comment-item",
+    "css:div[class*='CommentItem']",
 ]
 RATE_DESC_CSS_FALLBACKS = [
     "css:span.jdc-pc-rate-card-main-desc",
+    "css:span[class*='rate-card-main-desc']",
     "css:.comment-con",
     "css:p.comment-con",
     "css:.comment-item p",
@@ -88,7 +110,7 @@ RATE_DESC_CSS_FALLBACKS = [
 ]
 
 # 虚拟滚动稳定判定
-MAX_STALL_ROUNDS = 3
+MAX_STALL_ROUNDS = 8
 MAX_SCROLL_ROUNDS = 2000
 
 # 快速验证滑块检测
@@ -176,6 +198,20 @@ class JDDrissionPageScraper:
 
         self._browser = Chromium(co)
         self._tab = self._browser.new_tab()
+        # 设置页面加载策略为 eager：等 DOMContentLoaded 但不等 load 事件，
+        # 避免京东第三方资源加载不完导致卡死，同时保证 JS 上下文可用
+        try:
+            self._tab.set.load_mode.eager()
+        except Exception:
+            try:
+                self._tab.load_mode.eager()
+            except Exception:
+                pass
+        # 缩短全局超时
+        try:
+            self._tab.set.timeouts(base=10, page_load=20, script=15)
+        except Exception:
+            pass
         print("[jd-dp] 浏览器已启动（profile: %s）" % PROFILE_DIR)
 
     def _close_browser(self):
@@ -372,28 +408,83 @@ class JDDrissionPageScraper:
 
     @staticmethod
     def _scroll_overlay_js() -> str:
-        """增量滚动评论弹窗的 JS：把倒数第二张卡片滚到容器顶部。"""
+        """增量滚动评论弹窗：遍历所有可滚动容器，把内容向下滚一屏。
+        不依赖特定 class 名，兼容京东新版弹窗 DOM 结构。"""
         return """
-        const overlay = document.querySelector('._rateListBox_1ygkr_1');
-        if (!overlay) return false;
-        const cards = [...overlay.querySelectorAll('div[data-index]')];
-        if (cards.length < 2) return false;
-        const target = cards[cards.length - 2];
-        let scroller = target.parentElement;
-        while (scroller && scroller !== overlay) {
-            const st = getComputedStyle(scroller);
-            if ((st.overflowY === 'auto' || st.overflowY === 'scroll')
-                    && scroller.scrollHeight > scroller.clientHeight) {
-                break;
+        return (function(){
+            // 1. 先找评论卡片（任意容器内）
+            var cards = document.querySelectorAll('div[data-index], [class*="rate-card"], [class*="comment-item"], [class*="CommentItem"]');
+            if (cards.length < 1) return false;
+
+            // 2. 从最后一张卡片向上找可滚动的祖先容器
+            var lastCard = cards[cards.length - 1];
+            var scroller = null;
+            var node = lastCard.parentElement;
+            while (node && node !== document.body) {
+                var st = getComputedStyle(node);
+                if ((st.overflowY === 'auto' || st.overflowY === 'scroll')
+                        && node.scrollHeight > node.clientHeight + 50) {
+                    scroller = node;
+                    break;
+                }
+                node = node.parentElement;
             }
-            scroller = scroller.parentElement;
-        }
-        if (scroller) {
-            scroller.scrollTop = target.offsetTop - scroller.offsetTop;
+
+            // 3. 如果找到了可滚动容器，把最后一张卡片滚到视口
+            if (scroller) {
+                lastCard.scrollIntoView({block: 'center', behavior: 'instant'});
+                return true;
+            }
+
+            // 4. 兜底：找页面上任意可滚动容器（通常是弹窗主体），滚到底
+            var all = document.querySelectorAll('*');
+            for (var i = 0; i < all.length; i++) {
+                var el = all[i];
+                var s2 = getComputedStyle(el);
+                if ((s2.overflowY === 'auto' || s2.overflowY === 'scroll')
+                        && el.scrollHeight > el.clientHeight + 100) {
+                    el.scrollTop = el.scrollHeight;
+                    return true;
+                }
+            }
+
+            // 5. 最终兜底：window 滚动
+            window.scrollBy(0, 800);
             return true;
-        }
-        return false;
+        })();
         """
+
+    def _find_overlay(self, timeout: float = 2.0):
+        """尝试多个选择器找到评论弹窗 overlay，返回元素或 None。"""
+        # 先试主选择器
+        try:
+            overlay = self._tab.ele(RATE_LIST_XPATH, timeout=timeout)
+            if overlay:
+                return overlay
+        except Exception:
+            pass
+        # 试兜底选择器
+        for fb_xpath in RATE_LIST_XPATH_FALLBACKS:
+            if fb_xpath == RATE_LIST_XPATH:
+                continue
+            try:
+                overlay = self._tab.ele(fb_xpath, timeout=1.0)
+                if overlay:
+                    return overlay
+            except Exception:
+                continue
+        return None
+
+    def _find_cards(self, overlay, timeout: float = 1.0):
+        """从 overlay 中尝试多个选择器提取评论卡片，返回列表。"""
+        for card_css in RATE_CARD_CSS_FALLBACKS:
+            try:
+                cards = overlay.eles(card_css, timeout=timeout)
+                if cards:
+                    return cards
+            except Exception:
+                continue
+        return []
 
     def _extract_reviews_from_popup(self, product_url: str, product_id: str) -> List[Dict]:
         """
@@ -402,7 +493,7 @@ class JDDrissionPageScraper:
         返回统一格式的评论字典列表。
         """
         reviews: Dict[int, Dict] = {}
-        last_max = -1
+        last_count = 0
         stall = 0
         rounds = 0
 
@@ -413,108 +504,108 @@ class JDDrissionPageScraper:
             if rounds % 5 == 0:
                 self._handle_verify()
 
-            # 读取当前可见评论卡片
-            try:
-                overlay = self._tab.ele(RATE_LIST_XPATH, timeout=2)
-                if overlay:
-                    cards = overlay.eles(RATE_CARD_CSS, timeout=2)
-                    for card in cards:
-                        try:
-                            idx_attr = card.attr("data-index")
-                            if not idx_attr or not str(idx_attr).isdigit():
-                                continue
+            # 读取当前可见评论卡片（使用 _find_overlay + _find_cards 避免长超时）
+            overlay = self._find_overlay(timeout=1.5)
+            if overlay:
+                cards = self._find_cards(overlay, timeout=1.0)
+                for card in cards:
+                    try:
+                        idx_attr = card.attr("data-index")
+                        if idx_attr and str(idx_attr).isdigit():
                             idx = int(idx_attr)
-                            if idx in reviews:
-                                continue
-
-                            # 提取评论文本
-                            text = ""
-                            for desc_sel in RATE_DESC_CSS_FALLBACKS:
-                                try:
-                                    desc_ele = card.ele(desc_sel, timeout=0.5)
-                                    if desc_ele:
-                                        text = desc_ele.text.strip()
-                                        if text:
-                                            break
-                                except Exception:
-                                    continue
-
-                            if not text or len(text) < 8:
-                                continue
-
-                            # 尝试提取评分（星级）
-                            rating = 5
-                            try:
-                                star_ele = card.ele("css:.star", timeout=0.3)
-                                if star_ele:
-                                    cls = star_ele.attr("class") or ""
-                                    m = re.search(r"star(\d)", cls)
-                                    if m:
-                                        rating = int(m.group(1))
-                            except Exception:
-                                pass
-
-                            # 尝试提取日期
-                            review_date = ""
-                            try:
-                                date_ele = card.ele(
-                                    "css:.order-info span, .comment-date, .date",
-                                    timeout=0.3,
-                                )
-                                if date_ele:
-                                    review_date = date_ele.text.strip()
-                            except Exception:
-                                pass
-
-                            # 尝试提取用户名
-                            user_name = "匿名用户"
-                            try:
-                                user_ele = card.ele(
-                                    "css:.user-info, .u-name, .nickname",
-                                    timeout=0.3,
-                                )
-                                if user_ele:
-                                    user_name = user_ele.text.strip() or "匿名用户"
-                            except Exception:
-                                pass
-
-                            # 尝试提取 SKU 信息
-                            sku = ""
-                            try:
-                                sku_ele = card.ele(
-                                    "css:.sku-info, .sku-name, .J_order_type",
-                                    timeout=0.3,
-                                )
-                                if sku_ele:
-                                    sku = sku_ele.text.strip()
-                            except Exception:
-                                pass
-
-                            reviews[idx] = self._format_review(
-                                text=text,
-                                rating=rating,
-                                user_name=user_name,
-                                review_date=review_date,
-                                sku=sku,
-                                product_id=product_id,
-                                product_url=product_url,
-                                index=idx,
-                            )
-                        except Exception as e:
-                            print("[jd-dp] 解析评论卡片异常: %s" % e)
+                        else:
+                            # 无 data-index 时用内容哈希作为 key
+                            raw_text = card.text[:80] if card.text else ""
+                            idx = abs(hash(raw_text)) % (10**8)
+                        if idx in reviews:
                             continue
-            except Exception as e:
-                print("[jd-dp] 读取评论弹窗异常: %s" % e)
+
+                        # 提取评论文本
+                        text = ""
+                        for desc_sel in RATE_DESC_CSS_FALLBACKS:
+                            try:
+                                desc_ele = card.ele(desc_sel, timeout=0.3)
+                                if desc_ele:
+                                    text = desc_ele.text.strip()
+                                    if text:
+                                        break
+                            except Exception:
+                                continue
+
+                        if not text or len(text) < 5:
+                            continue
+
+                        # 尝试提取评分（星级）
+                        rating = 5
+                        try:
+                            star_ele = card.ele("css:.star", timeout=0.2)
+                            if star_ele:
+                                cls = star_ele.attr("class") or ""
+                                m = re.search(r"star(\d)", cls)
+                                if m:
+                                    rating = int(m.group(1))
+                        except Exception:
+                            pass
+
+                        # 尝试提取日期
+                        review_date = ""
+                        try:
+                            date_ele = card.ele(
+                                "css:.order-info span, .comment-date, .date",
+                                timeout=0.2,
+                            )
+                            if date_ele:
+                                review_date = date_ele.text.strip()
+                        except Exception:
+                            pass
+
+                        # 尝试提取用户名
+                        user_name = "匿名用户"
+                        try:
+                            user_ele = card.ele(
+                                "css:.user-info, .u-name, .nickname",
+                                timeout=0.2,
+                            )
+                            if user_ele:
+                                user_name = user_ele.text.strip() or "匿名用户"
+                        except Exception:
+                            pass
+
+                        # 尝试提取 SKU 信息
+                        sku = ""
+                        try:
+                            sku_ele = card.ele(
+                                "css:.sku-info, .J_order_type",
+                                timeout=0.2,
+                            )
+                            if sku_ele:
+                                sku = sku_ele.text.strip()
+                        except Exception:
+                            pass
+
+                        reviews[idx] = self._format_review(
+                            text=text,
+                            rating=rating,
+                            user_name=user_name,
+                            review_date=review_date,
+                            sku=sku,
+                            product_id=product_id,
+                            product_url=product_url,
+                            index=idx,
+                        )
+                    except Exception as e:
+                        print("[jd-dp] 解析评论卡片异常: %s" % e)
+                        continue
 
             # 上限判定
             if len(reviews) >= self.max_reviews:
                 print("[jd-dp] 达到采集上限 %d 条" % self.max_reviews)
                 break
 
-            # 推进判定
-            cur_max = max(reviews) if reviews else -1
-            if cur_max > last_max:
-                last_max = cur_max
+            # 推进判定：跟踪评论数量变化
+            cur_count = len(reviews)
+            if cur_count > last_count:
+                last_count = cur_count
                 stall = 0
             else:
                 stall += 1
@@ -529,16 +620,16 @@ class JDDrissionPageScraper:
             except Exception:
                 pass
 
-            # 等待推进
-            wait_until = time.time() + 1.5
+            # 等待新评论加载（短轮询，最多等 2 秒）
+            pre_count = len(reviews)
+            wait_until = time.time() + 2.0
             while time.time() < wait_until:
-                time.sleep(0.1)
-                # 简单检查：卡片数量是否变化
+                time.sleep(0.2)
                 try:
-                    overlay = self._tab.ele(RATE_LIST_XPATH, timeout=0.5)
-                    if overlay:
-                        cur_cards = overlay.eles(RATE_CARD_CSS, timeout=0.5)
-                        if len(cur_cards) > 0:
+                    ov = self._find_overlay(timeout=0.3)
+                    if ov:
+                        cur_cards = self._find_cards(ov, timeout=0.3)
+                        if len(cur_cards) > pre_count:
                             break
                 except Exception:
                     pass
@@ -656,7 +747,11 @@ class JDDrissionPageScraper:
             # 2. 先访问京东首页
             print("[jd-dp] 打开京东首页...")
             self._tab.get(JD_HOMEPAGE)
-            time.sleep(random.uniform(0.3, 0.6))
+            try:
+                self._tab.wait.doc_loaded(timeout=10)
+            except Exception:
+                pass
+            time.sleep(random.uniform(0.5, 1.0))
 
             # 3. 确保已登录
             if not self._ensure_logged_in():
@@ -666,7 +761,18 @@ class JDDrissionPageScraper:
             # 4. 访问商品详情页
             print("[jd-dp] 打开商品页: %s" % product_url)
             self._tab.get(product_url)
-            time.sleep(random.uniform(1.0, 2.0))
+            # load_mode=none 后，get() 可能在 DOM 还没解析完就返回，
+            # 显式等待 document.readyState 至少为 interactive
+            try:
+                self._tab.wait.doc_loaded(timeout=15)
+            except Exception:
+                pass
+            # 等待 body 出现
+            try:
+                self._tab.wait.ele_displayed("css:body", timeout=10)
+            except Exception:
+                pass
+            time.sleep(random.uniform(1.5, 2.5))
 
             # 检测是否被重定向到港澳版
             region = self._detect_region()
@@ -676,34 +782,53 @@ class JDDrissionPageScraper:
             # 处理可能的滑块
             self._handle_verify()
 
-            # 5. 尝试获取商品名称（大陆版 + 港澳版选择器）
+            # 5. 获取商品名称 — 优先用页面 title（最可靠），再尝试 DOM 选择器
             try:
-                title_selectors = (
-                    "css:.sku-name, #name h1, .product-intro .sku-name",
-                    "css:.itemInfo-wrap .sku-name",
-                    "css:[class*='goodsName']",
-                    "css:[class*='product-name']",
-                    "css:.product-intro .sku-name",
-                    "css:h1",
-                )
-                for ts in title_selectors:
-                    title_ele = self._tab.ele(ts, timeout=2)
-                    if title_ele:
-                        txt = title_ele.text.strip()
-                        if txt and len(txt) > 2:
-                            self._product_name = txt.split("\n")[0]
-                            break
+                # 方式1：从页面 title 提取（京东 title 格式：商品名【...】-京东）
+                page_title = ""
+                try:
+                    page_title = self._tab.title or ""
+                except Exception:
+                    pass
+                if page_title:
+                    # 去掉 "-京东" 后缀和【...】中的价格/品牌信息
+                    name = page_title.split("-京东")[0].split("-")[0].split("·")[0].strip()
+                    # 去掉 【...】 后缀
+                    name = re.sub(r'【.*?】.*$', '', name).strip()
+                    if name and len(name) >= 2:
+                        self._product_name = name
+                        print(f"[jd-dp] 商品名(title): {self._product_name}")
+
+                # 方式2：DOM 选择器（仅当 title 提取失败时）
+                if not self._product_name or len(self._product_name) < 2:
+                    title_selectors = (
+                        "css:#name h1",
+                        "css:.itemInfo-wrap .sku-name",
+                        "css:.product-intro .sku-name",
+                        "css:[class*='goodsName']",
+                        "css:[class*='product-name']",
+                        "css:h1",
+                    )
+                    for ts in title_selectors:
+                        title_ele = self._tab.ele(ts, timeout=2)
+                        if title_ele:
+                            txt = title_ele.text.strip()
+                            if txt and len(txt) > 2:
+                                candidate = txt.split("\n")[0].strip()
+                                if len(candidate) >= 4:
+                                    self._product_name = candidate
+                                    break
             except Exception:
                 pass
 
-            # 6. 滚动页面触发评论区加载
+            # 6. 滚动页面触发评论区加载（多滚几次确保评论区进入视口）
             print("[jd-dp] 滚动页面加载评论区...")
-            for _ in range(2):
+            for _ in range(4):
                 try:
-                    self._tab.scroll.down(5)
+                    self._tab.scroll.down(8)
                 except Exception:
                     pass
-                time.sleep(random.uniform(0.3, 0.6))
+                time.sleep(random.uniform(0.5, 1.0))
 
             # 7. 等待评论区出现（大陆版 + 港澳版多种选择器）
             comment_root = None
@@ -735,70 +860,201 @@ class JDDrissionPageScraper:
                 self._capture_screenshots(product_url, product_id)
                 return []
 
-            # 8. 点击"全部评论"按钮打开弹窗
-            print("[jd-dp] 尝试打开全部评论弹窗...")
-            all_btn = None
-            try:
-                all_btn = self._tab.ele(ALL_BTN_XPATH, timeout=3)
-            except Exception:
-                pass
+            # 8. 先用 JS 直接从页面 DOM 提取评论（最可靠，不依赖 CSS 选择器）
+            _dlog("尝试 JS 直接提取评论...")
+            reviews = self._extract_reviews_via_js(product_url, product_id)
+            _dlog("JS 直接提取返回 %d 条" % len(reviews) if reviews else "JS 直接提取返回 0 条")
+            if reviews and len(reviews) >= 3:
+                _dlog("JS 提取到 %d 条评论，直接返回" % len(reviews))
+                return reviews
 
-            if not all_btn:
-                for btn_xpath in (
-                    "x://a[contains(text(),'全部评价')]",
-                    "x://a[contains(text(),'查看全部')]",
-                    "x://a[contains(text(),'更多评价')]",
-                    "x://span[contains(text(),'全部评价')]",
-                    "x://a[contains(@class,'all-btn')]",
-                ):
-                    try:
-                        all_btn = self._tab.ele(btn_xpath, timeout=2)
-                        if all_btn:
-                            break
-                    except Exception:
-                        continue
+            # 9. 页面直接提取不足，尝试点击"全部评价"打开弹窗
+            _dlog("页面评论不足，尝试点击'全部评价'打开弹窗...")
+            all_btn = None
+            for btn_xpath in (
+                ALL_BTN_XPATH,
+                "x://a[contains(text(),'全部评价')]",
+                "x://a[contains(text(),'全部评论')]",
+                "x://a[contains(text(),'查看全部')]",
+                "x://a[contains(text(),'更多评价')]",
+                "x://span[contains(text(),'全部评价')]",
+                "x://div[contains(text(),'全部评价')]",
+                "x://a[contains(@class,'all-btn')]",
+                "x://div[contains(@class,'all-btn')]",
+            ):
+                try:
+                    all_btn = self._tab.ele(btn_xpath, timeout=1.5)
+                    if all_btn:
+                        break
+                except Exception:
+                    continue
 
             if all_btn:
                 try:
+                    _dlog("准备点击'全部评价'...")
+                    # 滚动到按钮位置确保可见
+                    try:
+                        all_btn.scroll.to_see()
+                    except Exception:
+                        pass
+                    time.sleep(0.5)
+                    old_url = self._tab.url or ""
                     all_btn.click()
-                    print("[jd-dp] 已点击'全部评论'")
-                    time.sleep(random.uniform(0.8, 1.5))
+                    _dlog("已点击'全部评价'，等待弹窗/页面加载...")
+                    # 等待：可能弹窗打开，也可能页面导航
+                    time.sleep(3)
+                    new_url = self._tab.url or ""
+                    if new_url != old_url:
+                        _dlog("页面导航到: %s" % new_url)
+                        # 页面发生了导航，等待 DOM 就绪
+                        try:
+                            self._tab.wait.doc_loaded(timeout=15)
+                        except Exception:
+                            pass
+                        time.sleep(2)
+                    else:
+                        _dlog("URL未变化，等待弹窗渲染...")
+                        time.sleep(2)
                 except Exception as e:
-                    print("[jd-dp] 点击全部评论失败: %s" % e)
+                    _dlog("点击全部评价失败: %s" % e)
+                    import traceback; traceback.print_exc()
+            else:
+                _dlog("未找到'全部评价'按钮")
 
             # 处理滑块
+            _dlog("检查滑块验证...")
             self._handle_verify()
+            _dlog("滑块检查完成")
 
-            # 9. 等待评论弹窗出现
-            popup_appeared = False
+            # 9.5 诊断：dump 弹窗 DOM 结构
+            _dlog("弹窗诊断：分析 DOM 结构...")
             try:
-                popup_appeared = self._tab.wait.ele_displayed(RATE_LIST_XPATH, timeout=6)
-            except Exception:
-                pass
+                # 用 return 关键字（DrissionPage 要求）
+                diag = self._tab.run_js("""
+                var report = {scrollables: [], overlays: [], commentEls: [], allClasses: []};
+                try {
+                  document.querySelectorAll('*').forEach(function(el){
+                    var st = getComputedStyle(el);
+                    if ((st.overflowY === 'auto' || st.overflowY === 'scroll')
+                        && el.scrollHeight > el.clientHeight + 50) {
+                      report.scrollables.push({
+                        tag: el.tagName,
+                        cls: String(el.className||'').substring(0,120),
+                        id: el.id||'',
+                        sh: el.scrollHeight, ch: el.clientHeight
+                      });
+                    }
+                  });
+                } catch(e) { report.err1 = e.message; }
+                try {
+                  document.querySelectorAll('[class*="overlay"],[class*="Overlay"],[class*="modal"],[class*="Modal"],[class*="popup"],[class*="Popup"],[class*="dialog"],[class*="Dialog"],[role="dialog"]').forEach(function(el){
+                    report.overlays.push({
+                      tag: el.tagName,
+                      cls: String(el.className||'').substring(0,150),
+                      id: el.id||'',
+                      childCount: el.children.length,
+                      textLen: (el.innerText||'').length
+                    });
+                  });
+                } catch(e) { report.err2 = e.message; }
+                try {
+                  document.querySelectorAll('[class*="comment"],[class*="Comment"],[class*="rate"],[class*="Rate"],[class*="review"],[class*="Review"]').forEach(function(el, i){
+                    if (i < 30) {
+                      report.commentEls.push({
+                        tag: el.tagName,
+                        cls: String(el.className||'').substring(0,120),
+                        id: el.id||'',
+                        textLen: (el.innerText||'').length
+                      });
+                    }
+                  });
+                } catch(e) { report.err3 = e.message; }
+                return JSON.stringify(report);
+                """)
+                if diag is None:
+                    _dlog("run_js 返回 None! 尝试简单JS测试...")
+                    simple = self._tab.run_js("return document.title;")
+                    _dlog("document.title = %s" % simple)
+                    body_len = self._tab.run_js("return document.body ? document.body.innerHTML.length : 0;")
+                    _dlog("body.innerHTML.length = %s" % body_len)
+                else:
+                    import json as _json
+                    diag_data = _json.loads(diag) if isinstance(diag, str) else diag
+                    _dlog("可滚动容器数量: %d" % len(diag_data.get("scrollables", [])))
+                    for s in diag_data.get("scrollables", [])[:5]:
+                        _dlog("  scroll: <%s> cls=%s sh=%d ch=%d" % (s["tag"], s["cls"][:80], s["sh"], s["ch"]))
+                    _dlog("overlay数量: %d" % len(diag_data.get("overlays", [])))
+                    for o in diag_data.get("overlays", [])[:5]:
+                        _dlog("  overlay: <%s> cls=%s children=%d textLen=%d" % (o["tag"], o["cls"][:80], o["childCount"], o["textLen"]))
+                    _dlog("评论相关元素数量: %d" % len(diag_data.get("commentEls", [])))
+                    for c in diag_data.get("commentEls", [])[:15]:
+                        _dlog("  commentEl: <%s> cls=%s textLen=%d" % (c["tag"], c["cls"][:80], c["textLen"]))
+                    for ek in ["err1","err2","err3"]:
+                        if ek in diag_data:
+                            _dlog("JS错误 %s: %s" % (ek, diag_data[ek]))
+            except Exception as e:
+                _dlog("DOM 诊断失败: %s" % e)
+                import traceback; traceback.print_exc()
 
-            if not popup_appeared:
-                print("[jd-dp] 评论弹窗未出现，尝试直接从页面提取评论")
+            # 9.6 保存弹窗区域HTML到文件用于分析
+            try:
+                html_dump = self._tab.run_js("return document.body ? document.body.innerHTML.substring(0, 80000) : '';")
+                if html_dump:
+                    dump_path = "jd_popup_dump.html"
+                    with io.open(dump_path, "w", encoding="utf-8") as df:
+                        df.write(html_dump)
+                    _dlog("弹窗HTML已保存到 %s (%d字符)" % (dump_path, len(html_dump)))
+            except Exception as e:
+                _dlog("保存HTML失败: %s" % e)
 
-                # 兜底：尝试从页面直接提取评论（非弹窗模式）
-                reviews = self._extract_reviews_from_page(product_url, product_id)
-                if reviews:
-                    print("[jd-dp] 从页面直接提取到 %d 条评论" % len(reviews))
-                    return reviews
+            # 10. 弹窗出现后，用 JS 直接提取 + 虚拟滚动
+            _dlog("弹窗已打开，用 JS 提取评论...")
+            _dlog("当前URL: %s" % (self._tab.url or "unknown"))
+            # 检测 iframe
+            try:
+                iframe_count = self._tab.run_js("return document.querySelectorAll('iframe').length;")
+                _dlog("页面iframe数量: %s" % iframe_count)
+            except Exception as e:
+                _dlog("检测iframe失败: %s" % e)
+            # 先直接提取当前可见的
+            try:
+                reviews = self._extract_reviews_via_js(product_url, product_id)
+            except Exception as e:
+                _dlog("JS提取异常: %s" % e)
+                import traceback; traceback.print_exc()
+                reviews = []
+            _dlog("JS提取返回 %d 条评论" % len(reviews))
+            if reviews and len(reviews) >= 3:
+                print("[jd-dp] 弹窗 JS 提取到 %d 条评论" % len(reviews))
+                # 如果还不够，继续滚动提取
+                if len(reviews) < self.max_reviews:
+                    _dlog("开始滚动加载更多评论 (已有%d, 目标%d)..." % (len(reviews), self.max_reviews))
+                    try:
+                        more = self._scroll_and_extract_js(product_url, product_id, reviews)
+                        if more:
+                            reviews = more
+                    except Exception as e:
+                        _dlog("滚动提取异常: %s" % e)
+                        import traceback; traceback.print_exc()
+                    _dlog("滚动提取结束，共 %d 条" % len(reviews))
+                return reviews
 
-                # 最终兜底：截图
-                print("[jd-dp] DOM 提取失败，截图兜底")
-                self._capture_screenshots(product_url, product_id)
-                return []
+            # 11. JS 提取失败，尝试 DrissionPage 选择器提取
+            print("[jd-dp] JS 提取不足，尝试选择器提取...")
+            reviews = self._extract_reviews_from_page(product_url, product_id)
+            if reviews:
+                print("[jd-dp] 选择器提取到 %d 条评论" % len(reviews))
+                return reviews
 
-            # 10. 虚拟滚动采集弹窗内评论
-            print("[jd-dp] 开始虚拟滚动采集评论...")
-            reviews = self._extract_reviews_from_popup(product_url, product_id)
-            print("[jd-dp] 弹窗采集完成，共 %d 条评论" % len(reviews))
+            # 12. 最终兜底：全局提取 + 截图
+            print("[jd-dp] 所有提取方式均失败，尝试全局提取...")
+            reviews = self._extract_reviews_global(product_url, product_id)
+            if reviews:
+                print("[jd-dp] 全局提取到 %d 条评论" % len(reviews))
+                return reviews
 
-            # 11. 如果弹窗也没抓到，截图兜底
-            if not reviews:
-                print("[jd-dp] 弹窗未采集到评论，截图兜底")
-                self._capture_screenshots(product_url, product_id)
+            print("[jd-dp] 截图兜底")
+            self._capture_screenshots(product_url, product_id)
 
         except Exception as e:
             print("[jd-dp] 抓取异常: %s" % e)
@@ -882,7 +1138,7 @@ class JDDrissionPageScraper:
         严格过滤：必须有星级图标 + 中文文本 >= 15字 + 非黑名单内容。"""
         try:
             js = r"""
-            (function() {
+            return (function() {
                 var results = [];
                 var seen = {};
                 var blacklist = [
@@ -1013,55 +1269,258 @@ class JDDrissionPageScraper:
             print("[jd-dp] 全局提取异常: %s" % e)
             return []
 
+    def _extract_reviews_via_js(self, product_url: str, product_id: str) -> List[Dict]:
+        """用 JavaScript 直接从 DOM 提取评论，不依赖 DrissionPage CSS 选择器。"""
+        js_code = """
+        return (function() {
+            var results = [];
+            var seen = new Set();
+
+            // 查找评论卡片：优先弹窗内，再找页面全局
+            var containers = [];
+            // 1. 弹窗 overlay（class 含 rateListBox 或 jdc-page-overlay）
+            document.querySelectorAll('[class*="rateListBox"], [class*="jdc-page-overlay"], [class*="_rateListBox_"]').forEach(function(el) {
+                containers.push(el);
+            });
+            // 2. comment-root
+            var cr = document.getElementById('comment-root');
+            if (cr) containers.push(cr);
+            // 3. 全局兜底
+            if (containers.length === 0) {
+                containers.push(document);
+            }
+
+            // 评论卡片选择器（多种变体）
+            var cardSelectors = [
+                '[class*="rate-card"]',
+                '[class*="RateCard"]',
+                '[class*="comment-item"]',
+                '[class*="CommentItem"]',
+                '[class*="review-item"]',
+                '[class*="ReviewItem"]',
+                '.comment-item',
+                '[data-index]'
+            ];
+
+            // 评论文本选择器
+            var descSelectors = [
+                '[class*="rate-card-main-desc"]',
+                '[class*="rate-card-desc"]',
+                '[class*="comment-content"]',
+                '[class*="commentContent"]',
+                '.comment-con',
+                '[class*="comment-con"]',
+                '[class*="review-content"]',
+                '[class*="reviewContent"]',
+                '[class*="rate-content"]',
+                '[class*="evaluation-content"]',
+                'p'
+            ];
+
+            // 用户名选择器
+            var userSelectors = [
+                '[class*="user-info"]', '[class*="userInfo"]',
+                '.u-name', '.user-info', '.nickname',
+                '[class*="rate-card-user"]', '[class*="rate-card-name"]'
+            ];
+
+            // 日期选择器
+            var dateSelectors = [
+                '[class*="comment-date"]', '[class*="date"]',
+                '.comment-date', '.date', '.order-info'
+            ];
+
+            containers.forEach(function(container) {
+                cardSelectors.forEach(function(cs) {
+                    var cards = container.querySelectorAll(cs);
+                    cards.forEach(function(card) {
+                        if (results.length >= 200) return;
+
+                        // 提取评论文本
+                        var text = '';
+                        for (var i = 0; i < descSelectors.length; i++) {
+                            var el = card.querySelector(descSelectors[i]);
+                            if (el) {
+                                text = (el.innerText || el.textContent || '').trim();
+                                if (text && text.length >= 5) break;
+                            }
+                        }
+                        if (!text || text.length < 5) return;
+                        // 去重
+                        if (seen.has(text)) return;
+                        // 必须含中文
+                        if (!/[\\u4e00-\\u9fa5]/.test(text)) return;
+                        // 黑名单
+                        var skipKw = ['登录','注册','购物车','配送至','优惠券','满减','秒杀','加入购物车','商品评价','好评率','视频购买','降价通知','促销','增值服务','白条','免邮'];
+                        for (var k = 0; k < skipKw.length; k++) {
+                            if (text.indexOf(skipKw[k]) === 0) return;
+                        }
+                        seen.add(text);
+
+                        // 提取评分
+                        var rating = 5;
+                        var starEl = card.querySelector('.star, [class*="star"]');
+                        if (starEl) {
+                            var cls = starEl.className || '';
+                            var m = cls.match(/star(\\d)/);
+                            if (m) rating = parseInt(m[1]);
+                        }
+
+                        // 提取用户名
+                        var userName = '匿名用户';
+                        for (var i = 0; i < userSelectors.length; i++) {
+                            var ue = card.querySelector(userSelectors[i]);
+                            if (ue) {
+                                var un = (ue.innerText || ue.textContent || '').trim();
+                                if (un && un.length > 0 && un.length < 30) {
+                                    userName = un;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 提取日期
+                        var reviewDate = '';
+                        for (var i = 0; i < dateSelectors.length; i++) {
+                            var de = card.querySelector(dateSelectors[i]);
+                            if (de) {
+                                reviewDate = (de.innerText || de.textContent || '').trim();
+                                if (reviewDate) break;
+                            }
+                        }
+
+                        results.push({
+                            text: text,
+                            rating: rating,
+                            user: userName,
+                            date: reviewDate
+                        });
+                    });
+                });
+            });
+
+            return JSON.stringify(results);
+        })();
+        """
+        try:
+            raw = self._tab.run_js(js_code)
+            if not raw:
+                return []
+            import json as _json
+            data = _json.loads(raw) if isinstance(raw, str) else raw
+            if not isinstance(data, list):
+                return []
+            reviews = []
+            for item in data:
+                text = self._clean_text(item.get("text", ""))
+                if not text or len(text) < 5:
+                    continue
+                reviews.append(self._format_review(
+                    text=text,
+                    rating=item.get("rating", 5),
+                    user_name=item.get("user", "匿名用户"),
+                    review_date=item.get("date", ""),
+                    sku="",
+                    product_id=product_id,
+                    product_url=product_url,
+                ))
+            print(f"[jd-dp] JS 提取到 {len(reviews)} 条评论")
+            return reviews[:self.max_reviews]
+        except Exception as e:
+            print(f"[jd-dp] JS 提取异常: {e}")
+            return []
+
+    def _scroll_and_extract_js(self, product_url: str, product_id: str,
+                                existing_reviews: List[Dict]) -> List[Dict]:
+        """在弹窗中虚拟滚动并用 JS 反复提取，直到达到上限或无新评论。"""
+        all_reviews = list(existing_reviews)
+        seen_texts = set(r.get("review_text", "")[:80] for r in all_reviews)
+        stall = 0
+
+        for round_num in range(50):
+            if len(all_reviews) >= self.max_reviews:
+                break
+
+            # 滚动
+            try:
+                self._tab.run_js(self._scroll_overlay_js())
+            except Exception:
+                pass
+            time.sleep(1.0)
+
+            # 提取
+            new_reviews = self._extract_reviews_via_js(product_url, product_id)
+            new_count = 0
+            for r in new_reviews:
+                txt = r.get("review_text", "")[:80]
+                if txt and txt not in seen_texts:
+                    all_reviews.append(r)
+                    seen_texts.add(txt)
+                    new_count += 1
+                    if len(all_reviews) >= self.max_reviews:
+                        break
+
+            if new_count == 0:
+                stall += 1
+                if stall >= 5:
+                    print(f"[jd-dp] 滚动提取连续 {stall} 轮无新评论，停止")
+                    break
+            else:
+                stall = 0
+                print(f"[jd-dp] 滚动第 {round_num + 1} 轮: +{new_count} 条 (累计 {len(all_reviews)})")
+
+        return all_reviews[:self.max_reviews]
+
     def _extract_reviews_from_page(self, product_url: str, product_id: str) -> List[Dict]:
 
         """兜底：从商品页面直接提取评论（非弹窗模式）。"""
         reviews = []
         seen_texts = set()
 
-        # 尝试多种评论容器选择器（大陆版 + 港澳版 + 通用）
+        # 评论容器选择器 — 优先新版 CSS module 选择器，再试旧版
         selectors = [
-            "css:.comment-item",
-            "css:.J-comments-list .comment-item",
-            "css:#comment .comment-item",
-            "css:.comments-list .comment-item",
-            "css:.J_commentsList .comment-item",
-            "css:.comment-list .comment-item",
-            "css:li.comment-item",
-            "css:div[class*='commentItem']",
+            # 新版京东 CSS module（rate-card）
+            "css:div[class*='rate-card']",
+            "css:div[class*='RateCard']",
             "css:div[class*='comment-item']",
             "css:div[class*='CommentItem']",
+            # 旧版
+            "css:.comment-item",
+            "css:.J-comments-list .comment-item",
+            "css:.J_commentsList .comment-item",
             "css:div[class*='review-item']",
             "css:div[class*='ReviewItem']",
             "css:div[class*='evaluation-item']",
             "css:[class*='commentList'] li",
             "css:[class*='CommentList'] li",
-            "css:[class*='reviewList'] li",
-            "css:.rate-list li",
-            "css:ul[class*='comment'] li",
-            "css:ul[class*='Comment'] li",
+        ]
+
+        # 评论文本选择器 — 同样优先新版
+        desc_selectors = [
+            "css:span[class*='rate-card-main-desc']",
+            "css:span[class*='rate-card-desc']",
+            "css:div[class*='rate-card-content']",
+            "css:div[class*='comment-content']",
+            "css:.comment-con", "css:p.comment-con",
+            "css:[class*='comment-con']", "css:[class*='commentCon']",
+            "css:[class*='commentContent']", "css:[class*='comment_content']",
+            "css:[class*='review-content']", "css:[class*='reviewContent']",
+            "css:[class*='rate-content']", "css:[class*='evaluation-content']",
+            "css:p", RATE_DESC_CSS,
         ]
 
         for sel in selectors:
             try:
-                items = self._tab.eles(sel, timeout=3)
+                items = self._tab.eles(sel, timeout=1.0)
                 if not items:
                     continue
 
                 for item in items:
                     try:
                         text = ""
-                        for desc_sel in [
-                            "css:.comment-con", "css:p.comment-con",
-                            "css:[class*='comment-con']", "css:[class*='commentCon']",
-                            "css:[class*='commentContent']", "css:[class*='comment_content']",
-                            "css:[class*='review-content']", "css:[class*='reviewContent']",
-                            "css:[class*='rate-content']", "css:[class*='evaluation-content']",
-                            "css:.J_commentsList .comment-con",
-                            "css:p", RATE_DESC_CSS,
-                        ]:
+                        for desc_sel in desc_selectors:
                             try:
-                                ele = item.ele(desc_sel, timeout=0.5)
+                                ele = item.ele(desc_sel, timeout=0.2)
                                 if ele:
                                     text = ele.text.strip()
                                     if text:
@@ -1069,7 +1528,7 @@ class JDDrissionPageScraper:
                             except Exception:
                                 continue
 
-                        if not text or len(text) < 10 or text in seen_texts:
+                        if not text or len(text) < 5 or text in seen_texts:
                             continue
                         # 必须包含中文字符
                         if not re.search(r"[\u4e00-\u9fa5]", text):
@@ -1085,7 +1544,7 @@ class JDDrissionPageScraper:
 
                         rating = 5
                         try:
-                            star = item.ele("css:.star", timeout=0.3)
+                            star = item.ele("css:.star", timeout=0.2)
                             if star:
                                 cls = star.attr("class") or ""
                                 m = re.search(r"star(\d)", cls)
@@ -1096,7 +1555,7 @@ class JDDrissionPageScraper:
 
                         user_name = "匿名用户"
                         try:
-                            u = item.ele("css:.u-name, .user-info", timeout=0.3)
+                            u = item.ele("css:.u-name, .user-info, [class*='user-info']", timeout=0.2)
                             if u:
                                 user_name = u.text.strip() or "匿名用户"
                         except Exception:
@@ -1104,7 +1563,7 @@ class JDDrissionPageScraper:
 
                         review_date = ""
                         try:
-                            d = item.ele("css:.comment-date, .date, .order-info", timeout=0.3)
+                            d = item.ele("css:.comment-date, .date, .order-info, [class*='date']", timeout=0.2)
                             if d:
                                 review_date = d.text.strip()
                         except Exception:
@@ -1128,6 +1587,15 @@ class JDDrissionPageScraper:
     def get_screenshots(self) -> List[str]:
         """返回截图文件路径列表。"""
         return [s for s in self._screenshots if os.path.exists(s)]
+
+    def get_browser_cookies(self) -> Dict:
+        """提取浏览器中的京东 cookie，供 API 直连使用。"""
+        try:
+            cookies = self._tab.cookies(all_domains=True)
+            return {c.get("name", ""): c.get("value", "") for c in cookies if c.get("name")}
+        except Exception as e:
+            print("[jd-dp] 提取 cookies 失败: %s" % e)
+            return {}
 
     def close(self):
         """显式关闭浏览器。"""
