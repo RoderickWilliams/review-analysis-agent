@@ -105,6 +105,7 @@ debug/
 # ===========================================
 *.bak
 *_backup_*.py
+_backup_pre_ui_redesign_20260915/
 _patch_*.py
 jd_dp_debug.log
 jd_popup_dump.html

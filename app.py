@@ -810,7 +810,7 @@ def page_product_url():
     )
     col1, _ = st.columns(2)
     with col1:
-        max_reviews = st.number_input("最大采集量（0=无上限）", 0, 100000, 100, help="设为0则持续采集直到没有更多评论")
+        max_reviews = st.number_input("最大采集量（0=无上限）", 0, 100000, 100)
         _max_reviews = max_reviews if max_reviews > 0 else 1000000
 
     if st.button("🚀 开始采集 + 分析", type="primary"):

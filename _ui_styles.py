@@ -232,51 +232,80 @@ def get_styles(theme: str = "light") -> str:
         color:#1A1A2E!important;
     }}
 
-    /* 数字输入框：透明背景、黑字、无深色块 —— 强力覆盖所有可能的 DOM 层级 */
+    /* 数字输入框：白底、黑字、可见边框 */
     .stNumberInput,
-    [data-testid="stNumberInput"],
-    .stNumberInput *,
-    [data-testid="stNumberInput"] * {{
-        background-color:transparent!important; background:transparent!important;
-        color:#1A1A2E!important; -webkit-text-fill-color:#1A1A2E!important;
+    [data-testid="stNumberInput"] {{
+        color:#1A1A2E!important;
     }}
     .stNumberInput input,
     [data-testid="stNumberInput"] input {{
         background-color:transparent!important; background:transparent!important;
         color:#1A1A2E!important; -webkit-text-fill-color:#1A1A2E!important;
+        border:none!important; border-radius:10px!important;
+        box-shadow:none!important; outline:none!important;
+    }}
+    /* 灰色背景来源：stNumberInputContainer — 强制白色 */
+    [data-testid="stNumberInputContainer"],
+    .stNumberInput [data-testid="stNumberInputContainer"],
+    [data-testid="stNumberInput"] [data-testid="stNumberInputContainer"] {{
+        background-color:#FFFFFF!important; background:#FFFFFF!important;
         border:none!important; box-shadow:none!important;
     }}
+    /* 输入框外层容器（react-aria-TextField） */
+    .stNumberInput > div,
+    [data-testid="stNumberInput"] > div,
+    .stNumberInput .react-aria-TextField,
+    [data-testid="stNumberInput"] .react-aria-TextField,
     .stNumberInput [data-baseweb="input"],
     [data-testid="stNumberInput"] [data-baseweb="input"],
     .stNumberInput [data-baseweb="base-input"],
-    [data-testid="stNumberInput"] [data-baseweb="base-input"] {{
-        background-color:transparent!important; background:transparent!important;
-        border:none!important; border-radius:10px!important;
-        box-shadow:0 0 0 0.5px #000000!important;
+    [data-testid="stNumberInput"] [data-baseweb="base-input"],
+    .stNumberInput [role="group"],
+    [data-testid="stNumberInput"] [role="group"] {{
+        background-color:#FFFFFF!important; background:#FFFFFF!important;
+        border:1px solid #E2E8F0!important; border-radius:10px!important;
+        box-shadow:none!important;
     }}
-    .stNumberInput [data-baseweb="input"]>div,
-    [data-testid="stNumberInput"] [data-baseweb="input"]>div,
-    .stNumberInput [data-baseweb="base-input"]>div,
-    [data-testid="stNumberInput"] [data-baseweb="base-input"]>div {{
-        background-color:transparent!important; background:transparent!important;
-        border:none!important;
+    .stNumberInput [data-baseweb="input"] > div,
+    [data-testid="stNumberInput"] [data-baseweb="input"] > div,
+    .stNumberInput [data-baseweb="base-input"] > div,
+    [data-testid="stNumberInput"] [data-baseweb="base-input"] > div,
+    .stNumberInput [role="group"] > div,
+    [data-testid="stNumberInput"] [role="group"] > div,
+    .stNumberInput .react-aria-TextField > div,
+    [data-testid="stNumberInput"] .react-aria-TextField > div {{
+        background-color:#FFFFFF!important; background:#FFFFFF!important;
+        border:none!important; box-shadow:none!important;
     }}
+    /* 兜底：NumberInput 内所有 div 强制白底 */
+    [data-testid="stNumberInput"] div,
+    .stNumberInput div {{
+        background-color:#FFFFFF!important; background:#FFFFFF!important;
+    }}
+    /* 隐藏加减按钮，只保留纯输入框 */
     .stNumberInput button,
     [data-testid="stNumberInput"] button,
     .stNumberInput [data-baseweb="spinbutton"],
     [data-testid="stNumberInput"] [data-baseweb="spinbutton"] {{
-        background:transparent!important; background-color:transparent!important;
-        color:#1A1A2E!important; border:none!important; box-shadow:none!important;
+        display:none!important; width:0!important; height:0!important; opacity:0!important; visibility:hidden!important;
     }}
-    .stNumberInput button:hover,
-    [data-testid="stNumberInput"] button:hover {{
-        background:rgba(99,102,241,0.08)!important;
+    [data-testid="stNumberInput"] > div > div[role="group"] {{
+        border-right:none!important;
     }}
-    .stNumberInput button svg,
-    [data-testid="stNumberInput"] button svg,
-    .stNumberInput svg,
+
+    /* 隐藏所有 SVG（彻底消除黑点） */
     [data-testid="stNumberInput"] svg {{
-        fill:#1A1A2E!important; color:#1A1A2E!important;
+        display:none!important;
+    }}
+
+    /* 隐藏原生 number input spinner（黑点来源） */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {{
+        -webkit-appearance:none!important; margin:0!important;
+        opacity:0!important; height:0!important; width:0!important;
+    }}
+    input[type=number] {{
+        -moz-appearance:textfield!important;
     }}
 
     /* 复选框：透明背景、无深色块、勾选后黑色对勾 */
