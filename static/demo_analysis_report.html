@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReviewPilot 示例分析报告</title>
+<style>
+:root{--canvas:#f5f1ec;--surface:#fff;--ink:#111;--muted:#626260;--line:#d3cec6;--orange:#ff5600;--green:#12b76a;--amber:#f79009;--red:#d92d20;--blue:#0878d1}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;-webkit-font-smoothing:antialiased}.page{max-width:1180px;margin:auto;padding:48px 32px 72px}.topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line);font-size:12px}.brand{font-weight:700}.badge{color:#b93800;background:#fff0e8;border:1px solid #ffd2bb;border-radius:999px;padding:6px 10px;font-size:10px;letter-spacing:.08em}.hero{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:end;padding:58px 0 42px}.eyebrow{color:var(--orange);font-size:11px;font-weight:700;letter-spacing:.12em}.hero h1{font-size:46px;font-weight:500;letter-spacing:-1.8px;margin:14px 0 12px}.hero p{max-width:720px;color:var(--muted);line-height:1.7;margin:0}.score{width:146px;height:146px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0 76.4%,#e7e2dc 76.4%);position:relative}.score:after{content:"";position:absolute;width:108px;height:108px;border-radius:50%;background:var(--canvas)}.score div{position:relative;z-index:1;text-align:center}.score strong{display:block;font-size:34px;font-weight:500}.score span{font-size:11px;color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:26px}.card{position:relative;isolation:isolate;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(17,17,17,.04)}.card:after{content:"";position:absolute;right:-60px;bottom:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,86,0,.13),rgba(255,86,0,.05) 40%,transparent 72%);z-index:-1}.metric small{color:var(--muted)}.metric strong{display:block;font-size:32px;font-weight:500;margin-top:30px}.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:22px;margin-top:22px}.section-title{font-size:16px;font-weight:650;margin:0 0 20px}.summary{font-size:15px;line-height:1.8;color:#383836}.list{display:grid;gap:10px}.item{padding:13px 14px;border:1px solid #e7e2dc;border-radius:10px;background:rgba(255,255,255,.78);font-size:13px}.bar{display:grid;grid-template-columns:62px 1fr 60px;gap:12px;align-items:center;margin:16px 0;font-size:12px;color:var(--muted)}.track{height:8px;border-radius:999px;background:#eeeae5;overflow:hidden}.fill{height:100%;border-radius:inherit}.full{grid-column:1/-1;margin-top:22px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;color:var(--muted);font-weight:600;background:#f1ede8}th,td{padding:12px 13px;border-bottom:1px solid #e7e2dc}tr:last-child td{border-bottom:0}.risk-low{color:#087443}.risk-mid{color:#a15c00}.risk-high{color:#b42318}.footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;color:#8a8782;font-size:10px}@media(max-width:760px){.page{padding:28px 18px}.hero,.grid{grid-template-columns:1fr}.score{display:none}.metrics{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:34px}}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="topbar"><span class="brand">ReviewPilot</span><span class="badge">示例分析报告</span></div>
+  <section class="hero">
+    <div><div class="eyebrow">PRODUCT REVIEW INTELLIGENCE</div><h1>AuroraFit X1 智能运动手表</h1><p>基于 8 条示例评论生成的产品链接分析。报告展示情绪分布、可信度、反讽识别、可疑评论和产品改进建议。</p></div>
+    <div class="score"><div><strong>76.4</strong><span>整体可信度</span></div></div>
+  </section>
+  <section class="metrics">
+    <div class="card metric"><small>评论总数</small><strong>8</strong></div>
+    <div class="card metric"><small>正面评论</small><strong>5</strong></div>
+    <div class="card metric"><small>反讽评论</small><strong>1</strong></div>
+    <div class="card metric"><small>可疑评论</small><strong>1</strong></div>
+  </section>
+  <section class="grid">
+    <div class="card"><h2 class="section-title">口碑结论</h2><p class="summary">整体口碑积极。用户认可屏幕清晰度、佩戴体验、续航和运动轨迹准确度。主要改进点集中在抬腕唤醒灵敏度与充电底座吸附力。样本中发现一条模板化好评，建议在扩大样本后继续观察重复内容比例。</p></div>
+    <div class="card"><h2 class="section-title">情绪分布</h2><div class="bar"><span>正面</span><div class="track"><div class="fill" style="width:62.5%;background:var(--green)"></div></div><b>62.5%</b></div><div class="bar"><span>中性</span><div class="track"><div class="fill" style="width:12.5%;background:var(--amber)"></div></div><b>12.5%</b></div><div class="bar"><span>负面</span><div class="track"><div class="fill" style="width:25%;background:var(--red)"></div></div><b>25.0%</b></div></div>
+    <div class="card"><h2 class="section-title">产品优势</h2><div class="list"><div class="item">屏幕清晰，信息展示直观</div><div class="item">续航稳定，可覆盖多日使用</div><div class="item">户外运动轨迹较准确</div><div class="item">售后响应与换货效率较好</div></div></div>
+    <div class="card"><h2 class="section-title">改进建议</h2><div class="list"><div class="item">优化抬腕亮屏识别速度</div><div class="item">增强充电底座的磁吸稳定性</div><div class="item">简化配套应用中的数据图表</div><div class="item">继续监测模板化评论比例</div></div></div>
+  </section>
+  <section class="card full"><h2 class="section-title">逐条评论分析</h2><table><thead><tr><th>评论摘要</th><th>评分</th><th>情绪</th><th>有效性</th><th>可信度</th><th>风险</th></tr></thead><tbody>
+    <tr><td>屏幕清晰，运动和睡眠记录直观，续航用了六天还有电。</td><td>5</td><td>正面</td><td>真实有效</td><td>94</td><td class="risk-low">低</td></tr>
+    <tr><td>表带柔软，全天佩戴舒适，消息提醒偶尔延迟。</td><td>4</td><td>正面</td><td>真实有效</td><td>88</td><td class="risk-low">低</td></tr>
+    <tr><td>定位速度较快，户外跑步轨迹基本准确。</td><td>5</td><td>正面</td><td>真实有效</td><td>91</td><td class="risk-low">低</td></tr>
+    <tr><td>功能够用，应用里的图表还可以再简单一些。</td><td>4</td><td>中性</td><td>真实有效</td><td>82</td><td class="risk-low">低</td></tr>
+    <tr><td>客服响应很快，换货流程两天处理完成。</td><td>5</td><td>正面</td><td>真实有效</td><td>90</td><td class="risk-low">低</td></tr>
+    <tr><td>充电底座吸力一般，轻碰会移位。</td><td>3</td><td>负面</td><td>真实有效</td><td>78</td><td class="risk-low">低</td></tr>
+    <tr><td>真是太智能了，抬腕三次终于亮屏。</td><td>2</td><td>反讽</td><td>真实有效</td><td>61</td><td class="risk-mid">中</td></tr>
+    <tr><td>很好很好很好，质量非常好，值得购买。</td><td>5</td><td>正面</td><td>模板化好评</td><td>27</td><td class="risk-high">高</td></tr>
+  </tbody></table></section>
+  <div class="footer"><span>ReviewPilot v4.1.6</span><span>示例数据仅用于功能展示</span></div>
+</main>
+</body>
+</html>

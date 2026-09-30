@@ -1553,9 +1553,13 @@ NAV_ICONS = {
 def render_sidebar():
     """Render navigation, language control and utilities."""
     with st.sidebar:
-        st.markdown("""
+        picker_state = st.session_state.get("_language_picker", "中文")
+        st.session_state["language"] = "en" if picker_state in ("EN", "English") else "zh"
+        with open(os.path.join(os.path.dirname(__file__), "static", "reviewpilot-logo.png"), "rb") as logo_file:
+            logo_b64 = base64.b64encode(logo_file.read()).decode("ascii")
+        st.markdown(f"""
         <div class="rp-sidebar-brand">
-            <div class="rp-sidebar-logo">RP</div>
+            <div class="rp-sidebar-logo"><img src="data:image/png;base64,{logo_b64}" alt="ReviewPilot"></div>
             <div>
                 <div class="rp-sidebar-name">ReviewPilot</div>
                 <div class="rp-sidebar-version">Review intelligence</div>
@@ -1564,45 +1568,37 @@ def render_sidebar():
         """, unsafe_allow_html=True)
 
         current = st.session_state.get("current_page", "dashboard")
-        st.markdown('<div class="rp-nav-label">WORKSPACE</div>', unsafe_allow_html=True)
-        for zh, en, key in NAV_ITEMS[:4]:
-            btn_type = "primary" if current == key else "secondary"
-            if st.button(t(zh, en), key=f"nav_{key}",
-                         use_container_width=True, type=btn_type, icon=NAV_ICONS[key]):
-                st.session_state["current_page"] = key
-                st.rerun()
-
-        st.markdown('<div class="rp-nav-label rp-nav-label-data">DATA</div>', unsafe_allow_html=True)
-        for zh, en, key in NAV_ITEMS[4:]:
-            btn_type = "primary" if current == key else "secondary"
-            if st.button(t(zh, en), key=f"nav_{key}",
-                         use_container_width=True, type=btn_type, icon=NAV_ICONS[key]):
-                st.session_state["current_page"] = key
-                st.rerun()
+        for group_key, group_label, items in (
+            ("sidebar_analysis", "ANALYSIS", NAV_ITEMS[:4]),
+            ("sidebar_records", "RECORDS", NAV_ITEMS[4:]),
+        ):
+            with st.container(key=group_key):
+                st.markdown(f'<div class="rp-nav-label">{group_label}</div>', unsafe_allow_html=True)
+                for zh, en, key in items:
+                    btn_type = "primary" if current == key else "secondary"
+                    if st.button(t(zh, en), key=f"nav_{key}",
+                                 use_container_width=True, type=btn_type, icon=NAV_ICONS[key]):
+                        st.session_state["current_page"] = key
+                        st.rerun()
 
         with st.container(key="sidebar_footer"):
-            st.markdown('<div class="rp-sidebar-divider"></div>', unsafe_allow_html=True)
-            st.markdown("""
-            <div class="rp-sidebar-version-row">
-                <span>ReviewPilot v5.0.0</span>
-            </div>
-            """, unsafe_allow_html=True)
+            render_language_switcher()
 
 
 def render_language_switcher():
-    """Render the existing language control in the top-right utility area."""
+    """Render the existing language control in the sidebar footer."""
     picker_state = st.session_state.get("_language_picker", "中文")
-    if picker_state == "English":
-        picker_state = "EN"
-        st.session_state["_language_picker"] = "EN"
+    if picker_state == "EN":
+        picker_state = "English"
+        st.session_state["_language_picker"] = "English"
     with st.container(key="language_switcher"):
         selected_language = st.segmented_control(
-            "Language / 语言", ["中文", "EN"],
-            default="EN" if picker_state == "EN" else "中文",
+            "Language / 语言", ["中文", "English"],
+            default="English" if picker_state == "English" else "中文",
             key="_language_picker",
             label_visibility="collapsed",
         )
-    st.session_state["language"] = "en" if selected_language == "EN" else "zh"
+    st.session_state["language"] = "en" if selected_language == "English" else "zh"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1611,7 +1607,6 @@ def render_language_switcher():
 
 def main():
     apply_styles()
-    render_language_switcher()
     render_sidebar()
     render_ethics_banner()
 
