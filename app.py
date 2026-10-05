@@ -1,4 +1,4 @@
-"""ReviewPilot Streamlit UI."""
+"""ReviewAgent Streamlit UI."""
 # force reload trigger
 
 import os
@@ -28,7 +28,7 @@ from history_manager import (
 from trust_report import TrustReportEngine
 
 st.set_page_config(
-    page_title="ReviewPilot",
+    page_title="ReviewAgent",
     page_icon="R",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -152,7 +152,7 @@ def _demo_record():
             },
         })
     return {
-        "id": "reviewpilot_demo_analysis",
+        "id": "reviewagent_demo_analysis",
         "timestamp": "2026-09-28T09:30:00",
         "timestamp_display": "2026-09-28 09:30:00",
         "source": "product_url",
@@ -182,7 +182,7 @@ def _display_history():
     """Combine persistent records with the session-removable product demo."""
     records = load_history()
     if not st.session_state.get("_demo_hidden", False):
-        return [_demo_record(), *[r for r in records if r.get("id") != "reviewpilot_demo_analysis"]]
+        return [_demo_record(), *[r for r in records if r.get("id") != "reviewagent_demo_analysis"]]
     return records
 
 # ──────────────────────────────────────────────────────────────
@@ -1555,13 +1555,13 @@ def render_sidebar():
     with st.sidebar:
         picker_state = st.session_state.get("_language_picker", "中文")
         st.session_state["language"] = "en" if picker_state in ("EN", "English") else "zh"
-        with open(os.path.join(os.path.dirname(__file__), "static", "reviewpilot-logo.png"), "rb") as logo_file:
+        with open(os.path.join(os.path.dirname(__file__), "static", "reviewagent-logo.png"), "rb") as logo_file:
             logo_b64 = base64.b64encode(logo_file.read()).decode("ascii")
         st.markdown(f"""
         <div class="rp-sidebar-brand">
-            <div class="rp-sidebar-logo"><img src="data:image/png;base64,{logo_b64}" alt="ReviewPilot"></div>
+            <div class="rp-sidebar-logo"><img src="data:image/png;base64,{logo_b64}" alt="ReviewAgent"></div>
             <div>
-                <div class="rp-sidebar-name">ReviewPilot</div>
+                <div class="rp-sidebar-name">ReviewAgent</div>
                 <div class="rp-sidebar-version">Review intelligence</div>
             </div>
         </div>

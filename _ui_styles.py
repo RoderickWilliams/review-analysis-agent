@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Intercom-inspired presentation layer for ReviewPilot."""
+"""Intercom-inspired presentation layer for ReviewAgent."""
 
 
 def get_styles(theme: str = "light") -> str:
