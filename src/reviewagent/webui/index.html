@@ -1,629 +1,161 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="system">
+<html lang="zh-CN" data-theme="light">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ReviewAgent 跨平台口碑与运营工作台（演示）">
-  <title>ReviewAgent · 跨平台口碑工作台</title>
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('ra-theme') || 'system';
-        document.documentElement.dataset.theme = saved;
-      } catch (e) {}
-    })();
-  </script>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>ReviewAgent · 对象层工作台</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314634a'/%3E%3Ctext x='32' y='44' font-family='Georgia,serif' font-size='34' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <a class="skip-link" href="#main">跳到正文</a>
+<a class="skip-link" href="#main">跳到正文</a>
 
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar" aria-label="报告目录">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" width="32" height="32" fill="none">
-            <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2.4"/>
-            <circle cx="16" cy="16" r="4.2" fill="currentColor"/>
-            <path d="M16 3v6M16 23v6M3 16h6M23 16h6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <span class="brand-text">
-          <strong>ReviewAgent</strong>
-          <small>口碑工作台 · v2</small>
-        </span>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="工作台导航">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><span>R</span></span>
+      <div class="brand-copy">
+        <strong>ReviewAgent</strong>
+        <span>口碑工作台 <em>v2</em></span>
       </div>
+    </div>
 
-      <button class="btn btn-primary btn-block" id="new-analysis" type="button">
-        <span aria-hidden="true">＋</span> 新建分析
-      </button>
+    <button class="btn btn-new" id="btn-new" type="button">
+      <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+      新建分析
+    </button>
 
-      <nav class="side-nav">
-        <p class="nav-label">工作台</p>
-        <a href="#panel-overview" class="nav-item is-active" data-tab="overview" data-target="panel-overview">
-          <span>总览</span><span class="nav-index">01</span>
-        </a>
-
-        <p class="nav-label">口碑诊断</p>
-        <a href="#diagnosis-trust" class="nav-item" data-tab="diagnosis" data-target="diagnosis-trust">
-          <span>情绪与可信度</span><span class="nav-index">02</span>
-        </a>
-        <a href="#pain-map" class="nav-item" data-tab="diagnosis" data-target="pain-map">
-          <span>痛点图谱</span><span class="nav-index">03</span>
-        </a>
-        <a href="#competitor" class="nav-item" data-tab="diagnosis" data-target="competitor">
-          <span>竞品对照</span><span class="nav-index">04</span>
-        </a>
-
-        <p class="nav-label">增长机会</p>
-        <a href="#improvements" class="nav-item" data-tab="growth" data-target="improvements">
-          <span>改进方向</span><span class="nav-index">05</span>
-        </a>
-        <a href="#topics" class="nav-item" data-tab="growth" data-target="topics">
-          <span>内容选题</span><span class="nav-index">06</span>
-        </a>
-        <a href="#content-kit" class="nav-item" data-tab="growth" data-target="content-kit">
-          <span>内容生产包</span><span class="nav-index">07</span>
-        </a>
-
-        <p class="nav-label">执行</p>
-        <a href="#ops-plan" class="nav-item" data-tab="ops" data-target="ops-plan">
-          <span>运营方案</span><span class="nav-index">08</span>
-        </a>
-        <a href="#action-list" class="nav-item" data-tab="ops" data-target="action-list">
-          <span>行动清单</span><span class="nav-index">09</span>
-        </a>
-        <a href="#evidence" class="nav-item" data-tab="overview" data-target="evidence">
-          <span>证据与方法</span><span class="nav-index">10</span>
-        </a>
+    <div class="sidebar-scroll">
+      <p class="nav-label">工作台</p>
+      <nav class="side-nav" id="side-nav" aria-label="报告目录">
+        <button class="side-link is-active" type="button" data-target="sec-overview" data-group="overview">
+          <svg class="icon" aria-hidden="true"><use href="#i-layout"></use></svg><span>总览</span><b>01</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-object" data-group="overview">
+          <svg class="icon" aria-hidden="true"><use href="#i-box"></use></svg><span>对象与同款</span><b>02</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-coverage" data-group="overview">
+          <svg class="icon" aria-hidden="true"><use href="#i-database"></use></svg><span>平台覆盖</span><b>03</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-diagnosis" data-group="diagnosis">
+          <svg class="icon" aria-hidden="true"><use href="#i-activity"></use></svg><span>口碑诊断</span><b>04</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-pains" data-group="diagnosis">
+          <svg class="icon" aria-hidden="true"><use href="#i-target"></use></svg><span>痛点图谱</span><b>05</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-competitors" data-group="diagnosis">
+          <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg><span>竞品对照</span><b>06</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-improvements" data-group="growth">
+          <svg class="icon" aria-hidden="true"><use href="#i-spark"></use></svg><span>增长机会</span><b>07</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-topics" data-group="growth">
+          <svg class="icon" aria-hidden="true"><use href="#i-pen"></use></svg><span>内容选题</span><b>08</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-content" data-group="growth">
+          <svg class="icon" aria-hidden="true"><use href="#i-file"></use></svg><span>内容生产包</span><b>09</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-ops" data-group="ops">
+          <svg class="icon" aria-hidden="true"><use href="#i-compass"></use></svg><span>运营方案</span><b>10</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-actions" data-group="ops">
+          <svg class="icon" aria-hidden="true"><use href="#i-check-list"></use></svg><span>行动清单</span><b>11</b>
+        </button>
+        <button class="side-link" type="button" data-target="sec-evidence" data-group="evidence">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span>证据与方法</span><b>12</b>
+        </button>
       </nav>
 
-      <div class="side-foot">
-        <div class="demo-badge"><span class="dot"></span> 演示数据</div>
-        <div class="side-links">
-          <button class="link-btn" id="about-btn" type="button">关于</button>
-          <a href="https://github.com/RoderickWilliams/review-analysis-agent" target="_blank" rel="noreferrer">GitHub</a>
-        </div>
-      </div>
-    </aside>
+      <p class="nav-label nav-label-spaced">关于</p>
+      <button class="side-link side-link-quiet" type="button" id="btn-about-side">
+        <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg><span>数据边界与说明</span>
+      </button>
+      <a class="side-link side-link-quiet" href="https://github.com/" target="_blank" rel="noreferrer">
+        <svg class="icon" aria-hidden="true"><use href="#i-github"></use></svg><span>项目仓库</span>
+      </a>
+    </div>
 
-    <div class="workspace">
-      <header class="topbar">
-        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="打开目录" aria-controls="sidebar" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/>
-          </svg>
+    <div class="side-foot">
+      <div class="side-foot-title"><span class="status-dot"></span>只在本机运行</div>
+      <p>不登录抓取，不调用第三方面板；解析结果来自公开页面。</p>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn menu-btn" id="btn-menu" type="button" aria-label="打开目录" aria-controls="sidebar" aria-expanded="false">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
         </button>
         <div class="crumbs">
-          <span>工作台</span><span class="crumb-sep">/</span><strong>示例商品分析</strong>
+          <span>工作台</span><i>/</i><strong id="crumb-title">新建分析</strong>
         </div>
-        <div class="top-actions">
-          <span class="status-chip"><span class="dot"></span> 本地演示</span>
-          <button class="icon-btn" id="print-btn" type="button" aria-label="打印或导出 PDF">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-              <path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" stroke-linecap="round"/>
-              <path d="M7 14h10v6H7z"/>
-            </svg>
-          </button>
-          <button class="icon-btn" id="theme-btn" type="button" aria-label="切换主题：跟随系统">
-            <svg class="icon-sun" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-              <circle cx="12" cy="12" r="4"/>
-              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"/>
-            </svg>
-            <svg class="icon-moon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <button class="btn btn-ghost" id="about-btn-2" type="button">关于</button>
-        </div>
-      </header>
-
-      <main class="content" id="main">
-        <section class="hero" aria-labelledby="hero-title">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="dot"></span> 分析对象 · 演示</p>
-            <h1 id="hero-title">示例：轻量防晒衣</h1>
-            <div class="hero-badges">
-              <span class="badge badge-own">自家</span>
-              <span class="badge">淘宝 / 天猫</span>
-              <span class="badge">京东</span>
-              <span class="badge">小红书</span>
-              <span class="badge badge-muted">采集档位 · <span id="tier-label">标准</span></span>
-            </div>
-            <p class="hero-meta">
-              <span>最近 12 个月</span>
-              <span class="meta-sep">·</span>
-              <span>已采集 <strong>xx</strong> 条评论 / <strong>xx</strong> 篇笔记</span>
-              <span class="meta-sep">·</span>
-              <span>采集覆盖 <strong>3/3</strong> 平台</span>
-            </p>
-            <p class="hero-note">演示页：所有数字以 x / xx 占位，示例评论标为「示例用户」，不代表真实商品。完整版由本机服务生成真实报告。</p>
-          </div>
-
-          <form class="hero-input" id="analyze-form" autocomplete="off">
-            <label class="field-label" for="object-input">粘贴商品或笔记链接，或输入商品名</label>
-            <div class="input-row">
-              <input id="object-input" name="object" type="text" placeholder="例如：https://item.jd.com/... 或「轻量防晒衣」" />
-              <button class="btn btn-primary" type="submit">开始分析</button>
-            </div>
-            <div class="input-meta">
-              <label class="select-label" for="tier-select">采集档位</label>
-              <select id="tier-select" aria-label="采集档位">
-                <option value="light">轻量 · 快速看方向</option>
-                <option value="standard" selected>标准 · 默认</option>
-                <option value="deep">深度 · 覆盖更全</option>
-                <option value="custom">自定义上限</option>
-              </select>
-              <span class="input-hint">支持淘宝 / 京东 / 小红书链接，也可直接输入商品名</span>
-            </div>
-          </form>
-        </section>
-
-        <div class="demo-banner" role="note">
-          <span class="demo-banner-tag">演示数据</span>
-          <span>这是 v2 界面原型：布局、交互与报告结构可用；分析结果、评论、痛点和运营动作均为 AI 生成样例，数字用 x / xx 占位。真实数据由本机服务采集后替换。</span>
-        </div>
-
-        <section class="kpi-grid" aria-label="核心指标">
-          <article class="kpi kpi-accent">
-            <div class="kpi-head"><span>口碑总分</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value">xx<span class="kpi-unit">/100</span></div>
-            <div class="kpi-foot"><span class="trend trend-flat">横向对比待接入</span></div>
-            <div class="spark" aria-hidden="true"><i style="height:38%"></i><i style="height:52%"></i><i style="height:47%"></i><i style="height:66%"></i><i style="height:61%"></i><i style="height:78%"></i><i style="height:74%"></i></div>
-          </article>
-          <article class="kpi">
-            <div class="kpi-head"><span>有效样本</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value">xx,xxx<span class="kpi-unit">条</span></div>
-            <div class="kpi-foot">去重后进入统计的评论与笔记</div>
-          </article>
-          <article class="kpi">
-            <div class="kpi-head"><span>风险等级</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value kpi-text">中</div>
-            <div class="kpi-foot"><span class="risk-dot risk-mid"></span> 存在需人工复核的信号</div>
-          </article>
-          <article class="kpi">
-            <div class="kpi-head"><span>痛点</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value">x<span class="kpi-unit">个</span></div>
-            <div class="kpi-foot">按频次 × 严重度排序</div>
-          </article>
-          <article class="kpi">
-            <div class="kpi-head"><span>增长机会</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value">x<span class="kpi-unit">个</span></div>
-            <div class="kpi-foot">改进项 + 内容选题</div>
-          </article>
-          <article class="kpi">
-            <div class="kpi-head"><span>采集覆盖</span><span class="tag tag-demo">示例</span></div>
-            <div class="kpi-value">3<span class="kpi-unit">/3 平台</span></div>
-            <div class="kpi-foot">淘宝天猫 · 京东 · 小红书</div>
-          </article>
-        </section>
-
-        <nav class="tabs" role="tablist" aria-label="报告视图">
-          <button class="tab is-active" id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview">总览</button>
-          <button class="tab" id="tab-diagnosis" role="tab" aria-selected="false" aria-controls="panel-diagnosis" data-tab="diagnosis" tabindex="-1">口碑诊断</button>
-          <button class="tab" id="tab-growth" role="tab" aria-selected="false" aria-controls="panel-growth" data-tab="growth" tabindex="-1">增长机会</button>
-          <button class="tab" id="tab-ops" role="tab" aria-selected="false" aria-controls="panel-ops" data-tab="ops" tabindex="-1">运营方案</button>
-        </nav>
-
-        <section class="tab-panel is-active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
-          <div class="layout-two">
-            <div class="stack">
-              <article class="card conclusion">
-                <header class="card-head">
-                  <div>
-                    <p class="card-kicker">结论</p>
-                    <h2>先处理防护描述，再把「轻」讲成可验证的细节</h2>
-                  </div>
-                  <span class="tag tag-demo">建议 · 演示</span>
-                </header>
-                <p class="lead">用户对「轻薄」的感知成立，但「防晒」与「耐洗」缺少可核对的信息。详情页和客服先补参数、检测口径与使用边界，再用真实场景内容承接搜索流量。</p>
-                <ul class="insight-list">
-                  <li><span class="insight-num">01</span><div><strong>卖点顺序</strong><p>把「轻量」「透气」放在首屏，把防晒参数与检测口径放在第二屏，避免用形容词替代证据。</p></div></li>
-                  <li><span class="insight-num">02</span><div><strong>内容切口</strong><p>用「通勤 30 分钟」「洗后还能不能防」这类具体场景做选题，不用「全网最防晒」这类无法验证的说法。</p></div></li>
-                  <li><span class="insight-num">03</span><div><strong>先验证</strong><p>本周先用客服 FAQ 与详情页补信息，观察咨询退货问题是否下降，再决定是否改主图。</p></div></li>
-                </ul>
-                <footer class="card-foot">
-                  <button class="link-btn" type="button" data-evidence="ev-summary">查看依据</button>
-                  <span class="muted">示例结论，完整版逐条绑定证据</span>
-                </footer>
-              </article>
-
-              <article class="card" id="coverage">
-                <header class="card-head">
-                  <div><p class="card-kicker">采集</p><h2>平台覆盖</h2></div>
-                  <a class="link-btn" href="#evidence" data-tab-link="overview" data-target="evidence">查看采集记录</a>
-                </header>
-                <div class="table-wrap">
-                  <table>
-                    <thead><tr><th>平台</th><th>对象</th><th>评论 / 笔记</th><th>时间范围</th><th>状态</th></tr></thead>
-                    <tbody>
-                      <tr><td><span class="platform platform-taobao">淘宝 / 天猫</span></td><td>xx 个同款 / 近似款</td><td>xx 条</td><td>最近 12 个月</td><td><span class="state state-ok">已采集</span></td></tr>
-                      <tr><td><span class="platform platform-jd">京东</span></td><td>xx 个同款 / 近似款</td><td>xx 条</td><td>最近 12 个月</td><td><span class="state state-ok">已采集</span></td></tr>
-                      <tr><td><span class="platform platform-xhs">小红书</span></td><td>xx 篇笔记</td><td>xx 条评论</td><td>最近 12 个月</td><td><span class="state state-warn">部分需登录</span></td></tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p class="footnote">演示数据。真实报告会写出每平台实际采集量、失败项、补采条数与最老一条时间。</p>
-              </article>
-
-              <article class="card" id="sentiment-overview">
-                <header class="card-head">
-                  <div><p class="card-kicker">情绪</p><h2>情绪与可信度</h2></div>
-                  <span class="tag tag-demo">示意分布</span>
-                </header>
-                <div class="sentiment-bar" role="img" aria-label="情绪分布示意：正向、中性、负向、反讽或矛盾">
-                  <span class="seg seg-pos" style="width:46%">正向 xx%</span>
-                  <span class="seg seg-neutral" style="width:27%">中性 xx%</span>
-                  <span class="seg seg-neg" style="width:18%">负向 xx%</span>
-                  <span class="seg seg-mixed" style="width:9%">反讽 xx%</span>
-                </div>
-                <div class="legend">
-                  <span><i class="dot dot-pos"></i>正向</span>
-                  <span><i class="dot dot-neutral"></i>中性</span>
-                  <span><i class="dot dot-neg"></i>负向</span>
-                  <span><i class="dot dot-mixed"></i>反讽 / 矛盾</span>
-                </div>
-                <details class="data-details">
-                  <summary>展开数据表</summary>
-                  <div class="table-wrap">
-                    <table>
-                      <thead><tr><th>维度</th><th>占比</th><th>说明</th></tr></thead>
-                      <tbody>
-                        <tr><td>真诚好评</td><td>xx%</td><td>含具体使用场景</td></tr>
-                        <tr><td>客观中性</td><td>xx%</td><td>描述事实，无强情绪</td></tr>
-                        <tr><td>直接差评</td><td>xx%</td><td>明确不满</td></tr>
-                        <tr><td>反讽 / 明褒暗贬</td><td>xx%</td><td>需人工复核的样本</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </details>
-              </article>
-            </div>
-
-            <aside class="stack">
-              <article class="card priority">
-                <header class="card-head">
-                  <div><p class="card-kicker">本周</p><h2>优先动作</h2></div>
-                  <span class="tag tag-demo">3 条</span>
-                </header>
-                <ol class="action-list">
-                  <li><span class="prio prio-p0">P0</span><div><strong>补防晒参数与检测口径</strong><p>详情页第二屏、客服快捷话术同步更新。</p><button class="link-btn" type="button" data-evidence="ev-uv">依据</button></div></li>
-                  <li><span class="prio prio-p1">P1</span><div><strong>把「轻」拆成可感知细节</strong><p>重量、收纳体积、上身对比，三项至少给两项。</p><button class="link-btn" type="button" data-evidence="ev-light">依据</button></div></li>
-                  <li><span class="prio prio-p1">P1</span><div><strong>做一组通勤场景选题</strong><p>先发 3 篇测试标题，不承诺防晒效果。</p><button class="link-btn" type="button" data-evidence="ev-topic">依据</button></div></li>
-                </ol>
-                <button class="btn btn-secondary btn-block" id="download-actions" type="button">导出行动清单（演示 CSV）</button>
-              </article>
-
-              <article class="card evidence-card" id="evidence">
-                <header class="card-head"><div><p class="card-kicker">边界</p><h2>证据与方法</h2></div></header>
-                <dl class="meta-list">
-                  <div><dt>数据来源</dt><dd>公开采集（演示）</dd></div>
-                  <div><dt>引语校验</dt><dd>未通过不进榜单</dd></div>
-                  <div><dt>统计口径</dt><dd>程序计算，不交给模型</dd></div>
-                  <div><dt>模型版本</dt><dd>演示版不调用模型</dd></div>
-                  <div><dt>商家数据</dt><dd>未接入；手填数据标「未经平台核验」</dd></div>
-                </dl>
-                <p class="footnote">完整版每条痛点、改进、选题都带证据链接，可回到原帖或原评论。</p>
-                <button class="link-btn" type="button" data-evidence="ev-method">查看方法说明</button>
-              </article>
-            </aside>
-          </div>
-        </section>
-
-        <section class="tab-panel" id="panel-diagnosis" role="tabpanel" aria-labelledby="tab-diagnosis" hidden>
-          <div class="section-head">
-            <div><p class="card-kicker">诊断</p><h2>口碑诊断</h2><p>先看可信度，再看情绪与痛点；可疑样本不进入主评分。</p></div>
-            <span class="tag tag-demo">演示</span>
-          </div>
-
-          <div class="grid-3" id="diagnosis-trust">
-            <article class="card score-card">
-              <p class="card-kicker">Trust Score</p>
-              <div class="score-value">xx<span>.x</span></div>
-              <p class="score-label">后验均值 · 95% 区间 xx–xx</p>
-              <div class="score-bar"><i style="width:64%"></i></div>
-              <p class="footnote">风险等级「中」为演示占位；完整版给区间、机制分解与敏感性。</p>
-            </article>
-            <article class="card">
-              <p class="card-kicker">有效性</p>
-              <h3>真实样本占比 xx%</h3>
-              <div class="mini-row"><span>模板化</span><div class="mini-bar"><i style="width:34%"></i></div><b>xx%</b></div>
-              <div class="mini-row"><span>套话堆砌</span><div class="mini-bar"><i style="width:26%"></i></div><b>xx%</b></div>
-              <div class="mini-row"><span>批量复制</span><div class="mini-bar"><i style="width:14%"></i></div><b>xx%</b></div>
-              <div class="mini-row"><span>AI 生成迹象</span><div class="mini-bar"><i style="width:11%"></i></div><b>xx%</b></div>
-              <p class="footnote">比例用于示意；真实值由分类器与规则共同计算。</p>
-            </article>
-            <article class="card">
-              <p class="card-kicker">风险信号</p>
-              <ul class="signal-list">
-                <li><span class="risk-dot risk-mid"></span><div><strong>评分与文本轻微不一致</strong><p>xx 条 · 需人工复核</p></div></li>
-                <li><span class="risk-dot risk-low"></span><div><strong>时间分布正常</strong><p>未发现明显突发</p></div></li>
-                <li><span class="risk-dot risk-mid"></span><div><strong>重复文本</strong><p>xx 组 · 已降权</p></div></li>
-              </ul>
-              <button class="link-btn" type="button" data-evidence="ev-risk">查看信号明细</button>
-            </article>
-          </div>
-
-          <article class="card" id="pain-map">
-            <header class="card-head">
-              <div><p class="card-kicker">痛点</p><h2>痛点图谱</h2></div>
-              <span class="tag tag-demo">按优先级</span>
-            </header>
-            <div class="table-wrap">
-              <table class="table-pains">
-                <thead><tr><th>#</th><th>痛点</th><th>严重度</th><th>类别</th><th>频次</th><th>证据</th></tr></thead>
-                <tbody>
-                  <tr>
-                    <td>01</td>
-                    <td><strong>防晒参数不清晰</strong><p class="cell-sub">「说是防晒，但没写 UPF 和检测口径」</p></td>
-                    <td><span class="sev sev-3">高</span></td>
-                    <td>信息缺失</td>
-                    <td>xx</td>
-                    <td><button class="link-btn" type="button" data-evidence="ev-uv">原评论</button></td>
-                  </tr>
-                  <tr>
-                    <td>02</td>
-                    <td><strong>洗后防护是否还在</strong><p class="cell-sub">「洗了两次，不知道还能不能防」</p></td>
-                    <td><span class="sev sev-2">中</span></td>
-                    <td>使用疑问</td>
-                    <td>xx</td>
-                    <td><button class="link-btn" type="button" data-evidence="ev-wash">原评论</button></td>
-                  </tr>
-                  <tr>
-                    <td>03</td>
-                    <td><strong>尺码与版型不确定</strong><p class="cell-sub">「按平时码买，肩部偏紧」</p></td>
-                    <td><span class="sev sev-2">中</span></td>
-                    <td>购买决策</td>
-                    <td>xx</td>
-                    <td><button class="link-btn" type="button" data-evidence="ev-size">原评论</button></td>
-                  </tr>
-                  <tr>
-                    <td>04</td>
-                    <td><strong>「轻薄」感知不具体</strong><p class="cell-sub">「轻是轻，但说不出和别的差多少」</p></td>
-                    <td><span class="sev sev-1">低</span></td>
-                    <td>表达模糊</td>
-                    <td>xx</td>
-                    <td><button class="link-btn" type="button" data-evidence="ev-light">原评论</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p class="footnote">演示评论为 AI 生成样例，标为「示例用户」；完整版每条引语必须能在原文或图片文字中找到。</p>
-          </article>
-
-          <article class="card" id="competitor">
-            <header class="card-head">
-              <div><p class="card-kicker">可选</p><h2>竞品对照</h2></div>
-              <span class="tag tag-muted">未启用</span>
-            </header>
-            <p class="empty-note">当前分析对象是「自家」商品。需要竞品对照时，在分析对象卡片把归属改成「竞品」，报告会增加对标与差异化，不混入本品主评分。</p>
-          </article>
-        </section>
-
-        <section class="tab-panel" id="panel-growth" role="tabpanel" aria-labelledby="tab-growth" hidden>
-          <div class="section-head">
-            <div><p class="card-kicker">增长</p><h2>增长机会</h2><p>改进动作、内容选题、内容生产包。全部标「建议」，依据不足会写样本不足。</p></div>
-            <span class="tag tag-demo">演示</span>
-          </div>
-
-          <div class="grid-3" id="improvements">
-            <article class="card improvement">
-              <div class="improvement-top"><span class="prio prio-p0">P0</span><span class="tag tag-demo">建议</span></div>
-              <h3>补全防晒参数与检测口径</h3>
-              <p>详情页第二屏和客服快捷话术同步补 UPF 值、检测机构、测试条件；没有数据就写「以产品参数为准」，不猜。</p>
-              <dl class="meta-list compact"><div><dt>依据</dt><dd>痛点 01</dd></div><div><dt>成本</dt><dd>低</dd></div><div><dt>验证</dt><dd>咨询退货问题是否下降</dd></div></dl>
-            </article>
-            <article class="card improvement">
-              <div class="improvement-top"><span class="prio prio-p1">P1</span><span class="tag tag-demo">建议</span></div>
-              <h3>把「轻」拆成三项可感知细节</h3>
-              <p>重量、收纳体积、上身对比。至少给两项，并配同一件衣服的实拍，不用模特图代替。</p>
-              <dl class="meta-list compact"><div><dt>依据</dt><dd>痛点 04</dd></div><div><dt>成本</dt><dd>中</dd></div><div><dt>验证</dt><dd>详情页停留与加购率</dd></div></dl>
-            </article>
-            <article class="card improvement">
-              <div class="improvement-top"><span class="prio prio-p1">P1</span><span class="tag tag-demo">建议</span></div>
-              <h3>补洗后防护 FAQ</h3>
-              <p>用「洗几次、怎么洗、什么时候需要换」三问三答，明确边界，不承诺「永久防晒」。</p>
-              <dl class="meta-list compact"><div><dt>依据</dt><dd>痛点 02</dd></div><div><dt>成本</dt><dd>低</dd></div><div><dt>验证</dt><dd>客服重复咨询量</dd></div></dl>
-            </article>
-          </div>
-
-          <div class="section-subhead" id="topics"><h3>内容选题</h3><span class="tag tag-demo">3 个方向</span></div>
-          <div class="grid-3">
-            <article class="card topic">
-              <p class="card-kicker">通勤场景</p>
-              <h3>「早八通勤 30 分钟，防晒衣到底要不要穿」</h3>
-              <p class="topic-meta">人群：通勤上班族 · 痛点：防晒与闷热 · 形式：图文 6–9 张</p>
-              <ul class="topic-points"><li>标题 A：通勤 30 分钟，防晒衣怎么选</li><li>标题 B：怕闷又想防晒，先看这三个细节</li><li>标题 C：早八人的防晒衣避坑清单</li></ul>
-              <div class="tag-row"><span class="tag tag-soft">建议</span><span class="tag tag-soft">风险词待扫描</span></div>
-            </article>
-            <article class="card topic">
-              <p class="card-kicker">洗护疑问</p>
-              <h3>「防晒衣洗几次就不防了？先看标签」</h3>
-              <p class="topic-meta">人群：已购买用户 · 痛点：洗后防护 · 形式：图文 6 张 + 评论区答疑</p>
-              <ul class="topic-points"><li>标题 A：防晒衣洗后还能不能穿</li><li>标题 B：标签上这三个字，决定怎么洗</li><li>标题 C：别把防晒衣洗坏了</li></ul>
-              <div class="tag-row"><span class="tag tag-soft">建议</span><span class="tag tag-soft">不承诺效果</span></div>
-            </article>
-            <article class="card topic">
-              <p class="card-kicker">对比测评</p>
-              <h3>「三件轻薄防晒衣，同场景实穿对比」</h3>
-              <p class="topic-meta">人群：选购对比人群 · 痛点：轻薄与防护难兼得 · 形式：图文 8 张 + 数据表</p>
-              <ul class="topic-points"><li>标题 A：三件防晒衣，谁更轻</li><li>标题 B：同场景实穿，差别在细节</li><li>标题 C：不吹不黑的防晒衣对比</li></ul>
-              <div class="tag-row"><span class="tag tag-soft">建议</span><span class="tag tag-soft">需真实实测</span></div>
-            </article>
-          </div>
-
-          <article class="card" id="content-kit">
-            <header class="card-head">
-              <div><p class="card-kicker">内容生产包</p><h2>主图、详情页、15 秒脚本</h2></div>
-              <span class="tag tag-demo">只给骨架</span>
-            </header>
-            <div class="kit-grid">
-              <div>
-                <h3>主图 brief</h3>
-                <ul class="plain-list">
-                  <li>1:1 主图：产品正面 + 三个卖点，文字不超过两行</li>
-                  <li>3:4 首图：通勤场景实拍，人物占画面 45%–60%</li>
-                  <li>16:9 视频封面：产品细节 + 一句场景文案</li>
-                </ul>
-              </div>
-              <div>
-                <h3>详情页 8 段</h3>
-                <ol class="plain-list numbered">
-                  <li>买家最在意的问题</li>
-                  <li>谁在穿、什么时候穿</li>
-                  <li>卖点一：轻量</li>
-                  <li>卖点二：防晒参数</li>
-                  <li>卖点三：透气与版型</li>
-                  <li>结构与材质细节</li>
-                  <li>对比与避坑</li>
-                  <li>售后与下一步</li>
-                </ol>
-              </div>
-            </div>
-            <details class="data-details">
-              <summary>展开 15 秒分镜</summary>
-              <div class="table-wrap">
-                <table>
-                  <thead><tr><th>时间</th><th>镜头</th><th>口播</th><th>字幕</th></tr></thead>
-                  <tbody>
-                    <tr><td>0–3s</td><td>通勤场景，产品入画</td><td>早八通勤，防晒衣怎么选</td><td>先看三个细节</td></tr>
-                    <tr><td>3–6s</td><td>产品细节，标签特写</td><td>先看参数，再看轻薄</td><td>参数要能查到</td></tr>
-                    <tr><td>6–10s</td><td>上身对比，收纳展示</td><td>轻不轻，看重量也看体积</td><td>别只看形容词</td></tr>
-                    <tr><td>10–13s</td><td>洗护说明</td><td>洗几次、怎么洗，标签上写清楚</td><td>不承诺永久防晒</td></tr>
-                    <tr><td>13–15s</td><td>产品全景 + 引导</td><td>想看完整参数，去详情页</td><td>先收藏，再对比</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </details>
-            <div class="boundary-note">
-              <strong>边界：</strong>内容包只给可执行骨架，不生成图片；参数、认证、售后政策必须由产品方确认后补。英文清单逐条标「待翻译/待复核」，不直接上线。
-            </div>
-          </article>
-        </section>
-
-        <section class="tab-panel" id="panel-ops" role="tabpanel" aria-labelledby="tab-ops" hidden>
-          <div class="section-head">
-            <div><p class="card-kicker">执行</p><h2>运营方案</h2><p>按需生成，已生成会缓存。下面展示方案骨架，数字用 x / xx 占位。</p></div>
-            <button class="btn btn-primary" id="generate-ops" type="button">生成运营方案（演示）</button>
-          </div>
-
-          <div class="ops-note" id="ops-note" hidden>演示版已生成方案骨架，并缓存到当前会话。完整版会调用本机分析结果生成可下载的详细方案。</div>
-
-          <div class="grid-3" id="ops-plan">
-            <article class="card ops-card">
-              <p class="card-kicker">A · 商品页转化</p>
-              <h3>先补信息，再改表达</h3>
-              <ul class="plain-list">
-                <li>标题：把「轻量 / 防晒 / 通勤」三个词放进前 20 字</li>
-                <li>卖点顺序：轻量 → 防晒参数 → 透气 → 版型</li>
-                <li>主图：1:1 讲参数，3:4 讲场景，16:9 讲细节</li>
-                <li>FAQ：洗后防护、尺码、防晒边界</li>
-                <li>客服：先问使用场景，再给参数，不口头承诺效果</li>
-              </ul>
-            </article>
-            <article class="card ops-card">
-              <p class="card-kicker">B · 定价促销</p>
-              <h3>用规格组合承接不同预算</h3>
-              <ul class="plain-list">
-                <li>价格带：先对标同款/近似款的公开价格，不猜</li>
-                <li>组合：单件 / 两件装 / 通勤套装，按真实成本定</li>
-                <li>节奏：先小力度测试，不一次性放到底价</li>
-                <li>赠品：优先选能解释产品的样品，不送无关小物</li>
-              </ul>
-            </article>
-            <article class="card ops-card">
-              <p class="card-kicker">C · 内容流量</p>
-              <h3>用可验证的场景内容接搜索</h3>
-              <ul class="plain-list">
-                <li>搜索词：通勤防晒衣、轻薄防晒衣、防晒衣怎么洗</li>
-                <li>选题：通勤 30 分钟、洗后防护、三件对比</li>
-                <li>达人：优先真实通勤/户外场景，不找纯摆拍</li>
-                <li>投放素材：先测「参数解释」与「场景实穿」两组</li>
-              </ul>
-            </article>
-          </div>
-
-          <article class="card" id="action-list">
-            <header class="card-head">
-              <div><p class="card-kicker">行动清单</p><h2>本周先做什么</h2></div>
-              <div class="head-actions">
-                <span class="tag tag-demo">演示</span>
-                <button class="btn btn-secondary" id="download-actions-2" type="button">下载 CSV</button>
-              </div>
-            </header>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>优先级</th><th>动作</th><th>为什么</th><th>怎么验证</th><th>依据</th></tr></thead>
-                <tbody>
-                  <tr><td><span class="prio prio-p0">P0</span></td><td>补防晒参数与检测口径</td><td>痛点 01 频次最高，直接影响下单</td><td>客服重复咨询量、退货原因</td><td><button class="link-btn" type="button" data-evidence="ev-uv">证据</button></td></tr>
-                  <tr><td><span class="prio prio-p1">P1</span></td><td>详情页加入「轻量三细节」</td><td>「轻」被认可，但缺少可感知对比</td><td>停留时长、加购率</td><td><button class="link-btn" type="button" data-evidence="ev-light">证据</button></td></tr>
-                  <tr><td><span class="prio prio-p1">P1</span></td><td>发 3 篇通勤场景笔记</td><td>用真实场景承接搜索，不承诺效果</td><td>收藏、评论问题类型</td><td><button class="link-btn" type="button" data-evidence="ev-topic">证据</button></td></tr>
-                  <tr><td><span class="prio prio-p2">P2</span></td><td>测试两件装组合</td><td>给不同预算一个选择，不直接降价</td><td>客单价、转化率</td><td><span class="muted">样本不足，待补</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </article>
-
-          <div class="layout-two ops-bottom">
-            <article class="card">
-              <header class="card-head"><div><p class="card-kicker">需要确认</p><h2>商家侧信息</h2></div></header>
-              <ul class="check-list">
-                <li><span class="check-box" aria-hidden="true"></span> 防晒参数、检测机构、测试条件</li>
-                <li><span class="check-box" aria-hidden="true"></span> 真实成本与可接受价格带</li>
-                <li><span class="check-box" aria-hidden="true"></span> 售后、退换、发货时效</li>
-                <li><span class="check-box" aria-hidden="true"></span> 可用于投放的素材授权</li>
-              </ul>
-              <p class="footnote">这些信息未确认前，报告只给方向，不写具体数字承诺。</p>
-            </article>
-            <article class="card">
-              <header class="card-head"><div><p class="card-kicker">竞品模式</p><h2>对标与差异化</h2></div><span class="tag tag-muted">未启用</span></header>
-              <p class="empty-note">把分析对象改为「竞品」后，这里会替换成对标动作：对方占优的卖点、价格带、内容角度，以及我方可以打的位置。不会出现「改我的详情页」这类只有自家能执行的动作。</p>
-            </article>
-          </div>
-        </section>
-
-        <footer class="page-foot">
-          <span>ReviewAgent v2 · 界面原型</span>
-          <span>演示数据，不可作为经营决策依据</span>
-          <span><a href="https://github.com/RoderickWilliams/review-analysis-agent" target="_blank" rel="noreferrer">仓库</a></span>
-        </footer>
-      </main>
-    </div>
-  </div>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <dialog class="modal" id="intro-dialog" aria-labelledby="intro-title">
-    <div class="modal-head">
-      <div>
-        <p class="card-kicker">能力介绍</p>
-        <h2 id="intro-title">这是 ReviewAgent v2 的界面原型</h2>
       </div>
-      <button class="icon-btn" id="intro-close" type="button" aria-label="关闭">×</button>
-    </div>
-    <div class="modal-body">
-      <p>输入商品链接、商品名或小红书笔记，跨淘宝/天猫、京东、小红书采集公开评论与笔记，输出口碑诊断、痛点、改进方向、内容选题和运营方案。</p>
-      <ul class="plain-list">
-        <li>所有数字用 x / xx 占位，评论标为「示例用户」。</li>
-        <li>事实、统计、建议、文案四层分开标注。</li>
-        <li>每条结论可回到证据；查不到就删掉或标未验证。</li>
-        <li>完整版在本机运行，演示版只展示界面与报告骨架。</li>
-      </ul>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-primary" id="intro-start" type="button" autofocus>开始查看演示</button>
-    </div>
-  </dialog>
+      <div class="topbar-right">
+        <span class="local-pill" title="本机 FastAPI 服务"><span class="status-dot"></span>本地解析</span>
+        <button class="icon-btn" id="btn-print" type="button" aria-label="打印或导出 PDF" title="打印 / PDF">
+          <svg class="icon" aria-hidden="true"><use href="#i-printer"></use></svg>
+        </button>
+        <button class="icon-btn" id="btn-theme" type="button" aria-label="切换深浅色" title="切换深浅色">
+          <svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg>
+        </button>
+        <button class="icon-btn" id="btn-about" type="button" aria-label="关于数据边界" title="关于">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
+        </button>
+      </div>
+    </header>
 
-  <dialog class="modal modal-wide" id="evidence-dialog" aria-labelledby="evidence-title">
-    <div class="modal-head">
-      <div><p class="card-kicker">证据</p><h2 id="evidence-title">证据详情</h2></div>
-      <button class="icon-btn" id="evidence-close" type="button" aria-label="关闭">×</button>
-    </div>
-    <div class="modal-body" id="evidence-body"></div>
-    <div class="modal-foot"><span class="muted">演示证据为 AI 生成样例，不作为事实依据。</span><button class="btn btn-secondary" id="evidence-ok" type="button">知道了</button></div>
-  </dialog>
+    <main class="main" id="main">
+      <section class="search-zone" id="search-zone" aria-label="输入分析对象"></section>
+      <div class="report-summary" id="report-summary"></div>
+      <div class="tabs-zone" id="tabs-zone" hidden></div>
+      <div class="content" id="content" aria-live="polite"></div>
+    </main>
 
-  <script src="app.js"></script>
+    <footer class="footer">
+      <span>ReviewAgent v2 · 对象层预览</span>
+      <span>所有解析与报告在本机生成 · 不把演示数据写进结论</span>
+    </footer>
+  </div>
+</div>
+
+<div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
+<div class="toast-root" id="toast-root" role="status" aria-live="polite"></div>
+<div id="modal-root"></div>
+
+<svg class="svg-sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M9 9.5V20"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M4 8.2 12 4l8 4.2v7.6L12 20l-8-4.2Z"/><path d="m4 8.2 8 4.3 8-4.3M12 12.5V20"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3.5 12h4l2.2-5.5 4.3 11 2.2-5.5h4.3"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.8 19c.4-3.3 2.3-5.2 5.2-5.2s4.8 1.9 5.2 5.2M16 5.5a3 3 0 0 1 0 5.8M17.5 14c1.8.5 2.8 2.2 3 5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="m18.5 16 .9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M14.5 5.5 18.5 9.5M4 20l4.2-.9L20 7.3a2.1 2.1 0 0 0-3-3L5.2 16.2Z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3.8h6l4 4V20H7Z"/><path d="M13 3.8v4h4M10 12h4M10 15.5h4"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.3"/><path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9Z"/></symbol>
+  <symbol id="i-check-list" viewBox="0 0 24 24"><path d="M9 5.5h11M9 12h11M9 18.5h11"/><path d="m3.5 5.5 1.2 1.2L7 4.5M3.5 12l1.2 1.2L7 11M3.5 18.5l1.2 1.2L7 17.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.6c0 4.3-2.8 7.4-7 8.9-4.2-1.5-7-4.6-7-8.9V6Z"/><path d="m9.3 11.8 1.8 1.8 3.7-3.8"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.5V17M12 7.3v.1"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><path d="M7 8V4h10v4M7 17H5.5A1.5 1.5 0 0 1 4 15.5v-5A1.5 1.5 0 0 1 5.5 9h13a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H17"/><rect x="7" y="14" width="10" height="6" rx="1"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2M12 19.2v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.8 12h2M19.2 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4L3 9.5M4 13a8 8 0 0 0 14.5 4L21 14.5"/><path d="M3 5v4.5h4.5M21 19v-4.5h-4.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.8 21 20H3Z"/><path d="M12 9v5M12 17v.1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.5 4.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.7 6.7"/><path d="M14 10a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.1-1.2"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M4.5 19.5h15"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 9 5 5 5-5"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 20v-3.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.9 1.3 1.9 1.3 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.4-1.3-5.4-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.3 2.9.1 3.2.8.8 1.2 1.8 1.2 3.1 0 4.5-2.8 5.5-5.4 5.8.4.4.8 1.1.8 2.2V20"/></symbol>
+</svg>
+
+<script src="./app.js"></script>
 </body>
 </html>

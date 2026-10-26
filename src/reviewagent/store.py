@@ -33,6 +33,19 @@ CREATE TABLE IF NOT EXISTS history (
 CREATE INDEX IF NOT EXISTS idx_history_created ON history(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_history_platform ON history(platform);
 
+CREATE TABLE IF NOT EXISTS analyses (
+    id            TEXT PRIMARY KEY,
+    created_at    TEXT NOT NULL,
+    updated_at    TEXT NOT NULL,
+    status        TEXT NOT NULL,
+    input_text    TEXT,
+    platform      TEXT,
+    title         TEXT,
+    report        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analyses_created ON analyses(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analyses_status ON analyses(status);
+
 CREATE TABLE IF NOT EXISTS runs (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     kind        TEXT NOT NULL,
@@ -170,6 +183,85 @@ def count_history() -> int:
     init_db()
     with _LOCK, connect() as conn:
         return int(conn.execute("SELECT COUNT(*) FROM history").fetchone()[0])
+
+
+# ── v2 对象分析任务 ──────────────────────────────────────────
+
+def save_analysis(analysis: Dict[str, Any]) -> str:
+    """保存或更新一条对象分析。report 列存完整 JSON。"""
+    init_db()
+    analysis_id = str(analysis["analysis_id"])
+    now = datetime.now().isoformat()
+    created_at = str(analysis.get("created_at") or now)
+    updated_at = str(analysis.get("updated_at") or now)
+    obj = analysis.get("object") or {}
+    report = analysis.get("report") or {}
+    with _LOCK, connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO analyses (id, created_at, updated_at, status, input_text, platform, title, report)
+            VALUES (?,?,?,?,?,?,?,?)
+            ON CONFLICT(id) DO UPDATE SET
+                updated_at=excluded.updated_at,
+                status=excluded.status,
+                input_text=excluded.input_text,
+                platform=excluded.platform,
+                title=excluded.title,
+                report=excluded.report
+            """,
+            (
+                analysis_id,
+                created_at,
+                updated_at,
+                str(analysis.get("status") or "ready"),
+                str(analysis.get("input") or ""),
+                str(obj.get("platform") or ""),
+                str(obj.get("title") or ""),
+                json.dumps(analysis, ensure_ascii=False),
+            ),
+        )
+    return analysis_id
+
+
+def get_analysis(analysis_id: str) -> Optional[Dict[str, Any]]:
+    init_db()
+    with _LOCK, connect() as conn:
+        row = conn.execute("SELECT report FROM analyses WHERE id=?", (analysis_id,)).fetchone()
+    if not row:
+        return None
+    try:
+        return json.loads(row["report"])
+    except ValueError:
+        return None
+
+
+def list_analyses(limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    init_db()
+    with _LOCK, connect() as conn:
+        rows = conn.execute("SELECT report FROM analyses ORDER BY created_at DESC, id DESC").fetchall()
+    if limit is not None:
+        rows = rows[:limit]
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        try:
+            out.append(json.loads(row["report"]))
+        except ValueError:
+            continue
+    return out
+
+
+def delete_analysis(analysis_id: str) -> bool:
+    init_db()
+    with _LOCK, connect() as conn:
+        cur = conn.execute("DELETE FROM analyses WHERE id=?", (analysis_id,))
+        return cur.rowcount > 0
+
+
+def clear_analyses() -> int:
+    init_db()
+    with _LOCK, connect() as conn:
+        cur = conn.execute("DELETE FROM analyses")
+        return cur.rowcount
 
 
 def record_run(kind: str, status: str = "running", meta: Optional[Dict[str, Any]] = None) -> int:

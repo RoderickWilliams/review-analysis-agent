@@ -1,6 +1,6 @@
 # ReviewAgent v2 产品规格（已确认需求）
 
-状态：需求冻结，进入实现
+状态：对象层已实现（京东链接解析、同 SPU 匹配、对象层报告、本地工作台）；跨平台评论采集、自动找同款与运营方案生成待接入
 日期：2026-10-27
 目标仓库：https://github.com/RoderickWilliams/review-analysis-agent
 分支：v2（确认演示与报告后再合并 main）

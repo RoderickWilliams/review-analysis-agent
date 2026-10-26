@@ -31,8 +31,8 @@ def test_webui_index_served():
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     assert "ReviewAgent" in resp.text
-    assert "跨平台口碑工作台" in resp.text
-    assert "analyze-form" in resp.text
+    assert "对象层工作台" in resp.text or "先确认对象" in resp.text
+    assert "app.js" in resp.text
 
 
 def test_webui_css_and_js_served():
@@ -41,7 +41,8 @@ def test_webui_css_and_js_served():
     assert "--surface" in css.text
     js = client.get("/app/app.js")
     assert js.status_code == 200
-    assert "activateTab" in js.text
+    assert "runAnalysis" in js.text
+    assert "API = '/v1'" in js.text
 
 
 def test_webui_has_no_external_cdn_assets():
