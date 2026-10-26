@@ -1,0 +1,9 @@
+# dsh-review-agent 组合包补丁：把评论分析插件行插入 profile。
+# 路径按本机默认值填写；换机器时改 pythonPath 与 workdir 两项即可。
+- insert:
+    - id: review-agent
+      name: 'dsh-review-agent'
+      config:
+        pythonPath: 'E:\DeepSeek\review-agent\.venv\Scripts\python.exe'
+        workdir: 'E:\DeepSeek\review-agent'
+        timeoutMs: 900000

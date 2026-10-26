@@ -1,0 +1,15 @@
+{
+  "_comment": "Scrapling 后端的通用选择器配置示例。选择器写 CSS，文本用 ::text，属性用 ::attr(name)。复制成自己的文件后改 item 与各字段即可；站点改版只改这里，不动 Python。",
+  "platform": "taobao",
+  "platform_name": "淘宝",
+  "item": "div.comment-item",
+  "fields": {
+    "review_text": "div.comment-content::text",
+    "rating": "span.star::attr(title)",
+    "reviewer_name": "span.user-name::text",
+    "review_date": "span.comment-date::text",
+    "sku": "span.sku::text",
+    "review_permalink": "a.comment-detail::attr(href)"
+  },
+  "rating_pattern": "(\\d+(?:\\.\\d+)?)"
+}

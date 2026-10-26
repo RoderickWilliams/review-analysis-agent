@@ -1,0 +1,15 @@
+.git
+.venv
+.cache
+.pytest_cache
+.hud
+output
+data
+tests
+docs
+plugins
+skills
+deploy
+*.png
+*.log
+.env
