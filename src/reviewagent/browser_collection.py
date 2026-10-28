@@ -534,7 +534,8 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
     reviews, seen = [], set()
     try:
         emit('opening_browser', '正在打开本机专用浏览器；不要求预先登录')
-        driver = open_driver(platform, headless=False)
+        # 京东评论接口在无头会话里同样可用，不需要登录，也不该弹窗打扰用户。
+        driver = open_driver(platform, headless=(platform == 'jd'))
         if hasattr(driver, 'start_review_listener'):
             driver.start_review_listener()
         if platform == 'jd':
