@@ -53,7 +53,9 @@ def test_operator_drafts_have_evidence_and_preserve_human_edits_on_regeneration(
     record = _operator_record()
     record["enrichment"].update(build_operations(record))
     drafts = record["enrichment"]["drafts"]
-    assert {d["kind"] for d in drafts} == {"selling_point", "support_script", "content_topic", "schedule"}
+    kinds = {d["kind"] for d in drafts}
+    assert kinds == {"selling_point", "support_script", "content_topic"}
+    assert "schedule" not in kinds
     assert all(d["evidence_ids"] == ["fixture-1"] and d["scheduled_date"] == "" for d in drafts)
     drafts[0].update(title="人工标题", body="已核对后的人工草稿", edited=True)
     record["enrichment"]["actions"][0].update(owner="运营", label="人工调整动作", edited=True)

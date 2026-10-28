@@ -114,6 +114,9 @@ def read_config() -> Dict[str, Any]:
         "custom_gateway": bool(config.BASE_URL),
         "llm_configured": config.is_llm_configured(),
         "api_key_count": len(config.API_KEYS),
+        "scraping_enabled": config.SCRAPING_ENABLED,
+        "browser_preference": config.BROWSER_PREFERENCE,
+        "browser_network": getattr(config, "BROWSER_NETWORK", "direct"),
         "similarity_high": config.SIMILARITY_HIGH,
         "similarity_medium": config.SIMILARITY_MEDIUM,
     }
@@ -448,6 +451,8 @@ async def access_control(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     if request.url.path.startswith("/app/"):
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
     return response
 
 

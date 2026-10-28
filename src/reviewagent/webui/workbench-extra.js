@@ -124,3 +124,11 @@ draftsView = function () {
   }).join('');
   return '<div class="section-bar"><h2>可编辑运营草稿 <span class="badge">' + items.length + '</span></h2><button class="button" data-command="drafts-csv" ' + (items.length ? '' : 'disabled') + '>↓ 导出草稿</button></div><div class="heading-actions">' + buttons + '</div><p class="note">按类型分区展示，避免混在一起。产品参数、处理政策和对外承诺需核对；日期、渠道和指标由运营编辑。重新生成会保留人工修改。</p>' + (items.length ? cards : '<p class="note">点击上方对应按钮，仅生成所选类型的草稿。有原句支持才生成；使用已配置模型生成，与本次分析共用最高 ¥1.50 预算；预算不足时保留已有内容并提示。</p>');
 };
+
+setTimeout(function () {
+  var host = document.getElementById('view-content');
+  if (!host || host.children.length || typeof boot === 'function') return;
+  host.innerHTML = '<div class="empty"><h2>页面脚本未正确加载</h2><p>浏览器可能仍在用旧缓存。按 Ctrl+Shift+R 强制刷新，或点击下面的按钮重新加载。</p><button class="button primary" id="force-reload">重新加载</button></div>';
+  var button = document.getElementById('force-reload');
+  if (button) button.onclick = function () { location.href = '/app/?v=' + Date.now(); };
+}, 2500);
