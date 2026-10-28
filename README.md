@@ -79,6 +79,16 @@ venv\Scripts\python.exe run_local.py
 - 清空从环境变量继承的模型 Key，模型只能在工作台左下角配置；
 - 以 `chrome + 直连` 启动采集。
 
+## 命令行采集
+
+不打开工作台也能采集评论，输出 JSON：
+
+```cmd
+venv\Scripts\python.exe crawler.py --url "https://detail.tmall.com/item.htm?id=568742960823" --limit 300 --out reviews.json
+```
+
+参数、输出字段和退出码见 [docs/crawler.md](docs/crawler.md)。它共用同一套采集实现，不调用模型、不写数据库。
+
 ## 模型配置与费用
 
 工作台左下角“配置模型”打开设置，粘贴 API Key 后自动识别可用的模型接口；Key 只保存在进程内存，
@@ -138,6 +148,6 @@ venv\Scripts\python.exe -m pytest -q
 ## 分支说明
 
 - `main`：完整工作台（即当前目录内容）。
-- `v2`：计划放可独立运行的爬虫工具，尚未完成，也尚未推送。
+- `v2`：可独立运行的采集工具入口（`crawler.py`），与 main 共用采集实现，不依赖界面。
 
 GitHub 上的内容在用户明确说“推送到 GitHub”之前不会更新。
