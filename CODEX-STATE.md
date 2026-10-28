@@ -255,3 +255,14 @@
 - 新完整测试ra_414f6f62c72f4077仅取得2条，正文分离生效，但未展开全评；当前_open_comments漏掉普通div入口。已补div精确文本匹配、scrollIntoView与点击。
 - 用户补充：真实总数二三十条就采实际数量，不凑几百条。已明确采集量是上限，新增页面displayed_review_count；确认精确数后target=min(上限,页面数)，分别保留requested_limit/displayed_total/selected，不用假评论补数。
 - 本次合并修复已在exec16593/64628载入，新记录ra_83acc5c8845c43cc正在唯一一次完整原始链接collect测试；模型未配置/未调用。exec92933只重启未测试，中途无重复链接请求。下一步监测该任务，核对正文去重与全评展开；真实评论可用后需用户在本机设置填Key，预算沿用总计<=1.5元。GitHub未推送。
+
+## 2026-10-28（DSH 会话）：采集根因修复，天猫同一链接 33 条全取
+
+- 迁移完成：代码在 E:/review-analysis-agent（分支 codex/reviewagent-upgrade，提交 1dcc71d、18e21b2、50f41dd）；runtime 数据 11 条记录复制到 runtime/；run_local.py 启动 64628；_archive/ 存旧 main 残留；venv 补 pytest/httpx。
+- 离线测试：全量 232 项通过、0 失败（含新增 7 项 tests/test_tmall_review_expansion.py），3 项跳过为既有 xhs 条件跳过。
+- 根因一：`_open_comments` 原来对文字容器用脚本 click，天猫的处理器在子元素 ShowButton 上，点击无效 → 只采到 2 条预览。已改为取最内层元素坐标，用 CDP 真鼠标事件点击（`_CdpDriver.click_at`），无 CDP 时保留脚本点击回退。
+- 根因二：页面标注 33 条，默认列表只渲染 13 条，另有 22 条被“已折叠”隐藏。页面自身接口 `mtop.taobao.rate.detaillist.get` 支持 `foldFlag`：0 返回主列表 11 条，1 返回折叠 22 条（20+2），`pageNo` 分页。
+- `_tmall_rate_rows` 在页面上下文调 `lib.mtop.request` 取两套分页；`normalize_comment` 补认 feedbackDate/createTime/userNick/skuValueStr。
+- 只有星级、正文是平台占位文案的评价（19 条）不计入文本证据，数量写入缺口说明 `rating_only`，不重试。
+- 应用内实测：ra_449f83dac73b44cf 采集 completed、33 条、无缺口；ra_5353ff74a46a4e09 采集 partial、14 条正文 + 缺口“另 19 条只有星级”。两条记录都在 runtime 库内，可对照。详见 docs/collection-20261028.md。
+- 尚未验证：模型分析（llm_configured=false，需用户在本机填 Key）、淘宝详情链接、京东、小红书、逐平台多链接矩阵、README/HR 演示页/v2 爬虫工具拆分、GitHub 推送。
