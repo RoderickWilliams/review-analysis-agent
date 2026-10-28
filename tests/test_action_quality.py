@@ -83,3 +83,52 @@ def test_generate_actions_drops_stale_generated_items():
     result = ops.generate_operations(base, "actions", FakeAgent())
     labels = [item["label"] for item in result["actions"]]
     assert "旧动作" not in labels
+
+def test_content_topic_template_is_xhs_post():
+    points = [point("p1", "毛绒玩具开线", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
+    base = analysis(points, improvements)
+    built = ops.build_operations(base, "content_topic")
+    topics = [d for d in built["drafts"] if d["kind"] == "content_topic"]
+    assert topics and topics[0]["channel"] == "小红书"
+    assert "配图建议" in topics[0]["body"] and "话题" in topics[0]["body"]
+
+
+def test_content_topic_generation_forces_xhs_channel():
+    points = [point("p1", "毛绒玩具开线", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
+    base = analysis(points, improvements)
+
+    class FakeAgent:
+        model = "test-model"
+
+        def _call_llm(self, prompt):
+            ids = [item["id"] for item in json.loads(prompt.rsplit("\n", 1)[-1])]
+            return json.dumps({"items": [{"id": ids[0], "title": "开线了？先别扔，这样处理",
+                                          "body": "正文：我家这只用了两周就开线……\n配图建议：封面实拍\n话题：#避坑",
+                                          "channel": "公众号"}]}, ensure_ascii=False)
+
+    result = ops.generate_operations(base, "content_topic", FakeAgent())
+    generated = [d for d in result["drafts"] if d["kind"] == "content_topic"]
+    assert generated and generated[0]["channel"] == "小红书"
+    assert "配图建议" in generated[0]["body"]
+
+def test_content_topic_accepts_list_and_structured_body():
+    points = [point("p1", "毛绒玩具开线", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
+    base = analysis(points, improvements)
+
+    class FakeAgent:
+        model = "test-model"
+
+        def _call_llm(self, prompt):
+            ids = [item["id"] for item in json.loads(prompt.rsplit("\n", 1)[-1])]
+            return json.dumps([{"id": ids[0], "title": "开线了先别扔",
+                                "body": {"正文": "用了两周就开线……", "配图建议": "封面实拍", "话题": "#避坑"}}],
+                              ensure_ascii=False)
+
+    result = ops.generate_operations(base, "content_topic", FakeAgent())
+    drafts = [d for d in result["drafts"] if d["kind"] == "content_topic" and d.get("generation_method") == "model"]
+    assert drafts
+    assert drafts[0]["channel"] == "小红书"
+    assert "配图建议" in drafts[0]["body"]
