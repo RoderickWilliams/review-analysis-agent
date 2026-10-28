@@ -29,6 +29,7 @@ CAPTURE = {
         {
             "review_text": "上脸两小时就开始闷痘，油皮真的受不了",
             "comment_id": "c1",
+            "review_id": "c1",
             "comment_like": 8,
             "note_id": "n1",
             "note_title": "油皮粉底液实测",
@@ -38,6 +39,7 @@ CAPTURE = {
         {
             "review_text": "遮瑕力确实可以，但下午会斑驳",
             "comment_id": "c2",
+            "review_id": "c2",
             "comment_like": 2,
             "note_id": "n1",
             "note_title": "油皮粉底液实测",
@@ -57,12 +59,12 @@ class FakeAgent:
             {
                 "sentiment_analysis": {"real_sentiment": "negative"},
                 "validity_analysis": {"validity_label": "真实有效"},
-                "final_analysis": {"trust_score": 42, "final_sentiment": "negative"},
+                "final_analysis": {"trust_score": 42, "final_sentiment": "negative", "final_validity": "authentic"},
             },
             {
                 "sentiment_analysis": {"real_sentiment": "neutral"},
                 "validity_analysis": {"validity_label": "真实有效"},
-                "final_analysis": {"trust_score": 66, "final_sentiment": "neutral"},
+                "final_analysis": {"trust_score": 66, "final_sentiment": "neutral", "final_validity": "authentic"},
             },
         ]
         self.calls = []

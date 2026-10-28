@@ -250,7 +250,10 @@ footer {{ color:var(--muted); font-size:12px; text-align:center; margin-top:26px
 
     def _sentiment_bars(self, results: List[Dict[str, Any]]) -> str:
         counts: Dict[str, int] = {}
+        from reviewagent.review_data import result_succeeded
         for item in results:
+            if not result_succeeded(item):
+                continue
             label = (
                 (item.get("sentiment_analysis") or {}).get("real_sentiment")
                 or (item.get("final_analysis") or {}).get("final_sentiment")
@@ -273,8 +276,9 @@ footer {{ color:var(--muted); font-size:12px; text-align:center; margin-top:26px
         return '<div class="bars">' + "".join(rows) + "</div>"
 
     def _trust_block(self, trust: Dict[str, Any]) -> str:
-        score = trust.get("overall_trust_score", 0)
-        risk = trust.get("risk_level", "low")
+        score = trust.get("overall_trust_score")
+        score = "未评估" if score is None else score
+        risk = trust.get("risk_level", "unknown")
         posterior = trust.get("posterior") or {}
         interval = ""
         if posterior.get("low") is not None and posterior.get("high") is not None:
@@ -286,7 +290,7 @@ footer {{ color:var(--muted); font-size:12px; text-align:center; margin-top:26px
             signals.append(f"<li>{_esc(name)}：{_esc(penalty)}</li>")
         return f"""
 <div class="trust">
-  <div><div class="sub">综合可信度</div><div class="score">{_esc(score)}<span class="sub">/100</span></div></div>
+  <div><div class="sub">统计信号分（未校准）</div><div class="score">{_esc(score)}<span class="sub">/100</span></div></div>
   <div><span class="tag">风险 {_esc(_RISK_LABEL.get(risk, risk))}</span>{_esc(interval)}</div>
 </div>
 <p class="sub">{_esc(trust.get('summary', ''))}</p>

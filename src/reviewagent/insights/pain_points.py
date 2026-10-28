@@ -26,7 +26,7 @@ from reviewagent.insights.textutil import (
 CATEGORIES = ["使用体验", "质量", "效果", "价格", "服务", "物流", "包装", "人群不适配", "信息不符", "其他"]
 SEVERITY_LABEL = {1: "轻微", 2: "明显", 3: "严重"}
 
-PAIN_PROMPT_HEADER = """你是中文用户反馈研究分析师。下面是从小红书采到的用户评论（每条带编号、点赞数与来源链接）。
+PAIN_PROMPT_HEADER = """你是中文用户反馈研究分析师。下面是用户导入或从平台采集的评论（每条带编号、点赞数与来源链接）。
 
 ## 任务
 只提取用户在真实使用中遇到的“痛点”，不要把好评、愿望、广告文案算成痛点。
@@ -164,6 +164,9 @@ def extract_pain_points(
             errors.append(f"第 {batches} 批提取失败：{type(exc).__name__}: {str(exc)[:160]}")
             continue
         parsed = parse_json_any(raw)
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("pain_points"), list):
+            errors.append(f"第 {batches} 批模型响应缺少痛点列表")
+            continue
         for item in as_list(parsed, "pain_points"):
             point = _validate_point(item, doc_map)
             if point["statement"]:

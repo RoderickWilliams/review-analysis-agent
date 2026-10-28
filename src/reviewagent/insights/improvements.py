@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Sequence
 
 from reviewagent.insights.textutil import as_list, clamp_int, normalize_text, parse_json_any, truncate
 
-IMPROVE_PROMPT_HEADER = """你是产品经理，正在根据小红书用户的真实抱怨制定改进计划。
+IMPROVE_PROMPT_HEADER = """你是产品经理，正在根据用户评论中有原句支持的抱怨制定改进计划。
 
 ## 输入
 下面每条痛点都有 id、概括、严重度（1-3）、提及人数与代表原句。
@@ -77,6 +77,8 @@ def generate_improvements(
         return {"improvements": [], "rejected": [], "error": f"{type(exc).__name__}: {str(exc)[:160]}"}
 
     parsed = parse_json_any(raw)
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("improvements"), list):
+        return {"improvements": [], "rejected": [], "error": "模型响应缺少改进列表，可重试"}
     by_id = {point["id"]: point for point in verified}
     improvements: List[Dict[str, Any]] = []
     rejected: List[Dict[str, Any]] = []

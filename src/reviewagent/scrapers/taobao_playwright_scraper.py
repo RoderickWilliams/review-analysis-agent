@@ -380,7 +380,7 @@ class TaobaoPlaywrightScraper:
                            !s.includes('avatar') && !s.includes('icon')));
 
             // 星级
-            let rateScore = 5;
+            let rateScore = null;
             const starEl = card.querySelector('[class*="star"], [class*="Star"], [class*="rateLevel"]');
             if (starEl) {
               const starText = textOf(starEl);
@@ -393,7 +393,7 @@ class TaobaoPlaywrightScraper:
               user_name: user,
               time: time,
               sku: sku,
-              content: content.slice(0, 2000),
+              content: content,
               images: imgs,
               rateScore: rateScore,
             });
@@ -507,7 +507,7 @@ class TaobaoPlaywrightScraper:
             user_id = ""
             review_date = raw.get("time", "")
             sku = raw.get("sku", "")
-            rating = raw.get("rateScore", 5)
+            rating = raw.get("rateScore")
             comment_id = raw.get("comment_id", "")
 
         if not review_text:

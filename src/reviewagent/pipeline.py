@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from reviewagent import config
+from reviewagent.review_data import normalize_reviews, summarize_results
 
 
 DEMO_REVIEWS: List[Dict[str, Any]] = [
@@ -81,12 +82,16 @@ def analyze_reviews(
     platform: str = "",
     product_url: str = "",
     agent: Any = None,
+    on_result: Any = None,
+    should_cancel: Any = None,
+    existing_results: Any = None,
 ) -> Dict[str, Any]:
     """运行完整分析流水线。
 
     :param agent: 可注入的分析器（测试或自定义模型用）；省略时按配置创建。
     :raises reviewagent.llm.LLMNotConfigured: 未配置 API Key。
     """
+    reviews = normalize_reviews(reviews)
     if not reviews:
         raise ValueError("没有可分析的评论")
 
@@ -95,8 +100,16 @@ def analyze_reviews(
     from reviewagent.trust_report import TrustReportEngine
 
     if agent is None:
-        agent = ReviewAnalysisAgent(model=config.MODEL, base_url=config.BASE_URL)
-    results = agent.batch_analyze(reviews, product_name=product_name)
+        from reviewagent.affordable_analysis import AffordableAgent
+        agent = AffordableAgent()
+    if on_result is not None or should_cancel is not None or existing_results is not None:
+        results = agent.batch_analyze(reviews, product_name=product_name, on_result=on_result,
+                                      should_cancel=should_cancel, existing_results=existing_results)
+    else:
+        results = agent.batch_analyze(reviews, product_name=product_name)
+    for index, result in enumerate(results):
+        for field, value in reviews[index].items():
+            result.setdefault(field, value)
     report = agent.generate_report(results, product_name=product_name)
 
     try:
@@ -106,7 +119,7 @@ def analyze_reviews(
         trust_report = {}
 
     config.ensure_dirs()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     html_path = HTMLReportGenerator().generate(
         results=results,
         report=report,
@@ -122,6 +135,8 @@ def analyze_reviews(
                 "report": report,
                 "trust_report": trust_report,
                 "detailed_results": results,
+                "reviews": reviews,
+                "statistics": summarize_results(results),
             },
             ensure_ascii=False,
             indent=2,
@@ -152,6 +167,8 @@ def analyze_reviews(
         "json_path": str(json_path),
         "record_id": record_id,
         "review_count": len(results),
+        "statistics": summarize_results(results),
+        "reviews": reviews,
     }
 
 
@@ -163,7 +180,7 @@ def _xhs_review_docs(reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     docs: List[Dict[str, Any]] = []
     for review in reviews:
         text = review.get("review_text") or ""
-        review_id = str(review.get("comment_id") or "").strip()
+        review_id = str(review.get("review_id") or review.get("comment_id") or "").strip()
         if not review_id:
             review_id = hashlib.md5(text.encode("utf-8")).hexdigest()[:12]
         review["review_id"] = review_id
@@ -211,7 +228,7 @@ def analyze_xhs(
     from reviewagent.trust_report import TrustReportEngine
 
     notes = capture.get("notes") or []
-    reviews = list(capture.get("reviews") or [])
+    reviews = normalize_reviews(list(capture.get("reviews") or []), strict=False)
     docs = _xhs_review_docs(reviews)
 
     if not product_name:
@@ -223,13 +240,15 @@ def analyze_xhs(
     trust_report: Dict[str, Any] = {}
     if reviews:
         if agent is None:
-            agent = ReviewAnalysisAgent(model=config.MODEL, base_url=config.BASE_URL)
+            from reviewagent.affordable_analysis import AffordableAgent
+            agent = AffordableAgent()
         results = agent.batch_analyze(reviews, product_name=product_name)
         for index, result in enumerate(results):
             if index < len(reviews):
                 result.setdefault("review_text", reviews[index].get("review_text", ""))
                 result["review_id"] = reviews[index].get("review_id")
                 result.setdefault("platform", reviews[index].get("source_platform") or "小红书")
+        results = [{**reviews[i], **result} for i, result in enumerate(results)]
         report = agent.generate_report(results, product_name=product_name)
         try:
             trust_report = TrustReportEngine().generate_report(reviews, results)
@@ -237,6 +256,10 @@ def analyze_xhs(
             print(f"  Trust Report 生成失败: {exc}")
             trust_report = {}
 
+    if getattr(agent, "ledger", None) is not None:
+        from reviewagent.review_data import result_succeeded
+        successful_ids = {r.get("review_id") for r in results if result_succeeded(r)}
+        docs = [doc for doc in docs if doc.get("review_id") in successful_ids]
     call = llm_call if llm_call is not None else getattr(agent, "_call_llm", None)
     corpus: List[str] = [doc["text"] for doc in docs if doc.get("text")]
     for note in notes:
@@ -275,8 +298,10 @@ def analyze_xhs(
         audience=topic_report.get("audience") or "",
     )
 
+    if getattr(agent, "ledger", None) is not None:
+        report.update(model_cost=agent.ledger.snapshot(), model_coverage=agent.sampling)
     config.ensure_dirs()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     html_path = XhsReportGenerator().generate(
         product_name=product_name,
         capture=capture,
@@ -379,7 +404,7 @@ def summarize(result: Dict[str, Any]) -> str:
         posterior = trust_report.get("posterior") or {}
         if posterior.get("ci95_score"):
             low, high = posterior["ci95_score"]
-            lines.append(f"  可信度区间:   95% CI {low}–{high}（有效样本 {posterior.get('effective_n')}）")
+            lines.append(f"  启发式区间:   95% 区间（未校准） {low}–{high}（有效样本 {posterior.get('effective_n')}）")
         if trust_report.get("risk_level"):
             lines.append(f"  风险等级:     {trust_report['risk_level']}")
     lines += [

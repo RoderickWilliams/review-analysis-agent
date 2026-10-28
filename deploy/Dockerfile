@@ -14,9 +14,9 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-chi-sim \
  && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-RUN pip install --upgrade pip && pip install ".[api]"
+RUN pip install --upgrade pip && pip install ".[api,import]"
 
 COPY config ./config
 COPY .env.example ./.env.example

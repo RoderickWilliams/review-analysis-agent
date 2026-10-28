@@ -105,26 +105,39 @@ class TrustReportEngine:
         """
         # 初始化默认结果
         report: Dict[str, Any] = {
-            "overall_trust_score": 100,
+            "overall_trust_score": None,
             "burst_detected": False,
             "duplicate_groups": [],
             "rating_anomaly": False,
             "length_uniformity_score": 0.0,
             "repeated_phrases": [],
             "mismatch_count": 0,
-            "risk_level": "low",
+            "risk_level": "unknown",
+            "status": "insufficient_data",
             "summary": "",
         }
 
+        from reviewagent.review_data import normalize_reviews, result_succeeded
+        input_count = len(reviews)
+        reviews = normalize_reviews(reviews, strict=False)
+        report["input_count"] = input_count
+        report["valid_text_count"] = len(reviews)
+        report["excluded_count"] = input_count - len(reviews)
         if not reviews:
             report["summary"] = "无评论数据可供分析。"
             return report
 
-        analysis_results = analysis_results or []
+        analysis_results = [r for r in (analysis_results or []) if result_succeeded(r) or (isinstance(r, dict) and r.get("sentiment") and not r.get("error"))]
 
         try:
             # 从评论中提取文本、评分、时间戳
             texts, ratings, timestamps = self._extract_fields(reviews)
+            report["coverage"] = {
+                "text_count": len(texts),
+                "rating_count": sum(1 <= value <= 5 for value in ratings),
+                "dated_count": sum(self._parse_timestamp(value) is not None for value in timestamps),
+                "sentiment_count": len(analysis_results),
+            }
 
             # 1. 时间突发检测
             burst_detected, date_counts = self._detect_temporal_burst(timestamps)
@@ -163,6 +176,7 @@ class TrustReportEngine:
                 mismatch_count=mismatch_count,
             )
             report["overall_trust_score"] = trust_score
+            report["status"] = "available"
             report["risk_level"] = self._risk_level(trust_score)
             report["summary"] = self._build_summary(
                 report=report,
@@ -193,14 +207,15 @@ class TrustReportEngine:
             report["sensitivity"] = self._sensitivity(trust_score, penalties)
             if not report["posterior"]["reliable"]:
                 report["summary"] += (
-                    f" 当前样本量 {len(reviews)} 条，低于 30 条，可信区间较宽，"
-                    "结论只宜作为方向参考。"
+                    f" 当前样本量 {len(reviews)} 条。分数与区间来自启发式规则，"
+                    "尚未进行真实性概率校准；样本条数不能单独证明结论可靠。"
                 )
         except Exception as exc:  # 兜底异常处理，保证不抛出
             logger.exception("生成信任报告时发生异常: %s", exc)
             report["summary"] = f"报告生成过程中出现异常: {exc}"
-            report["risk_level"] = "high"
-            report["overall_trust_score"] = 0
+            report["status"] = "error"
+            report["risk_level"] = "unknown"
+            report["overall_trust_score"] = None
 
         return report
 
@@ -375,13 +390,13 @@ class TrustReportEngine:
             # 字符级 n-gram 适配中英文，无需分词
             vectorizer = TfidfVectorizer(
                 analyzer="char_wb",
-                ngram_range=(2, 4),
+                ngram_range=(1, 3),
+                max_features=5000,
                 lowercase=False,
             )
             tfidf_matrix = vectorizer.fit_transform(valid_texts)
 
             # 计算余弦相似度矩阵
-            sim_matrix = cosine_similarity(tfidf_matrix)
 
             threshold = self.config["duplicate_threshold"]
 
@@ -400,10 +415,13 @@ class TrustReportEngine:
                 if rx != ry:
                     parent[rx] = ry
 
-            for i in range(n):
-                for j in range(i + 1, n):
-                    if sim_matrix[i][j] > threshold:
-                        union(i, j)
+            for start in range(0, n, 128):
+                block = cosine_similarity(tfidf_matrix[start:start + 128], tfidf_matrix)
+                for local, row in enumerate(block):
+                    i = start + local
+                    for j in range(i + 1, n):
+                        if row[j] > threshold:
+                            union(i, j)
 
             # 收集分组
             groups: Dict[int, List[int]] = defaultdict(list)
@@ -634,10 +652,7 @@ class TrustReportEngine:
                 len(repeated_phrases) * cfg["penalty_per_phrase"],
                 cfg["penalty_phrase_cap"],
             )),
-            "rating_sentiment_mismatch": float(min(
-                mismatch_count * cfg["penalty_per_mismatch"],
-                cfg["penalty_mismatch_cap"],
-            )),
+            "rating_sentiment_mismatch": 0.0,  # 评分矛盾可能来自反讽或误触，仅展示，不作为真实性扣分,
         }
 
     def _compute_trust_score(
@@ -716,7 +731,7 @@ class TrustReportEngine:
                 "signal": "rating_sentiment_mismatch",
                 "label": "评分-情感矛盾",
                 "detected": mismatch_count > 0,
-                "detail": f"{mismatch_count} 条矛盾",
+                "detail": f"{mismatch_count} 条矛盾；仅提示一致性，不作真实性扣分",
                 "magnitude": mismatch_count,
                 "penalty": round(penalties["rating_sentiment_mismatch"], 2),
             },
@@ -744,7 +759,10 @@ class TrustReportEngine:
             "effective_n": n,
             "observed_n": int(sample_size),
             "method": "wilson-normal-approx",
-            "reliable": int(sample_size) >= 30,
+            "reliable": False,
+            "adequate_sample_size": int(sample_size) >= 30,
+            "calibrated": False,
+            "interpretation": "启发式分数区间，不是真实性概率或经过校准的置信保证",
         }
 
     def _sensitivity(self, trust_score: int, penalties: Dict[str, float]) -> Dict[str, Any]:

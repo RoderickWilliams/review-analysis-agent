@@ -3,7 +3,8 @@ param(
   [switch]$WithDev,
   [switch]$WithScrapling,
   [switch]$Minimal,
-  [switch]$SkipTests
+  [switch]$SkipTests,
+  [switch]$RunChecks
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,7 +26,7 @@ Write-Host "[3/5] 安装 review-agent"
 
 Push-Location $repo
 try {
-  $extras = if ($Minimal) { 'api' } else { 'api,app,ocr,scrape' }
+  $extras = if ($Minimal) { 'api' } else { 'api,import' }
   if ($WithDev) { $extras += ',dev' }
   if ($WithScrapling) { $extras += ',scrapling' }
   & $py -m pip install -e ".[$extras]" --disable-pip-version-check
@@ -39,15 +40,17 @@ try {
     Write-Host "[4/5] .env 已存在，跳过"
   }
 
-  & $py -m reviewagent doctor
-  if ($LASTEXITCODE -ne 0) { Write-Warning "doctor 退出码 $LASTEXITCODE，按输出逐项补齐依赖或 Key" }
+  if ($RunChecks) {
+    & $py -m reviewagent doctor
+    if ($LASTEXITCODE -ne 0) { Write-Warning "doctor 退出码 $LASTEXITCODE" }
+  }
 
-  if ($WithDev -and -not $SkipTests) {
+  if ($RunChecks -and $WithDev -and -not $SkipTests) {
     Write-Host "[5/5] 运行测试"
     & $py -m pytest -q
     if ($LASTEXITCODE -ne 0) { throw "测试失败，退出码 $LASTEXITCODE" }
   } else {
-    Write-Host "[5/5] 跳过测试（需要时加 -WithDev）"
+    Write-Host "[5/5] 跳过检查（单独获准后加 -RunChecks；测试另需 -WithDev）"
   }
   Write-Host "完成: $py -m reviewagent --help"
 }

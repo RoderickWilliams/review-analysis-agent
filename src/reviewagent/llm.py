@@ -1,45 +1,77 @@
-# -*- coding: utf-8 -*-
-"""LLM 客户端工厂（仅官方 API）
-
-所有调用统一走 OpenAI 兼容的 `chat.completions` 接口。ReviewAgent 不再包含
-网页版登录、access_token、PoW 或 Cloudflare 绕过逻辑。
-"""
+"""OpenAI-compatible client with bounded, per-request key failover."""
 from __future__ import annotations
 
+import threading
+from types import SimpleNamespace
 from typing import Optional
 
 
 class LLMNotConfigured(RuntimeError):
-    """没有可用的 API Key 时抛出。"""
+    pass
 
 
-def create_llm_client(
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
-    timeout: Optional[float] = None,
-    max_retries: Optional[int] = None,
-):
-    """创建 OpenAI 兼容客户端。
+class AnthropicClient:
+    def __init__(self, key, base_url, timeout):
+        self.key, self.base_url, self.timeout = key, base_url.rstrip("/"), timeout
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
 
-    :param api_key: 显式指定 Key；缺省时从配置的 Key 池轮换取用。
-    :param base_url: 兼容网关地址；缺省用配置值。
-    :raises LLMNotConfigured: 未配置任何 Key。
-    """
+    def _create(self, **kwargs):
+        import httpx
+        messages = kwargs["messages"]
+        response = httpx.post(self.base_url + "/messages", headers={"x-api-key": self.key, "anthropic-version": "2023-06-01"},
+                              json={"model": kwargs["model"], "max_tokens": kwargs.get("max_tokens", 2048),
+                                    "system": "\n".join(m["content"] for m in messages if m["role"] == "system"),
+                                    "messages": [m for m in messages if m["role"] != "system"]}, timeout=self.timeout, follow_redirects=False)
+        if response.status_code != 200:
+            error = RuntimeError("模型供应商请求未完成")
+            error.status_code = response.status_code
+            raise error
+        data = response.json()
+        text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
+        usage = data.get("usage", {})
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text))],
+                               usage=SimpleNamespace(prompt_tokens=usage.get("input_tokens"), completion_tokens=usage.get("output_tokens")))
+
+
+class RotatingClient:
+    def __init__(self, keys, base_url, timeout, max_retries, ledger=None):
+        from openai import OpenAI
+
+        self._clients = [OpenAI(api_key=k, base_url=base_url, timeout=timeout, max_retries=max_retries) for k in keys]
+        if base_url and base_url.rstrip("/") == "https://api.anthropic.com/v1":
+            self._clients = [AnthropicClient(key, base_url, timeout) for key in keys]
+        if ledger is not None:
+            from reviewagent.model_budget import BudgetClient
+            self._clients = [BudgetClient(client, ledger) for client in self._clients]
+        self._index = 0
+        self._lock = threading.Lock()
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    def _create(self, **kwargs):
+        with self._lock:
+            start = self._index
+        last_error = None
+        for offset in range(len(self._clients)):
+            index = (start + offset) % len(self._clients)
+            try:
+                response = self._clients[index].chat.completions.create(**kwargs)
+                with self._lock:
+                    self._index = index
+                return response
+            except Exception as exc:
+                last_error = exc
+                if getattr(exc, "status_code", None) not in {401, 402, 403, 429}:
+                    raise
+        raise RuntimeError("所有已配置模型通道均暂不可用，请检查配额或稍后重试") from last_error
+
+
+def create_llm_client(api_key: Optional[str] = None, base_url: Optional[str] = None,
+                      timeout: Optional[float] = None, max_retries: Optional[int] = None):
     from reviewagent import config
 
-    key = api_key or config.get_next_api_key()
-    if not key:
-        raise LLMNotConfigured(
-            "未配置 API Key。请设置环境变量 REVIEWAGENT_API_KEYS（或 OPENAI_API_KEY / DEEPSEEK_API_KEY）后重试。"
-        )
-    try:
-        from openai import OpenAI
-    except ImportError as exc:  # pragma: no cover - 依赖缺失路径
-        raise LLMNotConfigured("缺少 openai 依赖，请先执行 pip install -e .[llm]") from exc
-
-    return OpenAI(
-        api_key=key,
-        base_url=base_url or config.BASE_URL,
-        timeout=timeout if timeout is not None else config.LLM_TIMEOUT,
-        max_retries=max_retries if max_retries is not None else config.LLM_MAX_RETRIES,
-    )
+    keys = [api_key] if api_key else list(config.API_KEYS)
+    if not keys:
+        raise LLMNotConfigured("未配置模型。请设置 REVIEWAGENT_API_KEYS 或 DEEPSEEK_API_KEY。")
+    return RotatingClient(keys, base_url or config.BASE_URL,
+                          config.LLM_TIMEOUT if timeout is None else timeout,
+                          config.LLM_MAX_RETRIES if max_retries is None else max_retries)

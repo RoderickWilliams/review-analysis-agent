@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -75,12 +76,17 @@ def db_path() -> Path:
     return Path(config.DB_PATH)
 
 
-def connect() -> sqlite3.Connection:
+@contextmanager
+def connect():
     conn = sqlite3.connect(str(db_path()), timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def init_db() -> None:
@@ -89,6 +95,9 @@ def init_db() -> None:
 
 
 def _migrate_legacy_json(conn: sqlite3.Connection) -> None:
+    import os
+    if os.environ.get("REVIEWAGENT_MIGRATE_LEGACY_HISTORY", "0") != "1":
+        return
     legacy = Path(config.DATA_DIR) / "history.json"
     if not legacy.is_file():
         return
@@ -146,9 +155,7 @@ def list_history(limit: Optional[int] = None) -> List[Dict[str, Any]]:
     with _LOCK, connect() as conn:
         _migrate_legacy_json(conn)
         sql = "SELECT payload FROM history ORDER BY created_at DESC, id DESC"
-        rows = conn.execute(sql).fetchall()
-    if limit is not None:
-        rows = rows[:limit]
+        rows = conn.execute(sql + " LIMIT ?", (max(0, limit),)).fetchall() if limit is not None else conn.execute(sql).fetchall()
     out: List[Dict[str, Any]] = []
     for row in rows:
         try:
@@ -191,12 +198,17 @@ def save_analysis(analysis: Dict[str, Any]) -> str:
     """保存或更新一条对象分析。report 列存完整 JSON。"""
     init_db()
     analysis_id = str(analysis["analysis_id"])
-    now = datetime.now().isoformat()
+    now = datetime.now().astimezone().isoformat(timespec="seconds")
     created_at = str(analysis.get("created_at") or now)
-    updated_at = str(analysis.get("updated_at") or now)
+    updated_at = now
+    analysis["created_at"] = created_at
+    analysis["updated_at"] = updated_at
     obj = analysis.get("object") or {}
     report = analysis.get("report") or {}
     with _LOCK, connect() as conn:
+        existing = conn.execute("SELECT status FROM analyses WHERE id=?", (analysis_id,)).fetchone()
+        if existing is not None and existing["status"] == "trashed":
+            raise ValueError("记录已清除，请先撤销清除")
         conn.execute(
             """
             INSERT INTO analyses (id, created_at, updated_at, status, input_text, platform, title, report)
@@ -230,7 +242,8 @@ def get_analysis(analysis_id: str) -> Optional[Dict[str, Any]]:
     if not row:
         return None
     try:
-        return json.loads(row["report"])
+        item = json.loads(row["report"])
+        return None if item.get("status") == "trashed" else item
     except ValueError:
         return None
 
@@ -238,9 +251,10 @@ def get_analysis(analysis_id: str) -> Optional[Dict[str, Any]]:
 def list_analyses(limit: Optional[int] = None) -> List[Dict[str, Any]]:
     init_db()
     with _LOCK, connect() as conn:
-        rows = conn.execute("SELECT report FROM analyses ORDER BY created_at DESC, id DESC").fetchall()
-    if limit is not None:
-        rows = rows[:limit]
+        if limit is None:
+            rows = conn.execute("SELECT report FROM analyses WHERE status != 'trashed' ORDER BY created_at DESC, id DESC").fetchall()
+        else:
+            rows = conn.execute("SELECT report FROM analyses ORDER BY created_at DESC, id DESC LIMIT ?", (limit,)).fetchall()
     out: List[Dict[str, Any]] = []
     for row in rows:
         try:
@@ -248,6 +262,23 @@ def list_analyses(limit: Optional[int] = None) -> List[Dict[str, Any]]:
         except ValueError:
             continue
     return out
+
+
+def update_analysis(analysis_id: str, changes: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge progress atomically without overwriting concurrent cancellation state."""
+    init_db()
+    with _LOCK, connect() as conn:
+        row = conn.execute("SELECT report FROM analyses WHERE id=?", (analysis_id,)).fetchone()
+        if row is None:
+            raise ValueError("分析任务不存在")
+        analysis = json.loads(row["report"])
+        if analysis.get("status") == "trashed":
+            raise ValueError("记录已清除")
+        analysis.update(changes)
+        analysis["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+        conn.execute("UPDATE analyses SET report=?,status=?,updated_at=? WHERE id=?",
+                     (json.dumps(analysis, ensure_ascii=False), analysis.get("status", "draft"), analysis["updated_at"], analysis_id))
+    return analysis
 
 
 def delete_analysis(analysis_id: str) -> bool:
@@ -262,6 +293,40 @@ def clear_analyses() -> int:
     with _LOCK, connect() as conn:
         cur = conn.execute("DELETE FROM analyses")
         return cur.rowcount
+
+
+def trash_analyses(batch_id: str) -> int:
+    """Hide saved analyses atomically; retain original records for explicit undo."""
+    init_db()
+    stamp = datetime.now().astimezone().isoformat(timespec="seconds")
+    with _LOCK, connect() as conn:
+        rows = conn.execute("SELECT id,status,report FROM analyses WHERE status != 'trashed'").fetchall()
+        if any(row["status"] in {"queued", "running", "cancel_requested"} for row in rows):
+            raise ValueError("存在运行中或待恢复的任务，请先结束任务并刷新记录")
+        for row in rows:
+            item = json.loads(row["report"])
+            item["trash"] = {"batch_id": batch_id, "previous_status": item.get("status", "draft"), "cleared_at": stamp}
+            item["status"] = "trashed"
+            conn.execute("UPDATE analyses SET status='trashed', updated_at=?, report=? WHERE id=?", (stamp, json.dumps(item, ensure_ascii=False), row["id"]))
+        return len(rows)
+
+
+def restore_analyses(batch_id: str) -> int:
+    init_db()
+    restored = 0
+    stamp = datetime.now().astimezone().isoformat(timespec="seconds")
+    with _LOCK, connect() as conn:
+        for row in conn.execute("SELECT id,report FROM analyses WHERE status='trashed'").fetchall():
+            item = json.loads(row["report"])
+            trash = item.get("trash") or {}
+            if trash.get("batch_id") != batch_id:
+                continue
+            item["status"] = trash.get("previous_status", "draft")
+            item["updated_at"] = stamp
+            item.pop("trash", None)
+            conn.execute("UPDATE analyses SET status=?,updated_at=?,report=? WHERE id=?", (item["status"], stamp, json.dumps(item, ensure_ascii=False), row["id"]))
+            restored += 1
+    return restored
 
 
 def record_run(kind: str, status: str = "running", meta: Optional[Dict[str, Any]] = None) -> int:

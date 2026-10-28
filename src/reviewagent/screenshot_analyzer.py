@@ -105,7 +105,7 @@ OCR 提取的文字：
 1. 识别文字中所有的用户评论（不包括系统提示、广告、按钮文字、页面标题）
 2. 对每条评论提取以下信息：
    - review_text: 评论正文内容
-   - rating: 评分（数字1-5，如果看不到评分则默认为5）
+   - rating: 评分（数字1-5，如果看不到评分则填写 null）
    - reviewer_name: 评论者昵称（看不到则填"匿名用户"）
    - review_date: 评论日期（看不到则填空字符串）
    - sku: 购买的商品规格/型号（看不到则填空字符串）
@@ -129,7 +129,7 @@ OCR 提取的文字：
 1. 识别截图中所有的用户评论（不包括系统提示、广告、按钮文字）
 2. 对每条评论提取以下信息：
    - review_text: 评论正文内容
-   - rating: 评分（数字1-5，如果截图中看不到评分则默认为5）
+   - rating: 评分（数字1-5，如果截图中看不到评分则填写 null）
    - reviewer_name: 评论者昵称（看不到则填"匿名用户"）
    - review_date: 评论日期（看不到则填空字符串）
    - sku: 购买的商品规格/型号（看不到则填空字符串）
@@ -201,11 +201,11 @@ OCR 提取的文字：
             r.setdefault("sku", "")
             r.setdefault("timestamp", r.get("review_date", ""))
             r.setdefault("user_id", r.get("reviewer_name", ""))
-            r.setdefault("rating", 5)
             try:
-                r["rating"] = int(r["rating"]) if str(r.get("rating", "5")).isdigit() else 5
+                rating = int(r["rating"]) if r.get("rating") is not None else None
+                r["rating"] = rating if rating is not None and 1 <= rating <= 5 else None
             except (ValueError, TypeError):
-                r["rating"] = 5
+                r["rating"] = None
 
         print(f"[screenshot] 提取到 {len(reviews)} 条评论（方法: {ocr_method}）")
         return reviews, ""

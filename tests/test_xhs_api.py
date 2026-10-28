@@ -20,6 +20,19 @@ CAPTURE = {
 }
 
 
+@pytest.fixture(autouse=True)
+def enable_capture_for_adapter_contracts(monkeypatch):
+    monkeypatch.setattr(http_api.config, "SCRAPING_ENABLED", True)
+
+
+def test_disabled_capture_never_calls_adapter(monkeypatch):
+    monkeypatch.setattr(http_api.config, "SCRAPING_ENABLED", False)
+    def unexpected(**kwargs):
+        pytest.fail("Disabled capture must not reach the adapter")
+    monkeypatch.setattr(xhs_reader, "capture", unexpected)
+    assert TestClient(http_api.app).post("/v1/xhs/capture", json={"keyword": "离线样本"}).status_code == 409
+
+
 def test_xhs_status(monkeypatch):
     monkeypatch.setattr(xhs_reader, "status", lambda: {"available": True, "logged_in": False})
     client = TestClient(http_api.app)

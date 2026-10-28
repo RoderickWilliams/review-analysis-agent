@@ -13,3 +13,12 @@ deploy
 *.png
 *.log
 .env
+
+.validation-dist
+build
+dist
+**/*.egg-info
+.env.*
+!.env.example
+cookies
+playwright-data

@@ -17,6 +17,9 @@ _TEST_HOME = Path(tempfile.mkdtemp(prefix="reviewagent-test-"))
 
 os.environ["REVIEWAGENT_HOME"] = str(_TEST_HOME)
 os.environ["REVIEWAGENT_LLM_CACHE"] = "0"
+os.environ.pop("REVIEWAGENT_ACCESS_TOKEN", None)
+os.environ["REVIEWAGENT_ENABLE_SCRAPING"] = "0"
+os.environ["REVIEWAGENT_MIGRATE_LEGACY_HISTORY"] = "0"
 os.environ["REVIEWAGENT_MODEL"] = "test-model"
 os.environ["REVIEWAGENT_API_KEYS"] = "sk-test-0123456789abcdef0123456789abcdef"
 
@@ -85,3 +88,10 @@ def _clean_state():
 @pytest.fixture()
 def trust_engine():
     return TrustReportEngine()
+
+@pytest.fixture(autouse=True)
+def _deny_external_network(monkeypatch):
+    import socket
+    def denied(*args, **kwargs):
+        raise AssertionError("离线测试禁止外部网络连接；请注入测试替身")
+    monkeypatch.setattr(socket, "create_connection", denied)

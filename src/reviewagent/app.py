@@ -93,6 +93,8 @@ def render_ethics_banner():
 
 
 def trust_color(score):
+    if score is None:
+        return "#617068"
     if score >= 70:
         return "#12b76a"
     elif score >= 40:
@@ -1205,9 +1207,12 @@ def display_results(reviews, results, report, trust_report):
     render_page_header(t("分析结果", "Analysis results"), t(f"共分析 {len(results)} 条评论", f"{len(results)} reviews analyzed"))
 
     total = len(results)
-    sarcastic = sum(1 for r in results if r.get("sentiment_analysis", {}).get("is_sarcastic"))
-    suspicious = sum(1 for r in results if r.get("final_analysis", {}).get("final_validity") in ("suspicious", "fake"))
-    avg_trust = sum(r.get("final_analysis", {}).get("trust_score", 50) for r in results) / total if total else 0
+    from reviewagent.review_data import summarize_results
+    statistics = summarize_results(results)
+    sarcastic = statistics["sarcastic_count"]
+    suspicious = statistics["suspicious_count"]
+    avg_trust = statistics["avg_trust_score"]
+    avg_trust_label = f"{avg_trust:.1f}" if avg_trust is not None else t("未评估", "Unknown")
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -1217,7 +1222,7 @@ def display_results(reviews, results, report, trust_report):
     with c3:
         st.markdown(metric_card_html(suspicious, t("可疑评论", "Suspicious")), unsafe_allow_html=True)
     with c4:
-        st.markdown(metric_card_html(f"{avg_trust:.1f}", t("平均可信度", "Average trust")), unsafe_allow_html=True)
+        st.markdown(metric_card_html(avg_trust_label, t("平均可信度", "Average trust")), unsafe_allow_html=True)
 
     st.markdown(f'<div class="rp-section-title">{t("产品口碑报告", "Product reputation report")}</div>', unsafe_allow_html=True)
     st.code(json.dumps(report, ensure_ascii=False, indent=2), language="json")

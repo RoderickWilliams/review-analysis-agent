@@ -120,7 +120,10 @@ class MultiPlatformScraper:
         if not url or url.isdigit():
             return None
         try:
-            netloc = urlparse(url).netloc.lower()
+            parsed = urlparse(url)
+            if parsed.scheme not in {"http", "https"} or parsed.username or parsed.password:
+                return None
+            netloc = (parsed.hostname or "").lower().rstrip(".")
         except Exception:
             return None
         if not netloc:
@@ -128,7 +131,7 @@ class MultiPlatformScraper:
         if netloc in PLATFORM_DOMAIN_MAP:
             return PLATFORM_DOMAIN_MAP[netloc]
         for domain, platform in PLATFORM_DOMAIN_MAP.items():
-            if netloc.endswith(domain) or domain in netloc:
+            if netloc.endswith("." + domain):
                 return platform
         return None
 
@@ -152,9 +155,13 @@ class MultiPlatformScraper:
                         "AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"},
             )
             final_url = resp.url
+            if MultiPlatformScraper.detect_platform(final_url) != MultiPlatformScraper.detect_platform(url):
+                raise ValueError("短链跳转至平台外地址，停止采集")
             if final_url and final_url != url:
                 print(f"[multi] 短链解析: {url} -> {final_url}")
                 return final_url
+        except ValueError:
+            raise
         except Exception as e:
             print(f"[multi] 短链解析失败: {e}，使用原始 URL")
         return url
@@ -188,6 +195,8 @@ class MultiPlatformScraper:
     def _scrape_single(self, platform: str, target: str,
                        max_reviews: int) -> List[Dict]:
         """抓取单个平台评论。"""
+        if self.detect_platform(target) != platform:
+            raise ValueError("来源链接与采集平台不符")
         scraper = self._create_scraper(platform)
         if scraper is None:
             return []

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """同款 / 近似款匹配：只比较已经拿到的对象，不编造候选。
 
-当前阶段没有登录采集通道，所以这里不做“自动跨平台搜索”。它做三件事：
-1. 把同一 SPU 下的不同规格列成同款候选；
+本模块只核对已有对象；真实跨平台检索由 collection 的专用浏览器流程负责：
+1. 把同一 SPU 下的不同规格分别列为关联候选；
 2. 把用户补充的链接按品牌、型号词、标题、类目逐项比较；
 3. 每个候选都给出匹配等级、分数、理由和缺失字段，匹配不了就写“不确定”。
 
@@ -12,6 +12,9 @@ unavailable_fields 中说明；不能用它们排序或去重。
 from __future__ import annotations
 
 import re
+import hashlib
+
+from reviewagent.product_groups import compare_identity
 import unicodedata
 from difflib import SequenceMatcher
 from typing import Any, Dict, Iterable, List, Optional, Sequence
@@ -20,10 +23,11 @@ from urllib.parse import urlparse
 LEVEL_LABELS = {
     "exact": "同款",
     "similar": "近似款",
+    "variant": "不同规格",
     "competitor": "竞品",
     "uncertain": "不确定",
 }
-LEVEL_RANK = {"exact": 0, "similar": 1, "competitor": 2, "uncertain": 3}
+LEVEL_RANK = {"exact": 0, "variant": 1, "similar": 2, "competitor": 3, "uncertain": 4}
 
 GENERIC_WORDS = {
     "商品", "产品", "正品", "官方", "旗舰", "旗舰店", "专卖", "专营", "自营",
@@ -250,7 +254,11 @@ def compare_objects(primary: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[
         title_sim=title_sim,
         token_sim=token_sim,
     )
+    strict = compare_identity(primary, candidate)
+    level = strict["level"]
+    reasons.append(strict["reason"])
     return {
+        "merge_allowed": strict["merge_allowed"], "identity_missing": strict["missing"],
         "score": score,
         "level": level,
         "level_label": LEVEL_LABELS[level],
@@ -276,14 +284,22 @@ def _candidate_record(
 ) -> Dict[str, Any]:
     platform_id = _platform_id(obj)
     url = _url(obj)
-    candidate_id = f"cand-{platform_id or abs(hash(url)) % 10_000_000}"
+    candidate_id = "cand-" + hashlib.sha256(f"{_platform(obj)}|{platform_id}|{url}".encode()).hexdigest()[:16]
     return {
         "candidate_id": candidate_id,
         "source": source,
-        "source_label": "同 SPU 规格" if source == "spu_variant" else "用户补充链接",
+        "source_label": {"spu_variant": "同 SPU 规格", "browser_search": "平台检索", "user_link": "用户补充链接"}.get(source, source),
+        "identity_source": obj.get("identity_source", ""),
+        "discovery_source": obj.get("discovery_source", ""),
         "match_level": comparison["level"],
         "match_label": comparison["level_label"],
         "match_score": comparison["score"],
+        "merge_allowed": comparison.get("merge_allowed", False),
+        "identity_missing": comparison.get("identity_missing", []),
+        "model": obj.get("model") or obj.get("mpn") or "",
+        "key_specs": obj.get("key_specs") or {},
+        "reviews_scope": obj.get("reviews_scope", "unknown"),
+        "specs_confirmed": obj.get("specs_confirmed", bool(obj.get("key_specs"))),
         "match_reasons": comparison["reasons"],
         "mismatches": comparison["mismatches"],
         "signals": comparison["signals"],
@@ -302,7 +318,7 @@ def _candidate_record(
         "note": note,
         "evidence": [
             {
-                "type": "product_page",
+                "type": "search_result" if source == "browser_search" else "product_page",
                 "title": _clean(obj.get("title")) or url,
                 "url": url,
                 "quote": _clean(obj.get("title")),
@@ -318,6 +334,8 @@ def _variant_object(primary: Dict[str, Any], variant: Dict[str, Any]) -> Dict[st
         "platform_id": _clean(variant.get("sku_id")),
         "title": _clean(variant.get("title")),
         "brand": primary.get("brand"),
+        "model": primary.get("model", ""),
+        "key_specs": {**(primary.get("key_specs") or {}), **{k: str(v) for k, v in (("颜色", variant.get("color")), ("尺寸", variant.get("size"))) if v}},
         "shop": primary.get("shop"),
         "category": primary.get("category") or [],
         "url": _clean(variant.get("url")),
@@ -375,15 +393,12 @@ def build_same_products(
             continue
         variant_obj = _variant_object(primary, variant)
         comparison = compare_objects(primary, variant_obj)
-        comparison["level"] = "exact"
-        comparison["level_label"] = LEVEL_LABELS["exact"]
-        comparison["score"] = max(comparison["score"], 0.9)
-        comparison["reasons"].insert(0, "同一 SPU 下的不同规格")
+        comparison["reasons"].insert(0, "同 SPU 仅表示有关联，规格不同仍独立建组")
         candidate = _candidate_record(
             variant_obj,
             source="spu_variant",
             comparison=comparison,
-            note="同一 SPU；颜色/容量/套装不同，可作为同款样本。",
+            note="同一 SPU 的颜色、容量或套装差异不自动合并评论。",
         )
         if variant.get("color") or variant.get("size"):
             candidate["spec"] = " / ".join(
@@ -400,9 +415,9 @@ def build_same_products(
         comparison = compare_objects(primary, obj)
         candidate = _candidate_record(
             obj,
-            source="user_link",
+            source="browser_search" if obj.get("discovery_source") == "owned_browser_search" or obj.get("source") == "browser_search" else "user_link",
             comparison=comparison,
-            note="用户补充的链接，按同一套规则比较；未采集评论。",
+            note="按品牌、型号和关键规格核对；候选元数据不代表已采集评论。",
         )
         if _clean(obj.get("status")) in {"needs_capture", "needs_link"} and not _clean(obj.get("title")):
             candidate["match_level"] = "uncertain"
@@ -430,13 +445,14 @@ def build_same_products(
         "shown": len(candidates),
         "exact": counts.get("exact", 0),
         "similar": counts.get("similar", 0),
+        "variant": counts.get("variant", 0),
         "competitor": counts.get("competitor", 0),
         "uncertain": counts.get("uncertain", 0),
         "sibling_variants": sibling_count,
         "user_supplied": sum(1 for c in candidates if c.get("source") == "user_link"),
         "platforms": platforms,
-        "auto_discovery": "unavailable",
-        "auto_discovery_reason": "当前没有登录采集通道，不会自动跨平台搜索同款；候选只来自同一 SPU 与用户补充链接。",
+        "auto_discovery": "not_started",
+        "auto_discovery_reason": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
         "search_keywords": _search_keywords(primary),
         "notes": notes,
     }

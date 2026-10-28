@@ -814,7 +814,10 @@ class ReviewChain:
         """
         logger.debug("生成报告: product=%s, count=%d", product_name, len(batch_results))
 
+        from reviewagent.review_data import result_succeeded, summarize_results
+        stats = summarize_results(batch_results)
         total = len(batch_results)
+        successful = [r for r in batch_results if result_succeeded(r)]
 
         # 统计情绪分布和可疑评论数
         sentiment_dist: Dict[str, int] = {
@@ -822,18 +825,18 @@ class ReviewChain:
         }
         suspicious_count = 0
 
-        for r in batch_results:
+        for r in successful:
             final = r.get("final_analysis", {}) or {}
-            sentiment = final.get("final_sentiment", "neutral")
+            sentiment = final.get("final_sentiment")
             if sentiment in sentiment_dist:
                 sentiment_dist[sentiment] += 1
-            validity = final.get("final_validity", "authentic")
+            validity = final.get("final_validity")
             if validity in ("suspicious", "fake"):
                 suspicious_count += 1
 
         # 提取关键结果摘要给 LLM（最多 50 条，控制 Token 消耗）
         batch_summary: List[Dict[str, Any]] = []
-        for r in batch_results[:50]:
+        for r in successful[:50]:
             final = r.get("final_analysis", {}) or {}
             batch_summary.append({
                 "sentiment": final.get("final_sentiment"),
@@ -844,6 +847,12 @@ class ReviewChain:
                     r.get("review_text", "")[:50] if r.get("review_text") else "",
                 ),
             })
+
+        if not successful:
+            return {"status": "insufficient_data", "total_reviews": total, "analyzed_reviews": 0,
+                    "failed_reviews": stats["failed_count"], "pending_reviews": stats["pending_count"],
+                    "cancelled_reviews": stats["cancelled_count"], "sentiment_distribution": sentiment_dist,
+                    "suspicious_review_count": 0}
 
         # 调用 LLM 生成报告
         report = self._call_and_parse(

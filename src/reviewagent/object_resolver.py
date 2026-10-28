@@ -27,7 +27,7 @@ MAX_HTML_BYTES = 3_000_000
 
 JD_HOSTS = {"item.jd.com", "item.m.jd.com", "u.jd.com", "3.cn", "jd.com", "www.jd.com"}
 TMALL_HOSTS = {"detail.tmall.com", "detail.m.tmall.com", "tmall.com", "www.tmall.com", "m.tmall.com"}
-TAOBAO_HOSTS = {"item.taobao.com", "item.m.taobao.com", "taobao.com", "www.taobao.com", "m.taobao.com", "m.tb.cn"}
+TAOBAO_HOSTS = {"item.taobao.com", "item.m.taobao.com", "taobao.com", "www.taobao.com", "m.taobao.com", "m.tb.cn", "e.tb.cn"}
 XHS_HOSTS = {"www.xiaohongshu.com", "xiaohongshu.com", "xhslink.com", "www.xhslink.com"}
 
 PLATFORM_LABELS = {
@@ -86,30 +86,48 @@ def _platform_label(platform: str) -> str:
 
 
 def _request(url: str, *, allow_redirects: bool = True) -> requests.Response:
-    response = requests.get(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "zh-CN,zh;q=0.9",
-        },
-        timeout=HTTP_TIMEOUT,
-        allow_redirects=allow_redirects,
-    )
-    response.encoding = "utf-8"
-    return response
+    from urllib.parse import urljoin
+    for redirect in range(5):
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+        allowed = host in {"3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com"} or any(host == domain or host.endswith("." + domain) for domain in ("jd.com", "tmall.com", "taobao.com", "xiaohongshu.com"))
+        if parsed.scheme not in {"http", "https"} or not allowed or parsed.username or parsed.password or parsed.port not in {None, 80, 443}:
+            raise requests.RequestException("商品来源地址不受支持")
+        response = requests.get(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html", "Accept-Language": "zh-CN,zh;q=0.9"}, timeout=HTTP_TIMEOUT, allow_redirects=False, stream=True)
+        if allow_redirects and response.is_redirect:
+            target = response.headers.get("Location", "")
+            response.close()
+            if redirect == 4 or not target:
+                raise requests.RequestException("商品链接重定向次数过多")
+            url = urljoin(url, target)
+            continue
+        try:
+            response.raise_for_status()
+            chunks, size = [], 0
+            for chunk in response.iter_content(65536):
+                size += len(chunk)
+                if size > MAX_HTML_BYTES:
+                    raise requests.RequestException("商品页面超过读取上限")
+                chunks.append(chunk)
+            response._content = b"".join(chunks)
+            response._content_consumed = True
+            response.encoding = "utf-8"
+            return response
+        finally:
+            response.close()
+    raise requests.RequestException("商品链接无法展开")
 
 
 def _unwrap_short_url(url: str, platform: str) -> Tuple[str, List[str]]:
     """展开京东 / 淘宝短链；失败时保留原链接并记录 warning。"""
     warnings: List[str] = []
     host = _host(url)
-    if host not in {"u.jd.com", "3.cn", "m.tb.cn", "xhslink.com", "www.xhslink.com"}:
+    if host not in {"u.jd.com", "3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com"}:
         return url, warnings
     try:
         response = _request(url)
         final = response.url or url
-        if final != url:
+        if final != url and detect_platform(final) in {"jd", "taobao", "tmall", "xhs"} and not _host(final).startswith(("login.", "passport.")) and not any(word in urlparse(final).path.lower() for word in ("login", "passport", "captcha", "verify")):
             return final, warnings
         warnings.append("短链接没有跳转到商品页，可能已失效。")
     except requests.RequestException as exc:
@@ -470,9 +488,10 @@ def resolve_object(text: str) -> Dict[str, Any]:
     if not url:
         return _resolve_keyword(raw)
 
+    input_url = url
     platform = detect_platform(url)
     url, short_warnings = _unwrap_short_url(url, platform)
-    platform = detect_platform(url) if platform == "unknown" else platform
+    platform = detect_platform(url) if detect_platform(url) != "unknown" else platform
     if platform == "jd":
         data = _resolve_jd(url)
     elif platform in {"tmall", "taobao"}:
@@ -486,5 +505,6 @@ def resolve_object(text: str) -> Dict[str, Any]:
         data["status_label"] = "未支持的链接"
         data["gaps"].append(_gap("unsupported_host", "不支持的平台", "当前只识别京东、淘宝/天猫、小红书链接。", "high"))
         data["message"] = "这个链接不属于当前支持的平台。"
+    data["input_url"] = input_url
     data["warnings"] = short_warnings + list(data.get("warnings") or [])
     return data

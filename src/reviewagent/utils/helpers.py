@@ -76,6 +76,10 @@ _CSV_EXPORT_COLUMNS = [
     "risk_level",
     "summary",
     "similar_count",
+    "review_id",
+    "review_date",
+    "source_url",
+    "status",
 ]
 
 # CSV 加载支持的列名（按优先级排序）
@@ -86,6 +90,11 @@ _CSV_LOAD_COLUMNS = [
     "product_name",
     "timestamp",
     "user_id",
+    "review_date",
+    "source_url",
+    "source_platform",
+    "review_id",
+    "reviewer_name",
 ]
 
 
@@ -339,7 +348,11 @@ def export_to_csv(results: List[Dict[str, Any]], filepath: str) -> str:
                 final = result.get("final_analysis", {}) or {}
 
                 row = {
-                    "review_text": truncate_text(result.get("review_text", ""), max_len=500),
+                    "review_text": result.get("review_text", ""),
+                    "review_id": result.get("review_id", ""),
+                    "review_date": result.get("review_date", ""),
+                    "source_url": result.get("source_url", ""),
+                    "status": result.get("status", ""),
                     "rating": result.get("rating", ""),
                     "platform": result.get("platform", ""),
                     "sentiment_label": sentiment.get("sentiment_label", ""),
@@ -353,7 +366,8 @@ def export_to_csv(results: List[Dict[str, Any]], filepath: str) -> str:
                     "summary": final.get("summary", ""),
                     "similar_count": result.get("similar_count", ""),
                 }
-                writer.writerow(row)
+                from reviewagent.review_data import csv_safe
+                writer.writerow({key: csv_safe(value) for key, value in row.items()})
 
         logger.info("CSV 导出成功: %s（共 %d 条）", filepath, len(results))
         return filepath
@@ -418,7 +432,7 @@ def load_reviews_from_csv(filepath: str) -> List[Dict[str, Any]]:
                     # 评分字段转换为整数
                     if target_col == "rating":
                         try:
-                            review[target_col] = int(float(value)) if value else 0
+                            review[target_col] = value or None
                         except (ValueError, TypeError):
                             review[target_col] = 0
                     else:
@@ -448,7 +462,7 @@ def load_reviews_from_csv(filepath: str) -> List[Dict[str, Any]]:
                     if review.get("review_text"):
                         if "rating" in review:
                             try:
-                                review["rating"] = int(float(review["rating"]))
+                                review["rating"] = review["rating"] or None
                             except (ValueError, TypeError):
                                 review["rating"] = 0
                         reviews.append(review)
@@ -456,7 +470,8 @@ def load_reviews_from_csv(filepath: str) -> List[Dict[str, Any]]:
             raise ValueError(f"CSV 文件编码读取失败: {e}")
 
     logger.info("CSV 加载成功: %s（共 %d 条评论）", filepath, len(reviews))
-    return reviews
+    from reviewagent.review_data import normalize_reviews
+    return normalize_reviews(reviews)
 
 
 # ═══════════════════════════════════════════════════════════════

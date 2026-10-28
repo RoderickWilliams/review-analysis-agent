@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from reviewagent import config, store
+from reviewagent.review_data import summarize_results
 
 DATA_DIR = str(config.DATA_DIR)
 REPORTS_DIR = str(config.REPORTS_DIR)
@@ -82,21 +83,12 @@ def save_history_record(
     config.ensure_dirs()
     record_id = datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{int(datetime.now().timestamp() * 1000) % 1000:03d}"
 
+    stats = summarize_results(results)
     total = len(results)
-    sarcastic = sum(1 for r in results if r.get("sentiment_analysis", {}).get("is_sarcastic"))
-    suspicious = sum(
-        1 for r in results
-        if r.get("final_analysis", {}).get("final_validity") in ("suspicious", "fake")
-    )
-    avg_trust = (
-        sum(r.get("final_analysis", {}).get("trust_score", 50) for r in results) / total
-        if total else 0
-    )
-
-    sentiment_dist: Dict[str, int] = {}
-    for r in results:
-        label = r.get("sentiment_analysis", {}).get("sentiment_label", "unknown")
-        sentiment_dist[label] = sentiment_dist.get(label, 0) + 1
+    sarcastic = stats["sarcastic_count"]
+    suspicious = stats["suspicious_count"]
+    avg_trust = stats["avg_trust_score"]
+    sentiment_dist = stats["sentiment_distribution"]
 
     methods: Dict[str, int] = {}
     for r in reviews:
@@ -127,7 +119,9 @@ def save_history_record(
         "review_count": total,
         "sarcastic_count": sarcastic,
         "suspicious_count": suspicious,
-        "avg_trust_score": round(avg_trust, 1),
+        "avg_trust_score": avg_trust,
+        "statistics": stats,
+        "reviews": reviews,
         "sentiment_distribution": sentiment_dist,
         "extraction_methods": methods,
         "report": report,

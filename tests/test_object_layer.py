@@ -57,6 +57,8 @@ def _primary():
         "url": "https://item.jd.com/1001.html",
         "title": "测试手机 12GB+256GB 曜石黑",
         "brand": "测试品牌",
+        "model": "测试手机",
+        "key_specs": {"颜色": "曜石黑", "尺寸": "12GB+256GB"},
         "shop": "测试旗舰店",
         "category": ["手机通讯", "手机", "智能手机"],
         "image_url": "https://img.example.com/main.jpg",
@@ -165,7 +167,7 @@ def test_different_brand_is_competitor_not_same():
     assert any("品牌不同" in item for item in result["mismatches"])
 
 
-def test_same_spu_variants_are_exact_and_extra_link_can_be_supplemented():
+def test_same_spu_variants_keep_distinct_specs_and_unknown_extra_identity():
     primary = _primary()
     extra = {
         "title": "测试手机 12GB+256GB 曜石黑",
@@ -178,14 +180,15 @@ def test_same_spu_variants_are_exact_and_extra_link_can_be_supplemented():
     }
     result = build_same_products(primary, [extra])
     assert result["summary"]["total_candidates"] == 3
-    assert result["summary"]["exact"] >= 2
+    assert result["summary"]["exact"] == 1
+    assert result["summary"]["variant"] == 1
     assert result["summary"]["sibling_variants"] == 1
     assert result["summary"]["user_supplied"] == 1
-    assert result["summary"]["auto_discovery"] == "unavailable"
+    assert result["summary"]["auto_discovery"] == "not_started"
     assert all(candidate["price"] is None for candidate in result["candidates"])
     assert all(candidate["review_count"] is None for candidate in result["candidates"])
     statuses = {candidate["platform_id"]: candidate["match_level"] for candidate in result["candidates"]}
-    assert statuses["3001"] in {"exact", "similar"}
+    assert statuses["3001"] == "uncertain"
 
 
 # ── 报告骨架 ──────────────────────────────────────────────────
@@ -255,7 +258,7 @@ def test_analysis_api_round_trip(client, monkeypatch):
     assert created.status_code == 200
     body = created.json()
     analysis_id = body["analysis_id"]
-    assert body["status"] == "ready"
+    assert body["status"] == "draft"
     assert body["report"]["dashboard"]["score"] is None
     assert body["report"]["object"]["title"] == "测试手机 12GB+256GB 曜石黑"
     assert "xx" not in json.dumps(body, ensure_ascii=False).lower()
@@ -285,4 +288,4 @@ def test_object_resolve_endpoint(client, monkeypatch):
     assert resp.status_code == 200
     body = resp.json()
     assert body["object"]["status"] == "resolved"
-    assert body["match_summary"]["exact"] == 2
+    assert body["match_summary"]["exact"] == 1

@@ -7,7 +7,8 @@ import pytest
 
 def test_empty_reviews_returns_neutral_report(trust_engine):
     report = trust_engine.generate_report([])
-    assert report["overall_trust_score"] == 100
+    assert report["overall_trust_score"] is None
+    assert report["risk_level"] == "unknown"
     assert "无评论数据" in report["summary"]
 
 
@@ -35,6 +36,9 @@ def test_rating_sentiment_mismatch_reads_nested_sentiment(trust_engine):
         {"rating": 1, "sentiment_analysis": {"real_sentiment": "positive"}},
         {"rating": 5, "final_analysis": {"final_sentiment": "positive"}},
     ]
+    for result in results:
+        sentiment = (result.get("final_analysis") or {}).get("final_sentiment") or result.get("sentiment_analysis", {}).get("real_sentiment")
+        result["final_analysis"] = {"final_sentiment": sentiment, "final_validity": "authentic", "trust_score": 80}
     report = trust_engine.generate_report(
         [{"review_text": f"评论{i}", "rating": r["rating"]} for i, r in enumerate(results)],
         results,

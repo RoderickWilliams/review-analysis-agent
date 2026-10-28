@@ -16,8 +16,10 @@ client = TestClient(app)
 
 def test_webui_assets_exist():
     assert (WEBUI_DIR / "index.html").is_file()
-    assert (WEBUI_DIR / "styles.css").is_file()
-    assert (WEBUI_DIR / "app.js").is_file()
+    assert (WEBUI_DIR / "workbench.css").is_file()
+    assert (WEBUI_DIR / "workbench.js").is_file()
+    assert (WEBUI_DIR / "workbench-extra.js").is_file()
+    assert (WEBUI_DIR / "logo.png").is_file()
 
 
 def test_root_redirects_to_app():
@@ -31,18 +33,18 @@ def test_webui_index_served():
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     assert "ReviewAgent" in resp.text
-    assert "对象层工作台" in resp.text or "先确认对象" in resp.text
-    assert "app.js" in resp.text
+    assert "评论研究工作台" in resp.text
+    assert "workbench.js" in resp.text
 
 
 def test_webui_css_and_js_served():
-    css = client.get("/app/styles.css")
+    css = client.get("/app/workbench.css")
     assert css.status_code == 200
     assert "--surface" in css.text
-    js = client.get("/app/app.js")
+    js = client.get("/app/workbench.js")
     assert js.status_code == 200
-    assert "runAnalysis" in js.text
-    assert "API = '/v1'" in js.text
+    assert "startJob" in js.text
+    assert "原文" in js.text
 
 
 def test_webui_has_no_external_cdn_assets():

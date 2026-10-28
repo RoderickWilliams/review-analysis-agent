@@ -8,16 +8,20 @@ from __future__ import annotations
 import csv
 import io
 import uuid
+import json
+import hmac
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse, Response
+from fastapi import FastAPI, HTTPException, Query, File, Form, UploadFile, Request
+from fastapi.responses import RedirectResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from reviewagent import __version__, config
+from reviewagent.review_data import normalize_reviews, csv_safe
 
 app = FastAPI(
     title="ReviewAgent API",
@@ -30,7 +34,14 @@ WEBUI_DIR = Path(__file__).resolve().parent / "webui"
 
 # ── 模型 ──────────────────────────────────────────────────────
 
-class AnalyzeRequest(BaseModel):
+class ReviewsPayload(BaseModel):
+    @field_validator("reviews", check_fields=False)
+    @classmethod
+    def validate_reviews(cls, value):
+        return normalize_reviews(value)
+
+
+class AnalyzeRequest(ReviewsPayload):
     reviews: List[Dict[str, Any]] = Field(..., min_length=1, max_length=200)
     product_name: str = "产品"
     save_history: bool = False
@@ -58,8 +69,8 @@ class XhsAnalyzeRequest(BaseModel):
     limit_topics: int = Field(10, ge=1, le=20)
 
 
-class TrustReportRequest(BaseModel):
-    reviews: List[Dict[str, Any]] = Field(..., min_length=1, max_length=500)
+class TrustReportRequest(ReviewsPayload):
+    reviews: List[Dict[str, Any]] = Field(..., min_length=1, max_length=5000)
     results: List[Dict[str, Any]] = Field(default_factory=list)
 
 
@@ -67,14 +78,17 @@ class ObjectResolveRequest(BaseModel):
     input: str = Field(..., min_length=1, max_length=2000)
 
 
-class AnalysisCreateRequest(BaseModel):
+class AnalysisCreateRequest(ReviewsPayload):
     input: str = Field(..., min_length=1, max_length=2000)
     extra_links: List[str] = Field(default_factory=list, max_length=20)
     ownership: str = Field("own", pattern="^(own|competitor)$")
     tier: str = Field("standard", pattern="^(light|standard|deep|custom)$")
     window_months: int = Field(12, ge=1, le=60)
-    reviews: List[Dict[str, Any]] = Field(default_factory=list, max_length=500)
+    reviews: List[Dict[str, Any]] = Field(default_factory=list, max_length=5000)
     save: bool = True
+    platforms: List[str] = Field(default_factory=lambda: ["jd", "taobao", "xhs"], max_length=3)
+    candidate_limit: int = Field(5, ge=1, le=20)
+    per_product_limit: int = Field(300, ge=1, le=500)
 
 
 # ── 基础 ──────────────────────────────────────────────────────
@@ -86,7 +100,9 @@ def healthz() -> Dict[str, Any]:
         "version": __version__,
         "model": config.MODEL,
         "llm_configured": config.is_llm_configured(),
-        "data_dir": str(config.DATA_DIR),
+        "scraping_enabled": config.SCRAPING_ENABLED,
+        "browser_preference": config.BROWSER_PREFERENCE,
+        "browser_network": config.BROWSER_NETWORK,
     }
 
 
@@ -95,7 +111,7 @@ def read_config() -> Dict[str, Any]:
     return {
         "version": __version__,
         "model": config.MODEL,
-        "base_url": config.BASE_URL,
+        "custom_gateway": bool(config.BASE_URL),
         "llm_configured": config.is_llm_configured(),
         "api_key_count": len(config.API_KEYS),
         "similarity_high": config.SIMILARITY_HIGH,
@@ -155,10 +171,14 @@ def xhs_status() -> Dict[str, Any]:
 
 @app.post("/v1/xhs/capture", summary="小红书只读采集（笔记 + 评论 + OCR）")
 def xhs_capture(payload: XhsCaptureRequest) -> Dict[str, Any]:
+    if not config.SCRAPING_ENABLED:
+        raise HTTPException(status_code=409, detail="采集尚未开启，可先导入评论")
     from reviewagent.scrapers import xhs_reader
 
     if not (payload.keyword or payload.user or payload.links):
         raise HTTPException(status_code=400, detail="请提供 keyword / user / links 之一")
+    if payload.out_dir:
+        _output_path(payload.out_dir)
     try:
         capture = xhs_reader.capture(
             links=payload.links or None,
@@ -208,6 +228,7 @@ def xhs_analyze(payload: XhsAnalyzeRequest) -> Dict[str, Any]:
 
     capture = payload.capture
     if payload.run_dir:
+        _output_path(payload.run_dir)
         try:
             capture = xhs_reader.load_run(payload.run_dir)
         except Exception as exc:
@@ -236,59 +257,18 @@ def _analysis_id() -> str:
 
 
 def _run_analysis(payload: AnalysisCreateRequest) -> Dict[str, Any]:
-    from reviewagent.object_resolver import resolve_object
-    from reviewagent.report_builder import build_analysis_report
-    from reviewagent.same_product import build_same_products
-
-    raw = payload.input.strip()
-    if not raw:
+    from reviewagent.analysis_tasks import create_record
+    if not payload.input.strip():
         raise HTTPException(status_code=422, detail="请输入商品链接或商品名")
-
-    primary = resolve_object(raw)
-    extra_objects: List[Dict[str, Any]] = []
-    for link in payload.extra_links:
-        link = str(link or "").strip()
-        if not link:
-            continue
-        extra_objects.append(resolve_object(link))
-
-    match_result = build_same_products(primary, extra_objects)
-    built = build_analysis_report(
-        primary,
-        match_result,
-        ownership=payload.ownership,
-        input_text=raw,
-        tier=payload.tier,
-        window_months=payload.window_months,
-        reviews=payload.reviews,
-    )
-    now = datetime.now().astimezone().isoformat(timespec="seconds")
-    analysis = {
-        "analysis_id": _analysis_id(),
-        "created_at": now,
-        "updated_at": now,
-        "status": built["status"],
-        "status_label": built["status_label"],
-        "input": raw,
-        "object": built["object"],
-        "candidates": built["candidates"],
-        "match_summary": built["match_summary"],
-        "report": built["report"],
-    }
-    if payload.save:
-        from reviewagent import store
-
-        store.save_analysis(analysis)
-    return analysis
+    return create_record(payload.model_dump())
 
 
 def _analysis_or_404(analysis_id: str) -> Dict[str, Any]:
-    from reviewagent import store
-
-    analysis = store.get_analysis(analysis_id)
-    if not analysis:
-        raise HTTPException(status_code=404, detail="分析任务不存在")
-    return analysis
+    from reviewagent.analysis_tasks import get_record
+    try:
+        return get_record(analysis_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="分析任务不存在") from None
 
 
 @app.post("/v1/object/resolve", summary="解析商品链接 / 商品名，返回对象与候选")
@@ -307,7 +287,10 @@ def object_resolve(payload: ObjectResolveRequest) -> Dict[str, Any]:
 
 @app.post("/v1/analysis", summary="创建对象分析：解析 + 同款匹配 + 报告骨架")
 def create_analysis(payload: AnalysisCreateRequest) -> Dict[str, Any]:
-    return _run_analysis(payload)
+    try:
+        return _run_analysis(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
 
 
 @app.get("/v1/analysis", summary="分析任务列表")
@@ -326,27 +309,37 @@ def list_analysis(limit: int = Query(20, ge=1, le=100)) -> Dict[str, Any]:
                 "input": item.get("input"),
                 "title": (item.get("object") or {}).get("title"),
                 "platform": (item.get("object") or {}).get("platform"),
+                "review_count": len(item.get("reviews") or []),
+                "statistics": (item.get("report") or {}).get("statistics", {}),
             }
             for item in items
         ],
     }
 
 
+@app.delete("/v1/analysis", summary="清除分析历史，可撤销；不影响运行中的任务")
+def clear_analysis_history():
+    from reviewagent.analysis_tasks import clear_saved_records
+    try:
+        return clear_saved_records()
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
+class RestoreHistoryRequest(BaseModel):
+    batch_id: str = Field(..., pattern="^clear_[0-9a-f]{32}$")
+
+
+@app.post("/v1/analysis/restore", summary="撤销一次历史清除")
+def restore_analysis_history(payload: RestoreHistoryRequest):
+    from reviewagent import store
+    return {"restored": store.restore_analyses(payload.batch_id)}
+
+
 @app.get("/v1/analysis/{analysis_id}", summary="分析任务状态与对象")
 def get_analysis(analysis_id: str) -> Dict[str, Any]:
     analysis = _analysis_or_404(analysis_id)
-    return {
-        "analysis_id": analysis.get("analysis_id"),
-        "created_at": analysis.get("created_at"),
-        "updated_at": analysis.get("updated_at"),
-        "status": analysis.get("status"),
-        "status_label": analysis.get("status_label"),
-        "input": analysis.get("input"),
-        "object": analysis.get("object"),
-        "match_summary": analysis.get("match_summary"),
-        "candidates": analysis.get("candidates"),
-        "report": analysis.get("report"),
-    }
+    return analysis
 
 
 @app.get("/v1/analysis/{analysis_id}/report", summary="完整报告 JSON")
@@ -369,14 +362,14 @@ def get_analysis_actions_csv(analysis_id: str) -> Response:
     for action in report.get("actions") or []:
         if not isinstance(action, dict):
             continue
-        writer.writerow([
+        writer.writerow([csv_safe(value) for value in [
             action.get("priority", ""),
             action.get("label", ""),
             action.get("detail", ""),
             action.get("metric", ""),
             action.get("owner", ""),
             action.get("due", ""),
-        ])
+        ]])
     content = "\ufeff" + output.getvalue()
     return Response(
         content=content,
@@ -439,6 +432,323 @@ def delete_history(record_id: str) -> Dict[str, Any]:
     return {"deleted": record_id}
 
 
+
+
+@app.middleware("http")
+async def access_control(request: Request, call_next):
+    token = os.environ.get("REVIEWAGENT_ACCESS_TOKEN", "")
+    if token and request.url.path.startswith("/v1"):
+        authorization = request.headers.get("authorization", "")
+        supplied = authorization[7:] if authorization.startswith("Bearer ") else ""
+        if not hmac.compare_digest(supplied.encode("utf-8"), token.encode("utf-8")):
+            return JSONResponse({"detail": "需要服务访问令牌"}, status_code=401)
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Frame-Options"] = "DENY"
+    if request.url.path.startswith("/app/"):
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+    return response
+
+
+def _output_path(value):
+    candidate = Path(value).expanduser().resolve()
+    if not candidate.is_relative_to(config.OUTPUT_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="文件路径必须位于当前服务的 output 目录内")
+    return candidate
+
+
+class AttachReviewsRequest(ReviewsPayload):
+    reviews: List[Dict[str, Any]] = Field(..., min_length=1, max_length=5000)
+    append: bool = False
+
+
+class TaskRequest(BaseModel):
+    operation: str = Field("analyze", pattern="^(analyze|collect|discover|operations|generate_actions|generate_selling_point|generate_support_script|generate_content_topic|generate_schedule|login_jd|login_taobao|login_xhs)$")
+
+
+class SettingsRequest(BaseModel):
+    discovery_platform: Optional[str] = Field(None, pattern="^(jd|taobao|xhs)$")
+    selected_urls: Optional[List[str]] = Field(None, max_length=20)
+    ownership: Optional[str] = Field(None, pattern="^(own|competitor)$")
+    tier: Optional[str] = Field(None, pattern="^(light|standard|deep|custom)$")
+    window_months: Optional[int] = Field(None, ge=1, le=60)
+    extra_links: Optional[List[str]] = Field(None, max_length=20)
+    platforms: Optional[List[str]] = Field(None, max_length=3)
+    candidate_limit: Optional[int] = Field(None, ge=1, le=20)
+    per_product_limit: Optional[int] = Field(None, ge=1, le=500)
+
+
+@app.post("/v1/import/preview", summary="预览文件并映射评论字段")
+async def preview_import(file: UploadFile = File(...), mapping: str = Form("{}")):
+    from reviewagent.import_reviews import MAX_UPLOAD, parse_upload
+    from starlette.concurrency import run_in_threadpool
+    try:
+        content = await file.read(MAX_UPLOAD + 1)
+        fields = json.loads(mapping)
+        if not isinstance(fields, dict):
+            raise ValueError("字段映射必须是对象")
+        return await run_in_threadpool(parse_upload, file.filename or "reviews.csv", content, fields)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    finally:
+        await file.close()
+
+
+@app.post("/v1/analysis/{analysis_id}/reviews", summary="保存评论样本，不自动调用模型")
+def attach_analysis_reviews(analysis_id: str, payload: AttachReviewsRequest):
+    from reviewagent.analysis_tasks import attach_reviews
+    _analysis_or_404(analysis_id)
+    try:
+        return attach_reviews(analysis_id, payload.reviews, append=payload.append)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
+@app.post("/v1/analysis/{analysis_id}/run", status_code=202, summary="显式启动分析、采集或运营任务")
+def start_analysis_task(analysis_id: str, payload: TaskRequest):
+    from reviewagent.analysis_tasks import start
+    _analysis_or_404(analysis_id)
+    try:
+        return start(analysis_id, payload.operation)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
+@app.post("/v1/analysis/{analysis_id}/cancel", summary="取消后续请求，保留已完成结果")
+def cancel_analysis_task(analysis_id: str):
+    from reviewagent.analysis_tasks import cancel
+    _analysis_or_404(analysis_id)
+    return cancel(analysis_id)
+
+
+@app.patch("/v1/analysis/{analysis_id}", summary="更新归属和采集设置，保留评论与分析")
+def update_analysis_settings(analysis_id: str, payload: SettingsRequest):
+    from reviewagent.analysis_tasks import mutate_record
+    _analysis_or_404(analysis_id)
+    changes = payload.model_dump(exclude_none=True)
+    extras = None
+    if "extra_links" in changes:
+        from reviewagent.object_resolver import resolve_object
+        extras = [resolve_object(url) for url in changes["extra_links"]]
+    def apply(analysis):
+        analysis.setdefault("request", {}).update(changes)
+        from reviewagent.collection import normalize_scope
+        normalize_scope(analysis["request"])
+        if extras is not None:
+            from reviewagent.same_product import build_same_products
+            matched = build_same_products(analysis["object"], extras)
+            analysis.update(candidates=matched["candidates"], match_summary=matched["summary"])
+    try:
+        return mutate_record(analysis_id, apply)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+    except KeyError:
+        raise HTTPException(status_code=404, detail="分析任务不存在") from None
+
+
+@app.get("/v1/analysis/{analysis_id}/reviews.csv", summary="导出原文、状态、结果与证据链接")
+def export_analysis_reviews(analysis_id: str):
+    analysis = _analysis_or_404(analysis_id)
+    by_id = {item.get("review_id"): item for item in analysis.get("results", [])}
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["review_id", "review_text", "rating", "review_date", "platform", "source_url", "status", "sentiment", "is_sarcastic", "validity", "trust_score", "summary"])
+    for review in analysis.get("reviews", []):
+        result = by_id.get(review["review_id"], {})
+        final = result.get("final_analysis") or {}
+        writer.writerow([csv_safe(value) for value in [review["review_id"], review["review_text"], review.get("rating"), review.get("review_date"), review.get("platform"), review.get("source_url"), result.get("status", "pending"), final.get("final_sentiment"), (result.get("sentiment_analysis") or {}).get("is_sarcastic"), final.get("final_validity"), final.get("trust_score"), final.get("summary")]])
+    return Response("\ufeff" + output.getvalue(), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="reviews-{analysis_id}.csv"'})
+
+
+@app.get("/v1/analysis/{analysis_id}/report.html", summary="离线完整评论报告")
+def export_analysis_html(analysis_id: str):
+    from reviewagent.report_generator import HTMLReportGenerator
+    analysis = _analysis_or_404(analysis_id)
+    gen = HTMLReportGenerator()
+    by_id = {r.get("review_id"): r for r in analysis.get("results", [])}
+    results = [{**r, **by_id.get(r["review_id"], {"status": "pending"})} for r in analysis.get("reviews", [])]
+    report = analysis.get("report") or {}
+    html = gen._build_html(analysis["object"].get("title") or analysis["input"], gen._extract_stats(results, report), results, report)
+    return Response(html, media_type="text/html; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="report-{analysis_id}.html"', "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"})
+
+
+class ActionUpdateRequest(BaseModel):
+    label: Optional[str] = Field(None, min_length=1, max_length=500)
+    detail: Optional[str] = Field(None, max_length=2000)
+    owner: str = Field("", max_length=80)
+    due: str = Field("", max_length=10)
+    state: str = Field("todo", pattern="^(todo|doing|done)$")
+    metric: str = Field("", max_length=1000)
+
+    @field_validator("due")
+    @classmethod
+    def validate_due(cls, value):
+        if value:
+            from datetime import date
+            date.fromisoformat(value)
+        return value
+
+
+@app.patch("/v1/analysis/{analysis_id}/actions/{action_id}", summary="保存行动负责人、日期、状态与验证指标")
+def update_analysis_action(analysis_id: str, action_id: str, payload: ActionUpdateRequest):
+    from reviewagent.analysis_tasks import mutate_record
+    _analysis_or_404(analysis_id)
+    def apply(analysis):
+        actions = analysis.get("enrichment", {}).get("actions", [])
+        action = next((item for item in actions if item.get("id") == action_id), None)
+        if action is None:
+            raise HTTPException(status_code=404, detail="行动不存在，请先整理行动计划")
+        action.update(payload.model_dump(exclude_none=True))
+        action["edited"] = True
+        plan = analysis["enrichment"].get("ops_plan", {})
+        if plan.get("groups"):
+            plan["groups"][0]["items"] = actions
+    try:
+        return mutate_record(analysis_id, apply)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+    except KeyError:
+        raise HTTPException(status_code=404, detail="分析任务不存在") from None
+
+
+class SourceIdentityRequest(BaseModel):
+    source_url: str = Field("", max_length=2000)
+    title: str = Field("", max_length=500)
+    brand: str = Field("", max_length=120)
+    model: str = Field("", max_length=120)
+    key_specs: Dict[str, str] = Field(default_factory=dict, max_length=30)
+    specs_confirmed: bool = False
+    reviews_scope: str = Field("unknown", pattern="^(unknown|selected_spec)$")
+
+    @field_validator("key_specs")
+    @classmethod
+    def validate_specs(cls, value):
+        if any(not key.strip() or not item.strip() or len(key) > 120 or len(item) > 500 for key, item in value.items()):
+            raise ValueError("规格名称与值不能留空，且应为简短、可核对的字段")
+        return value
+
+
+@app.patch("/v1/analysis/{analysis_id}/source-identity", summary="保存来源品牌、型号与关键规格核对结果")
+def update_source_identity(analysis_id: str, payload: SourceIdentityRequest):
+    from reviewagent.analysis_tasks import mutate_record
+    _analysis_or_404(analysis_id)
+    if payload.specs_confirmed and not (payload.brand.strip() and payload.model.strip() and payload.key_specs):
+        raise HTTPException(status_code=400, detail="确认同款前需填写品牌、型号和关键规格")
+    def apply(analysis):
+        sources = [analysis["object"]] + list(analysis.get("candidates", []))
+        known = any((source.get("url") or source.get("source_url") or "") == payload.source_url for source in sources)
+        known = known or any((review.get("source_url") or "") == payload.source_url for review in analysis.get("reviews", []))
+        if not known:
+            raise HTTPException(status_code=404, detail="此来源不属于当前分析")
+        values = payload.model_dump(exclude={"source_url"})
+        values["identity_source"] = "user_confirmed" if payload.specs_confirmed else "user_pending"
+        analysis.setdefault("source_identities", {})[payload.source_url] = values
+        if analysis.get("enrichment"):
+            analysis["enrichment"]["source_changed"] = True
+    try:
+        return mutate_record(analysis_id, apply)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
+class DraftUpdateRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    body: str = Field(..., min_length=1, max_length=10000)
+    channel: str = Field("", max_length=120)
+    scheduled_date: str = Field("", max_length=10)
+    state: str = Field("draft", pattern="^(draft|ready|archived)$")
+
+    @field_validator("scheduled_date")
+    @classmethod
+    def validate_date(cls, value):
+        if value:
+            from datetime import date
+            date.fromisoformat(value)
+        return value
+
+
+@app.patch("/v1/analysis/{analysis_id}/drafts/{draft_id}", summary="编辑运营草稿，保留证据与商品组")
+def update_operation_draft(analysis_id: str, draft_id: str, payload: DraftUpdateRequest):
+    from reviewagent.analysis_tasks import mutate_record, now
+    _analysis_or_404(analysis_id)
+    def apply(analysis):
+        draft = next((item for item in analysis.get("enrichment", {}).get("drafts", []) if item.get("id") == draft_id), None)
+        if draft is None:
+            raise HTTPException(status_code=404, detail="草稿不存在，请先整理运营计划")
+        draft.update(payload.model_dump(), edited=True, updated_at=now())
+    try:
+        return mutate_record(analysis_id, apply)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
+@app.get("/v1/analysis/{analysis_id}/drafts.csv", summary="导出可编辑运营草稿及证据编号")
+def export_operation_drafts(analysis_id: str):
+    analysis = _analysis_or_404(analysis_id)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["类型", "商品组", "标题", "正文", "渠道", "排期日期", "状态", "证据编号", "待确认"])
+    for item in analysis.get("enrichment", {}).get("drafts", []):
+        writer.writerow([csv_safe(value) for value in [item.get("kind"), item.get("group_title"), item.get("title"),
+                         item.get("body"), item.get("channel"), item.get("scheduled_date"), item.get("state"),
+                         ";".join(item.get("evidence_ids", [])), item.get("notes")]])
+    return Response("\ufeff" + output.getvalue(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="drafts-{analysis_id}.csv"'})
+
+
+class DetectModelRequest(BaseModel):
+    api_key: SecretStr
+    provider: str = "auto"
+    base_url: str = Field("", max_length=500)
+
+
+class CollectionEnabledRequest(BaseModel):
+    enabled: Optional[bool] = None
+    browser: Optional[str] = Field(None, pattern="^(auto|edge|chrome|firefox)$")
+    network: Optional[str] = Field(None, pattern="^(direct|system)$")
+
+
+@app.post("/v1/collection/configure", summary="用户显式开启或关闭本机平台采集")
+def configure_collection(payload: CollectionEnabledRequest):
+    from reviewagent.analysis_tasks import _lock, _active
+    with _lock:
+        if _active:
+            raise HTTPException(status_code=409, detail="请先结束运行中的任务")
+        if payload.enabled is not None:
+            config.SCRAPING_ENABLED = payload.enabled
+        if payload.browser is not None:
+            config.BROWSER_PREFERENCE = payload.browser
+        if payload.network is not None:
+            config.BROWSER_NETWORK = payload.network
+    return {"enabled": config.SCRAPING_ENABLED, "browser": config.BROWSER_PREFERENCE, "network": config.BROWSER_NETWORK}
+
+
+class ApplyModelRequest(BaseModel):
+    ticket: str = Field(..., max_length=100)
+    model: str = Field(..., max_length=200)
+    input_price: Optional[float] = Field(None, gt=0, le=100000, allow_inf_nan=False)
+    output_price: Optional[float] = Field(None, gt=0, le=100000, allow_inf_nan=False)
+
+
+@app.post("/v1/model/detect", summary="仅向确定或用户选择的供应商验证 Key 并获取模型")
+def detect_model(payload: DetectModelRequest):
+    from reviewagent.model_settings import detect
+    try:
+        return detect(payload.api_key.get_secret_value(), payload.provider, payload.base_url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+
+
+@app.post("/v1/model/configure", summary="启用验证后的模型；Key 仅保存于服务内存")
+def configure_model(payload: ApplyModelRequest):
+    from reviewagent.model_settings import apply
+    try:
+        return apply(**payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+
+
 # ── 本地 Web UI（静态单页，与 API 同源） ──────────────────────
 
 @app.get("/", include_in_schema=False)
@@ -448,3 +758,11 @@ def webui_root() -> RedirectResponse:
 
 if WEBUI_DIR.is_dir():
     app.mount("/app", StaticFiles(directory=str(WEBUI_DIR), html=True), name="webui")
+
+WEBUI_REDESIGN_DIR = Path(__file__).resolve().parent / "webui-redesign"
+if WEBUI_REDESIGN_DIR.is_dir():
+    app.mount("/app-redesign", StaticFiles(directory=str(WEBUI_REDESIGN_DIR), html=True), name="webui-redesign")
+
+WEBUI_CLASSIC_DIR = Path(__file__).resolve().parent / "webui-classic"
+if WEBUI_CLASSIC_DIR.is_dir():
+    app.mount("/app-classic", StaticFiles(directory=str(WEBUI_CLASSIC_DIR), html=True), name="webui-classic")

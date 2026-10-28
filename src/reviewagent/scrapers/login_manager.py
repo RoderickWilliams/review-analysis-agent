@@ -37,18 +37,18 @@ class LoginManager:
         return os.path.join(COOKIE_DIR, f"{platform}_cookies.json")
 
     def has_valid_cookies(self, platform: str) -> bool:
-        """检查是否已有有效Cookie"""
+        """是否有本地可复用候选；不代表平台已验证会话有效。"""
         cookie_path = self.get_cookie_path(platform)
         if not os.path.exists(cookie_path):
             return False
         try:
             with open(cookie_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # 检查Cookie是否过期（24小时）
-            saved_time = data.get("saved_at", 0)
-            if time.time() - saved_time > 86400:
+            # 不把保存满 24 小时误当作平台会话失效。
+            expires_at = data.get("expires_at")
+            if expires_at is not None and float(expires_at) <= time.time():
                 return False
-            return bool(data.get("cookies"))
+            return isinstance(data.get("cookies"), dict) and bool(data["cookies"])
         except Exception:
             return False
 

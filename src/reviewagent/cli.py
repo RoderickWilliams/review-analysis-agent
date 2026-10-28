@@ -93,12 +93,9 @@ def cmd_serve(args: argparse.Namespace) -> int:
         import uvicorn
     except ImportError:
         return _fail("缺少 uvicorn，请执行 pip install -e .[api]")
-    print(f"启动 HTTP API：http://{args.host}:{args.port}（文档 /docs）")
-    if args.host not in {"127.0.0.1", "localhost", "::1"}:
-        print(
-            "警告：API 本身没有鉴权，只适合放在受信网络或反向代理后面；"
-            "对外暴露前请加访问控制。"
-        )
+    if args.host not in {"127.0.0.1", "localhost", "::1"} and not os.environ.get("REVIEWAGENT_ACCESS_TOKEN"):
+        return _fail("非本机监听需要设置 REVIEWAGENT_ACCESS_TOKEN；本机使用 --host 127.0.0.1")
+    print(f"启动工作台：http://{args.host}:{args.port}/app/（文档 /docs）")
     uvicorn.run("reviewagent.http_api:app", host=args.host, port=args.port, reload=args.reload)
     return 0
 
@@ -313,7 +310,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     from reviewagent.scrapers import xhs_reader
 
     try:
-        xhs_status = xhs_reader.status()
+        xhs_status = xhs_reader.status() if getattr(args, "with_sources", False) else {"available": False, "hint": "默认离线检查；--with-sources 才连接采集端"}
     except Exception as exc:  # 自检不因采集端异常中断
         xhs_status = {"available": False, "hint": f"{type(exc).__name__}: {exc}"}
     print(f"  小红书采集: {'可用' if xhs_status.get('available') else '不可用'}")
@@ -401,7 +398,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true")
     p.set_defaults(func=cmd_history)
 
-    p = sub.add_parser("doctor", help="环境自检")
+    p = sub.add_parser("doctor", help="环境自检（默认离线）")
+    p.add_argument("--with-sources", action="store_true", help="同时连接采集端查看状态")
     p.set_defaults(func=cmd_doctor)
 
     return parser

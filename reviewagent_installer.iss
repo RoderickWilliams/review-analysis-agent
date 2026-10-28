@@ -4,10 +4,10 @@
 ; ═══════════════════════════════════════════════════════════════
 
 #define MyAppName "ReviewAgent"
-#define MyAppVersion "4.1.6"
+#define MyAppVersion "1.0.0"
 #define MyAppPublisher "ReviewAgent"
 #define MyAppExeName "ReviewAgent.exe"
-#define MyAppSource "C:\temp\reviewagent_dist\ReviewAgent"
+#define MyAppSource SourcePath + "\dist\ReviewAgent"
 
 [Setup]
 AppId={{REVIEWAGENT-2026-0819-INSTALL}}
@@ -17,8 +17,8 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-OutputDir=C:\temp\reviewagent_installer
-OutputBaseFilename=ReviewAgent_Setup_v4.1.6
+OutputDir=dist\installer
+OutputBaseFilename=ReviewAgent_Setup_v{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 LZMAUseSeparateProcess=yes
@@ -46,8 +46,7 @@ Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
-[UninstallDelete]
-Type: filesandordirs; Name: "{app}"
+; Inno removes installed files. User data stays outside the installation directory.
 
 [Code]
 function InitializeSetup(): Boolean;

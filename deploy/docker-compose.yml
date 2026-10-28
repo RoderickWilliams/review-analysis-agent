@@ -10,6 +10,7 @@ services:
     environment:
       REVIEWAGENT_HOME: /opt/review-agent
       REVIEWAGENT_ENABLE_SCRAPING: "0"
+      REVIEWAGENT_ACCESS_TOKEN: ${REVIEWAGENT_ACCESS_TOKEN:?请先在运行环境设置服务访问令牌}
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

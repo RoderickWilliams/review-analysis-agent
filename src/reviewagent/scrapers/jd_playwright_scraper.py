@@ -757,7 +757,7 @@ class JDPlaywrightScraper:
                     '[class*=sku], [class*=spec], [class*=Sku], .sku-item, .sku-name'
                 ));
 
-                let rateScore = 5;
+                let rateScore = null;
                 const starEl = node.querySelector(
                     '[class*=star], [class*=Star], [class*=rate], [class*=score], .star'
                 );
@@ -792,7 +792,7 @@ class JDPlaywrightScraper:
                     user_name: user || '匿名用户',
                     time: time,
                     sku: sku,
-                    content: content.slice(0, 2000),
+                    content: content,
                     rateScore: rateScore,
                 });
             }
@@ -873,7 +873,7 @@ class JDPlaywrightScraper:
             user_id = ""
             review_date = raw.get("time", "")
             sku = raw.get("sku", "")
-            rating = raw.get("rateScore", 5)
+            rating = raw.get("rateScore")
             comment_id = raw.get("comment_id", "")
             product_name_from_api = product_name
 

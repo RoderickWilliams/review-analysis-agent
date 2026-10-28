@@ -295,7 +295,8 @@ def build_analysis_report(
     match_result = match_result or {"candidates": [], "summary": {}}
     candidates = list(match_result.get("candidates") or [])
     match_summary = dict(match_result.get("summary") or {})
-    reviews = list(reviews or [])
+    from reviewagent.review_data import normalize_reviews
+    reviews = normalize_reviews(list(reviews or []))
     review_count = len(reviews)
     trust = _trust_block(reviews)
     gaps = _merge_gaps(primary, match_summary, review_count)
@@ -470,14 +471,14 @@ def build_analysis_report(
         "evidence": evidence,
         "method": {
             "resolver": _clean(primary.get("parser")) or "none",
-            "matching": "品牌 + 型号/系列词 + 标题相似度 + 类目；同 SPU 直接标同款",
+            "matching": "品牌、型号与关键规格齐全一致才归并；标题相似和同 SPU 仅作关联线索",
             "llm_used": False,
             "review_analysis": "not_run" if review_count == 0 else "trust_only",
             "report_version": REPORT_VERSION,
             "limitations": [
                 "未登录，评论接口未接入。",
                 "价格、销量、评论数未从商品页稳定取得，统一为 null。",
-                "同款候选只来自同一 SPU 与用户补充链接，没有自动跨平台搜索。",
+                "候选来源见检索记录；未启动检索时仅含已提供链接与 SPU 关联项。",
             ],
         },
     }

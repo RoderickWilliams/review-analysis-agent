@@ -17,6 +17,8 @@ LLM 统一走 OpenAI 兼容的 Chat Completions API（官方 SDK）。
 from __future__ import annotations
 
 import itertools
+import json
+import threading
 import os
 from pathlib import Path
 from typing import List, Optional
@@ -38,7 +40,7 @@ def _load_dotenv(path: Path) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        key = key.strip().lstrip("export ").strip()
+        key = key.strip().removeprefix("export ").strip()
         value = value.strip().strip('"').strip("'")
         if key and key not in os.environ:
             os.environ[key] = value
@@ -113,9 +115,13 @@ def check_ethics_compliance(reviews: list) -> dict:
 
 LLM_MODE = "api"
 
-MODEL = (os.environ.get("REVIEWAGENT_MODEL") or os.environ.get("LLM_MODEL") or "gpt-4o").strip()
+_deepseek_default = bool(os.environ.get("DEEPSEEK_API_KEY")) and not any(os.environ.get(name) for name in ("REVIEWAGENT_API_KEYS", "LLM_API_KEYS", "OPENAI_API_KEY"))
+MODEL = (os.environ.get("REVIEWAGENT_MODEL") or os.environ.get("LLM_MODEL")
+         or os.environ.get("OPENAI_MODEL") or os.environ.get("DEEPSEEK_MODEL")
+         or ("deepseek-flash" if _deepseek_default else "gpt-4o")).strip()
 _base_url = (os.environ.get("REVIEWAGENT_BASE_URL") or os.environ.get("LLM_BASE_URL")
-             or os.environ.get("OPENAI_BASE_URL") or "").strip()
+              or os.environ.get("OPENAI_BASE_URL") or os.environ.get("DEEPSEEK_BASE_URL")
+              or ("https://api.deepseek.com" if os.environ.get("DEEPSEEK_API_KEY") and not os.environ.get("OPENAI_API_KEY") else "")).strip()
 BASE_URL = _base_url or None
 
 LLM_TIMEOUT = float(os.environ.get("REVIEWAGENT_LLM_TIMEOUT", "120"))
@@ -123,12 +129,17 @@ LLM_MAX_RETRIES = int(os.environ.get("REVIEWAGENT_LLM_MAX_RETRIES", "3"))
 
 
 def _parse_api_keys() -> List[str]:
-    raw = "".join(
-        os.environ.get(name, "") + ","
-        for name in ("REVIEWAGENT_API_KEYS", "LLM_API_KEYS", "OPENAI_API_KEY", "DEEPSEEK_API_KEY")
-    )
+    raw = next((os.environ[name] for name in ("REVIEWAGENT_API_KEYS", "LLM_API_KEYS", "OPENAI_API_KEY", "DEEPSEEK_API_KEY") if os.environ.get(name)), "")
+    try:
+        values = json.loads(raw) if raw.lstrip().startswith("[") else raw.split(",")
+    except ValueError:
+        return []
+    if not isinstance(values, list):
+        return []
     keys: List[str] = []
-    for key in raw.split(","):
+    for key in values:
+        if not isinstance(key, str):
+            continue
         key = key.strip().strip('"').strip("'")
         if len(key) >= 16 and not any(ch.isspace() for ch in key) and key not in keys:
             keys.append(key)
@@ -139,24 +150,25 @@ API_KEYS: List[str] = _parse_api_keys()
 API_KEY: Optional[str] = API_KEYS[0] if API_KEYS else None
 _key_cycle = itertools.cycle(API_KEYS) if API_KEYS else None
 _failed_keys: set = set()
+_key_lock = threading.Lock()
 
 
 def get_next_api_key() -> Optional[str]:
     """获取下一个可用 API Key（轮换 + 跳过失败 Key）。"""
-    if not _key_cycle or not API_KEYS:
+    with _key_lock:
+        if not _key_cycle or not API_KEYS:
+            return None
+        for _ in range(len(API_KEYS)):
+            key = next(_key_cycle)
+            if key not in _failed_keys:
+                return key
         return None
-    for _ in range(len(API_KEYS)):
-        key = next(_key_cycle)
-        if key not in _failed_keys:
-            return key
-    _failed_keys.clear()
-    return next(_key_cycle)
 
 
 def mark_key_failed(key: str) -> None:
     """标记某个 Key 为失败（配额用尽或无效）。"""
-    _failed_keys.add(key)
-    print(f"  [Key轮换] 标记失败，剩余可用 Key: {len(API_KEYS) - len(_failed_keys)}/{len(API_KEYS)}")
+    with _key_lock:
+        _failed_keys.add(key)
 
 
 def is_api_key_configured() -> bool:
@@ -220,6 +232,8 @@ def get_llm_client(**kwargs):
 # 采集是实验功能：涉及第三方站点与浏览器自动化，默认关闭。
 # 打开方式：REVIEWAGENT_ENABLE_SCRAPING=1；关闭时 --url 会明确报错而不是静默回退。
 SCRAPING_ENABLED = os.environ.get("REVIEWAGENT_ENABLE_SCRAPING", "").strip().lower() in ("1", "true", "yes", "on")
+BROWSER_PREFERENCE = os.environ.get("REVIEWAGENT_BROWSER", "auto").strip().lower()
+BROWSER_NETWORK = os.environ.get("REVIEWAGENT_BROWSER_NETWORK", "direct").strip().lower()
 
 # 抓取后端：legacy 用现有平台爬虫；scrapling 用可选后端（见 scrapers/scrapling_backend.py）。
 # 选择器配置是 JSON 文件，站点改版时改配置不改代码。

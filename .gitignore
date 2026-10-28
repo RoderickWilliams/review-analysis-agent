@@ -16,6 +16,7 @@ data/history.json.migrated
 .codegraph/
 cookies/
 playwright-data/
+browser-profiles/
 debug/
 playwright/.cache/
 .pytest_cache/
@@ -28,3 +29,9 @@ htmlcov/
 plugins/dsh-review-agent/lib/_*.json
 plugins/dsh-review-agent/lib/_*.csv
 *.log
+
+# Isolated validation and package output
+.validation-dist/
+build/
+dist/
+*.egg-info/
