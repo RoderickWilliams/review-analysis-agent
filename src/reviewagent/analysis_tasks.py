@@ -158,7 +158,8 @@ def _rebuild(analysis):
     from reviewagent.trust_report import TrustReportEngine
     report["trust_report"] = TrustReportEngine().generate_report(analysis.get("reviews", []), analysis.get("results", []))
     report["statistics"] = stats
-    report["dashboard"].update(score=stats["avg_trust_score"], score_label="信息可信度", valid_samples=stats["successful_count"])
+    report["dashboard"].update(score=report["trust_report"].get("overall_trust_score"), score_label="评论可信度",
+                               valid_samples=stats["successful_count"], model_avg_trust=stats["avg_trust_score"])
     if stats["successful_count"]:
         report["diagnosis"].update(status="available", status_label="已分析", sentiment_distribution=stats["sentiment_distribution"],
                                     sarcastic_count=stats["sarcastic_count"], successful_count=stats["successful_count"], failed_count=stats["failed_count"])
@@ -169,9 +170,11 @@ def _rebuild(analysis):
     for key in ("pain_points", "improvements", "topics", "content_kit", "ops_plan", "actions", "drafts", "insight_groups"):
         if key in analysis.get("enrichment", {}):
             report[key] = analysis["enrichment"][key]
-    score = stats["avg_trust_score"]
-    risk = "unknown" if score is None else "low" if score >= 70 else "medium" if score >= 40 else "high"
-    report["dashboard"].update(risk=risk, risk_label={"unknown": "未评估", "low": "低疑点", "medium": "需复核", "high": "高疑点"}[risk], score_note="模型内容信号；无法认证评论真实性", pain_count=len(report.get("pain_points", {}).get("items", [])), opportunity_count=len(report.get("improvements", {}).get("items", [])))
+    score = report["trust_report"].get("overall_trust_score")
+    risk = report["trust_report"].get("risk_level") or "unknown"
+    report["dashboard"].update(risk=risk, risk_label={"unknown": "未评估", "low": "低风险", "medium": "中风险", "high": "高风险"}.get(risk, "未评估"),
+                               score_note="按重复评论、时间突发、长度均匀度与跨评论重复短语计算；不是真实性概率",
+                               pain_count=len(report.get("pain_points", {}).get("items", [])), opportunity_count=len(report.get("improvements", {}).get("items", [])))
     report["diagnosis"].update(score=score, risk=risk, trust=report["trust_report"], signals=report["trust_report"].get("signals", []))
     report["data_status"]["llm_used"] = bool(stats["successful_count"])
     report["data_status"]["analyzed_reviews"] = stats["successful_count"]
@@ -362,7 +365,7 @@ def _execute(analysis_id, operation, event, agent):
                 analysis["results"] = [by_id[r["review_id"]] for r in analysis["reviews"] if r["review_id"] in by_id]
                 statistics = summarize_results(analysis["results"])
                 analysis["report"]["statistics"] = statistics
-                analysis["report"]["dashboard"].update(score=statistics["avg_trust_score"], valid_samples=statistics["successful_count"])
+                analysis["report"]["dashboard"].update(valid_samples=statistics["successful_count"], model_avg_trust=statistics["avg_trust_score"])
                 store.update_analysis(analysis_id, {"results": analysis["results"], "report": analysis["report"],
                                                     "progress": {"stage": "reviews", "done": done, "total": total}})
             if ledger is None:
