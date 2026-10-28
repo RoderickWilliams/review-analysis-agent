@@ -258,7 +258,7 @@ def _operations(analysis, kind="all"):
 
 def start(analysis_id, operation="analyze", *, agent=None):
     analysis = get_record(analysis_id)
-    if operation not in {"analyze", "collect", "discover", "operations", "generate_actions", "generate_selling_point", "generate_support_script", "generate_content_topic", "generate_schedule", "login_jd", "login_taobao", "login_xhs"}:
+    if operation not in {"analyze", "collect", "discover", "operations", "generate_actions", "generate_selling_point", "generate_support_script", "generate_content_topic", "login_jd", "login_taobao", "login_xhs"}:
         raise ValueError("未知任务类型")
     if operation == "analyze" and not analysis.get("reviews"):
         raise ValueError("请先导入评论或完成采集")

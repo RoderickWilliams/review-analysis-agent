@@ -92,7 +92,7 @@ function editSource(key){
 }
 function draftsView(){
   const items=state.analysis?.report?.drafts||[],busy=busyStatuses.has(state.analysis?.status);
-  const names={selling_point:'商品卖点',support_script:'客服话术',content_topic:'内容选题',schedule:'排期'};
+  const names={selling_point:'商品卖点',support_script:'客服话术',content_topic:'内容选题'};
   return `<div class="section-bar"><h2>可编辑运营草稿 <span class="badge">${items.length}</span></h2><button class="button" data-command="drafts-csv" ${items.length?'':'disabled'}>↓ 导出草稿</button></div><div class="heading-actions">${Object.entries(names).map(([kind,name])=>`<button class="button primary" data-command="generate_${kind}" ${busy?'disabled':''}>生成${name}</button>`).join('')}</div><p class="note">按商品组分别整理。产品参数、处理政策和对外承诺需核对；日期、渠道和指标由运营编辑。重新生成会保留人工修改。</p>${items.length?`<div class="draft-grid">${items.map(d=>`<article class="panel draft-card"><div class="panel-title"><span class="badge">${names[d.kind]||esc(d.kind)}</span><span>${d.edited?'已编辑':'草稿'}${d.needs_review?' · 证据需复核':''}</span></div><h3>${esc(d.title)}</h3><p class="cell-meta">${esc(d.group_title||'商品组待确认')}</p><p class="draft-body">${esc(d.body)}</p><div class="draft-meta"><span>${esc(d.channel||'渠道待定')} · ${esc(d.scheduled_date||'日期待定')}</span><button class="button" data-edit-draft="${esc(d.id)}" ${busy?'disabled':''}>编辑草稿</button></div></article>`).join('')}</div>`:'<p class="note">点击上方对应按钮，仅生成所选类型的草稿。有原句支持才生成；使用已配置模型生成，与本次分析共用最高 ¥1.50 预算；预算不足时保留已有内容并提示。</p>'}`;
 }
 function editDraft(id){
@@ -114,7 +114,6 @@ draftsView = function () {
     ['selling_point', '商品卖点', '详情页与商品卡可直接使用'],
     ['support_script', '客服话术', '客服知识库可直接使用'],
     ['content_topic', '内容选题 · 小红书图文模板', '标题 / 正文 / 配图建议 / 话题，按小红书笔记结构生成'],
-    ['schedule', '排期', '内容与行动的时间安排'],
   ];
   const buttons = groups.map(([kind, name]) => '<button class="button primary" data-command="generate_' + kind + '" ' + (busy ? 'disabled' : '') + '>生成' + (kind === 'content_topic' ? '内容选题' : name) + '</button>').join('');
   const cards = groups.map(([kind, name, hint]) => {

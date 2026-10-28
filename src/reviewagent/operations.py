@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 
+ALLOWED_KINDS = {"all", "actions", "selling_point", "support_script", "content_topic"}
 PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2}
 NON_OPERATOR_MARKERS = ("质检", "出厂检查", "出厂检验", "来料", "开模", "模具", "生产工艺", "生产线",
                         "供应链", "研发", "配方", "材质改良", "品控流程", "洁净度", "手感排查", "来货")
@@ -28,7 +29,7 @@ def _id(kind, point):
 
 
 def build_operations(analysis, requested_kind="all"):
-    if requested_kind not in {"all", "actions", "selling_point", "support_script", "content_topic", "schedule"}:
+    if requested_kind not in ALLOWED_KINDS:
         raise ValueError("未知运营内容类型")
     enrichment = analysis.get("enrichment", {})
     points = [p for p in enrichment.get("pain_points", {}).get("items", []) if p.get("verified")]
@@ -67,7 +68,6 @@ def build_operations(analysis, requested_kind="all"):
             ("selling_point", "卖点说明草稿", "商品详情页", f"围绕「{statement}」说明适用场景、选择方法与可核对细节。\n【待补：真实参数或实测依据】\n适用边界：【待确认】"),
             ("support_script", "客服话术草稿", "客服知识库", f"您好，您提到的「{statement}」需要结合具体规格和使用情况核对。请补充商品型号、规格及问题出现的场景。\n【待核对后填写处理步骤、售后政策与可承诺时效】"),
             ("content_topic", "小红书图文模板", "小红书", f"封面文案：{statement}，我家踩过的坑替你避一下\n正文：先说场景（引用原句「{quote}」）→ 再讲怎么核对 → 最后给选购建议\n配图建议：封面放商品实拍+大字标题；第2张展示问题细节；第3-5张对比/使用场景\n话题：#毛绒玩具 #礼物推荐 #避坑指南\n【待补：真实参数与实拍素材】"),
-            ("schedule", f"第 {index + 1} 项排期草稿", "待选择渠道", f"议题：{statement}\n准备：核对原句、商品参数与可用素材。\n执行：先更新草稿，经必要确认后选择渠道。\n验证：{action['metric']}\n实际日期、负责人和指标目标由运营填写。"),
         ]
         for kind, title, channel, body in variants:
             draft_id = _id(kind, point)
