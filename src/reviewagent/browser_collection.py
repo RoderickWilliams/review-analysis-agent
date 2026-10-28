@@ -279,7 +279,11 @@ def _jd_browser_reviews(driver, item_id, limit, cancelled, emit):
         batch = data.get("comments") or []
         if not batch:
             break
-        rows.extend(item for item in batch if isinstance(item, dict))
+        for item in batch:
+            if isinstance(item, dict):
+                item = dict(item)
+                item["_jd_page"] = page + 1
+                rows.append(item)
         page += 1
         if emit:
             emit("jd_api", "京东评论接口（浏览器会话）：第 %d 页，累计 %d 条" % (page, len(rows)))
@@ -545,7 +549,10 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
                 api_rows = _jd_browser_reviews(driver, jd_item_id, limit, cancelled, emit)
                 if api_rows:
                     for raw in api_rows:
-                        review = normalize_comment(raw, source, 'owned_browser_jd_api')
+                        page_no = raw.pop('_jd_page', None) if isinstance(raw, dict) else None
+                        locator = {'kind': 'jd_comment_api', 'page': page_no,
+                                   'comment_id': str(raw.get('id') or raw.get('guid') or '')} if page_no else None
+                        review = normalize_comment(raw, source, 'owned_browser_jd_api', locator=locator)
                         if not review or review['comment_id'] in seen:
                             continue
                         reviews.append(review)

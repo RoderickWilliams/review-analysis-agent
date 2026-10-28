@@ -32,7 +32,7 @@ def comment_rows(body, platform):
     return rows[:1000]
 
 
-def normalize_comment(raw, source, method):
+def normalize_comment(raw, source, method, locator=None):
     content = str(raw.get("content") or raw.get("rateContent") or raw.get("feedback") or "").strip()
     if not content:
         return None
@@ -55,7 +55,8 @@ def normalize_comment(raw, source, method):
             "reviewer_name": str(raw.get("userNick") or raw.get("reduceUserNick") or raw.get("nickname")
                                or raw.get("displayUserNick") or raw.get("user_name") or user.get("nick") or ""),
             "product_name": source.get("title", ""), "is_demo": False, "extraction_method": method,
-            "content_kind": "social_comment" if source.get("platform") == "xhs" else "product_review"}
+            "content_kind": "social_comment" if source.get("platform") == "xhs" else "product_review",
+            "source_locator": locator}
 
 
 def product_id(url, platform):

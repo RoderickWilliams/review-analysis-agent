@@ -150,7 +150,9 @@ def collect_into_analysis(analysis, cancelled, *, on_checkpoint=None, on_state=N
         raise ValueError("没有可采集的商品链接，请先确认对象或补充来源链接")
     combined = list(analysis.get("reviews", []))
     previous_count = len(combined)
-    known = {(r.get("platform"), r.get("source_url"), r.get("comment_id") or r.get("review_id")) for r in combined}
+    key_of = lambda r: (r.get("platform"), r.get("source_url"), r.get("comment_id") or r.get("review_id"))
+    known = {key_of(r) for r in combined}
+    by_key = {key_of(r): r for r in combined}
     old_collection = analysis.get("collection") or {}
     settings_key = [request.get("window_months", 12), per_product]
     previous = {item.get("url"): item for item in old_collection.get("sources", [])} if old_collection.get("settings_key") == settings_key else {}
@@ -210,10 +212,17 @@ def collect_into_analysis(analysis, cancelled, *, on_checkpoint=None, on_state=N
             normalized = normalize_reviews(prepared, strict=False)
             chosen, window = select_window(normalized, request.get("window_months", 12), per_product)
             for review in chosen:
-                key = (review.get("platform"), review.get("source_url"), review.get("comment_id") or review.get("review_id"))
-                if key not in known and len(combined) < 5000:
+                key = key_of(review)
+                existing = by_key.get(key)
+                if existing is not None:
+                    # 重新采集时补上定位信息（接口页号等），不覆盖人工或已有内容。
+                    if review.get("source_locator") and not existing.get("source_locator"):
+                        existing["source_locator"] = review["source_locator"]
+                    continue
+                if len(combined) < 5000:
                     combined.append(review)
                     known.add(key)
+                    by_key[key] = review
             item.update(received=len(raw), invalid=len(raw) - len(normalized), selected=len(chosen), **window)
             checkpoint()
 

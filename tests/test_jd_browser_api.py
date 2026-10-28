@@ -26,6 +26,7 @@ def test_jd_browser_reviews_pages_until_empty(monkeypatch):
     ])
     rows = bc._jd_browser_reviews(driver, "100078467468", 50, lambda: False, None)
     assert [row["id"] for row in rows] == [1, 2]
+    assert [row["_jd_page"] for row in rows] == [1, 2]
     assert "productId=100078467468" in driver.urls[0]
     assert "page=1" in driver.urls[1]
 
@@ -64,3 +65,11 @@ def test_jd_collection_opens_headless_browser(monkeypatch):
     rows = bc._collect_source(source, 10, lambda: False)
     assert captured["headless"] is True
     assert len(rows) == 1
+
+def test_normalize_comment_keeps_source_locator():
+    from reviewagent.public_collection import normalize_comment
+
+    review = normalize_comment({"id": "c1", "content": "一条评论", "creationTime": "2026-01-01"},
+                               {"platform": "jd", "url": "https://item.jd.com/1.html"},
+                               "owned_browser_jd_api", locator={"kind": "jd_comment_api", "page": 2})
+    assert review["source_locator"] == {"kind": "jd_comment_api", "page": 2}
