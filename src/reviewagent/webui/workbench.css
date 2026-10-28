@@ -62,3 +62,7 @@ main::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,#modal-body::-we
   main{min-height:0;padding:20px 14px 16px}
   .heading-actions{flex-wrap:wrap}
 }
+
+.label-cell{white-space:nowrap}
+.label-cell .text-button{margin-right:10px}
+.label-cell .text-button.active{color:#2c7a5b;font-weight:600}

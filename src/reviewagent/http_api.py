@@ -500,6 +500,29 @@ async def preview_import(file: UploadFile = File(...), mapping: str = Form("{}")
         await file.close()
 
 
+class ReviewLabelRequest(BaseModel):
+    label: str
+
+
+@app.post("/v1/analysis/{analysis_id}/reviews/{review_id}/label", summary="人工归类一条评论并写入语料库")
+def label_analysis_review(analysis_id: str, review_id: str, payload: ReviewLabelRequest):
+    from reviewagent import store
+    from reviewagent.review_corpus import set_label
+    analysis = _analysis_or_404(analysis_id)
+    label = (payload.label or "").strip()
+    if label not in {"authentic", "suspicious"}:
+        raise HTTPException(status_code=400, detail="label 只能是 authentic 或 suspicious")
+    review = next((item for item in analysis.get("reviews", []) if item.get("review_id") == review_id), None)
+    if review is None:
+        raise HTTPException(status_code=404, detail="评论不存在")
+    review["user_label"] = label
+    review["labeled_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+    store.update_analysis(analysis_id, {"reviews": analysis["reviews"]})
+    set_label(review.get("review_text") or "", label,
+              {"rating": review.get("rating"), "date": review.get("review_date"), "platform": review.get("platform")})
+    return {"ok": True, "review_id": review_id, "label": label}
+
+
 @app.post("/v1/analysis/{analysis_id}/reviews", summary="保存评论样本，不自动调用模型")
 def attach_analysis_reviews(analysis_id: str, payload: AttachReviewsRequest):
     from reviewagent.analysis_tasks import attach_reviews

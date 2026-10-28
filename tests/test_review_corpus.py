@@ -37,3 +37,13 @@ def test_positive_examples_are_separated(monkeypatch, tmp_path):
     text = review_corpus.format_examples(negative=3, positive=3)
     assert "真实用户样本" in text
     assert "超萌" in text
+
+def test_set_label_updates_existing_row(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    assert review_corpus.set_label("一条待判断的评论", "suspicious", {"platform": "jd"})
+    rows = review_corpus._read_rows()
+    assert rows[0]["label"] == "suspicious"
+    assert review_corpus.set_label("一条待判断的评论", "authentic")
+    rows = review_corpus._read_rows()
+    assert len(rows) == 1
+    assert rows[0]["label"] == "authentic"

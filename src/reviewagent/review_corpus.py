@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -93,6 +94,46 @@ def add_examples(rows: list[dict], label: str) -> int:
         raise ValueError("未知标签：%s" % label)
     prepared = [{**row, "label": label} for row in rows]
     return _append(prepared)
+
+
+def set_label(text: str, label: str, meta: dict | None = None) -> bool:
+    """人工给一条评论定标签：已有同样正文就改标签，没有就追加。"""
+    if label not in LABELS:
+        raise ValueError("未知标签：%s" % label)
+    text = (text or "").strip()
+    if not text:
+        return False
+    key = _key(text)
+    with _LOCK:
+        rows = _read_rows()
+        changed = False
+        for row in rows:
+            if row.get("key") == key or (row.get("text") or "").strip() == text:
+                if row.get("label") != label:
+                    row["label"] = label
+                    changed = True
+                if meta:
+                    for field in ("rating", "date", "platform"):
+                        if meta.get(field) is not None:
+                            row[field] = meta[field]
+                            changed = True
+                if changed:
+                    row["saved_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+                break
+        else:
+            rows.append({"key": key, "text": text[:500], "rating": (meta or {}).get("rating"),
+                         "date": (meta or {}).get("date") or "", "platform": (meta or {}).get("platform") or "",
+                         "label": label, "saved_at": datetime.now().astimezone().isoformat(timespec="seconds")})
+            changed = True
+        if changed:
+            path = corpus_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            temp = path.with_suffix(".jsonl.tmp")
+            with temp.open("w", encoding="utf-8") as handle:
+                for row in rows:
+                    handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+            os.replace(temp, path)
+        return True
 
 
 def load_examples(limit: int = 6, label: str | None = None) -> list[dict]:
