@@ -451,6 +451,7 @@ async def access_control(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     if request.url.path.startswith("/app/"):
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+    if request.url.path.startswith(("/app/", "/showcase/")):
         response.headers["Cache-Control"] = "no-store, max-age=0"
         response.headers["Pragma"] = "no-cache"
     return response
@@ -787,7 +788,10 @@ def webui_root() -> RedirectResponse:
 if WEBUI_DIR.is_dir():
     app.mount("/app", StaticFiles(directory=str(WEBUI_DIR), html=True), name="webui")
 
+SHOWCASE_DIR = Path(__file__).resolve().parents[2] / "showcase"
 WEBUI_REDESIGN_DIR = Path(__file__).resolve().parent / "webui-redesign"
+if SHOWCASE_DIR.is_dir():
+    app.mount("/showcase", StaticFiles(directory=str(SHOWCASE_DIR), html=True), name="showcase")
 if WEBUI_REDESIGN_DIR.is_dir():
     app.mount("/app-redesign", StaticFiles(directory=str(WEBUI_REDESIGN_DIR), html=True), name="webui-redesign")
 
