@@ -190,6 +190,8 @@ VALIDITY_CHECK_PROMPT = """你是用户反馈内容研究员。有效性分类�
 - 产品名称：{product_name}
 - 同批次相似评论数：{similar_count}（由TF-IDF算法计算得出，0表示无相似评论）
 
+{corpus_examples}
+
 ## 输出要求
 请以JSON格式输出，不要输出其他内容：
 {{
@@ -436,10 +438,16 @@ class ReviewAnalysisAgent:
             - authenticity_score: 真实性得分(0-1)
             - red_flags: 可疑特征列表
         """
+        try:
+            from reviewagent.review_corpus import format_examples as _format_examples
+            corpus_examples = _format_examples()
+        except Exception:
+            corpus_examples = ""
         prompt = VALIDITY_CHECK_PROMPT.format(
             review_text=review_text,
             product_name=product_name,
-            similar_count=similar_count
+            similar_count=similar_count,
+            corpus_examples=corpus_examples
         )
         raw = self._call_llm(prompt, temperature=0.0)
         return self._validated(self._parse_json(raw), "validity")

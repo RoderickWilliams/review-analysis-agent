@@ -399,6 +399,11 @@ def _execute(analysis_id, operation, event, agent):
                 sampling["modeled_count"] = sum(result_succeeded(r) for r in analysis["results"])
                 analysis["sampling"] = sampling
                 ledger.set_phase("insights")
+            try:
+                from reviewagent.review_corpus import append_flagged
+                append_flagged(analysis.get("reviews"), analysis.get("results"))
+            except Exception:
+                pass
             if not event.is_set():
                 store.update_analysis(analysis_id, {"progress": {"stage": "insights", "done": len(analysis["reviews"]), "total": len(analysis["reviews"])}})
                 analysis.setdefault("enrichment", {}).update(_insights(analysis, agent, event.is_set))
