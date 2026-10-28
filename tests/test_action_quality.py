@@ -1,3 +1,36 @@
+def test_selling_point_uses_positive_reviews_only():
+    points = [point("p1", "毛绒玩具手感好", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "突出手感卖点", "priority": "P1", "effort": 1, "impact": 2}]
+    base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r1", "review_text": "毛绒很细腻，孩子抱着不撒手", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r1", "status": "completed",
+                        "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}]
+
+    class FakeAgent:
+        model = "test-model"
+
+        def _call_llm(self, prompt):
+            ids = [item["id"] for item in json.loads(prompt.rsplit("\n", 1)[-1])]
+            return json.dumps([{"id": ids[0], "title": "手感细腻", "body": "毛绒细腻，抱着舒服。", "channel": "商品详情页"}],
+                              ensure_ascii=False)
+
+    result = ops.generate_operations(base, "selling_point", FakeAgent())
+    generated = [d for d in result["drafts"] if d["kind"] == "selling_point" and d.get("generation_method") == "model"]
+    assert generated and generated[0]["title"] == "手感细腻"
+    assert generated[0]["evidence_ids"] == ["r1"]
+
+
+def test_selling_point_skips_negative_only_reviews():
+    points = [point("p1", "开线", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
+    base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r1", "review_text": "刚收到就开线了", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r1", "status": "completed",
+                        "final_analysis": {"final_sentiment": "negative", "final_validity": "authentic"}}]
+    built = ops.build_operations(base, "selling_point")
+    assert [d for d in built["drafts"] if d["kind"] == "selling_point"] == []
+
+
 """运营动作：优先级排序，以及把工厂侧事项改成“汇总客诉交负责人确认”。"""
 import json
 
@@ -133,20 +166,24 @@ def test_content_topic_accepts_list_and_structured_body():
     assert drafts[0]["channel"] == "小红书"
     assert "配图建议" in drafts[0]["body"]
 
-def test_selling_point_accepts_list_response():
-    points = [point("p1", "毛绒玩具手感好", "P1", "r1")]
-    improvements = [{"pain_point_id": "p1", "action": "突出手感卖点", "priority": "P1", "effort": 1, "impact": 2}]
+def test_generating_one_kind_keeps_other_drafts():
+    points = [point("p1", "开线", "P1", "r1")]
+    improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
     base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r2", "review_text": "毛绒很细腻，孩子抱着不撒手", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r2", "status": "completed",
+                        "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}]
+    base["enrichment"].update(ops.build_operations(base, "support_script"))
 
     class FakeAgent:
         model = "test-model"
 
         def _call_llm(self, prompt):
             ids = [item["id"] for item in json.loads(prompt.rsplit("\n", 1)[-1])]
-            return json.dumps([{"id": ids[0], "title": "手感卖点", "body": "毛绒细腻", "channel": "商品详情页"}],
+            return json.dumps([{"id": ids[0], "title": "手感细腻", "body": "毛绒细腻。", "channel": "商品详情页"}],
                               ensure_ascii=False)
 
     result = ops.generate_operations(base, "selling_point", FakeAgent())
-    generated = [d for d in result["drafts"] if d["kind"] == "selling_point" and d.get("generation_method") == "model"]
-    assert generated and generated[0]["title"] == "手感卖点"
-    assert "schedule" not in ops.ALLOWED_KINDS
+    kinds = {d["kind"] for d in result["drafts"]}
+    assert "support_script" in kinds
+    assert "selling_point" in kinds

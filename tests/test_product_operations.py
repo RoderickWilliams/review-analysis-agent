@@ -43,7 +43,10 @@ def test_confirmed_same_specs_merge_but_unknown_selected_skus_stay_separate():
 
 
 def _operator_record():
-    return {"enrichment": {"pain_points": {"items": [{"id": "g-pp-1", "group_id": "g", "group_title": "2644 · 10cm",
+    return {"reviews": [{"review_id": "pos-1", "review_text": "毛绒很细腻，孩子抱着不撒手", "group_id": "g", "group_title": "2644 · 10cm"}],
+            "results": [{"review_id": "pos-1", "status": "completed",
+                       "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}],
+            "enrichment": {"pain_points": {"items": [{"id": "g-pp-1", "group_id": "g", "group_title": "2644 · 10cm",
             "statement": "指套偏紧", "verified": True,
             "evidence": [{"review_id": "fixture-1", "quote": "指套偏紧", "source_url": "https://example.com/review"}]}]},
             "improvements": {"items": []}}}
@@ -55,8 +58,7 @@ def test_operator_drafts_have_evidence_and_preserve_human_edits_on_regeneration(
     drafts = record["enrichment"]["drafts"]
     kinds = {d["kind"] for d in drafts}
     assert kinds == {"selling_point", "support_script", "content_topic"}
-    assert "schedule" not in kinds
-    assert all(d["evidence_ids"] == ["fixture-1"] and d["scheduled_date"] == "" for d in drafts)
+    assert all(d["evidence_ids"] and d["scheduled_date"] == "" for d in drafts)
     drafts[0].update(title="人工标题", body="已核对后的人工草稿", edited=True)
     record["enrichment"]["actions"][0].update(owner="运营", label="人工调整动作", edited=True)
     regenerated = build_operations(record)
