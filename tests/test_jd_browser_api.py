@@ -1,0 +1,36 @@
+"""京东评论接口在专用浏览器会话里读取（纯 requests 会被 444 拒绝）。"""
+import json
+
+from reviewagent import browser_collection as bc
+
+
+class FakeDriver:
+    def __init__(self, pages):
+        self.pages = list(pages)
+        self.urls = []
+
+    def get(self, url):
+        self.urls.append(url)
+
+    def execute_script(self, script, *args):
+        page = self.pages.pop(0) if self.pages else ""
+        return page if isinstance(page, str) else json.dumps(page, ensure_ascii=False)
+
+
+def test_jd_browser_reviews_pages_until_empty(monkeypatch):
+    monkeypatch.setattr(bc, "_wait", lambda seconds, cancelled: None)
+    driver = FakeDriver([
+        {"comments": [{"id": 1, "content": "好评", "creationTime": "2026-01-01"}]},
+        {"comments": [{"id": 2, "content": "一般", "creationTime": "2026-01-02"}]},
+        {"comments": []},
+    ])
+    rows = bc._jd_browser_reviews(driver, "100078467468", 50, lambda: False, None)
+    assert [row["id"] for row in rows] == [1, 2]
+    assert "productId=100078467468" in driver.urls[0]
+    assert "page=1" in driver.urls[1]
+
+
+def test_jd_browser_reviews_stops_on_forbidden_body(monkeypatch):
+    monkeypatch.setattr(bc, "_wait", lambda seconds, cancelled: None)
+    driver = FakeDriver(["<html>The Request Forbidden</html>"])
+    assert bc._jd_browser_reviews(driver, "1", 10, lambda: False, None) == []

@@ -246,6 +246,46 @@ def _tmall_rate_rows(driver, item_id, limit, cancelled):
     return rows[:limit], ok
 
 
+JD_COMMENT_API = "https://club.jd.com/comment/productPageComments.action"
+
+
+def _jd_api_url(item_id, page, page_size=10):
+    return (JD_COMMENT_API + "?productId=" + str(item_id) + "&score=0&sortType=5&page=" + str(page)
+            + "&pageSize=" + str(page_size) + "&isShadowSku=0&fold=1")
+
+
+def _jd_browser_reviews(driver, item_id, limit, cancelled, emit):
+    """在专用浏览器会话里直接读京东评论接口。
+
+    纯 requests 会被京东按 444 拒绝；浏览器带着自己的 Cookie 与 TLS 指纹可以拿到 JSON。
+    """
+    import json as _json
+    rows, page = [], 0
+    while len(rows) < limit and page < 30:
+        if cancelled():
+            break
+        try:
+            driver.get(_jd_api_url(item_id, page))
+        except Exception:
+            break
+        _wait(1, cancelled)
+        text = (driver.execute_script("return (document.body && document.body.innerText) || '';") or "").strip()
+        try:
+            data = _json.loads(text)
+        except Exception:
+            break
+        if not isinstance(data, dict):
+            break
+        batch = data.get("comments") or []
+        if not batch:
+            break
+        rows.extend(item for item in batch if isinstance(item, dict))
+        page += 1
+        if emit:
+            emit("jd_api", "京东评论接口（浏览器会话）：第 %d 页，累计 %d 条" % (page, len(rows)))
+    return rows[:limit]
+
+
 def _folded_reviews(driver):
     """Return Tmall's folded-review count and the point of its notice."""
     data = driver.execute_script(r"""
@@ -497,6 +537,24 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
         driver = open_driver(platform, headless=False)
         if hasattr(driver, 'start_review_listener'):
             driver.start_review_listener()
+        if platform == 'jd':
+            from reviewagent.public_collection import product_id as _product_id
+            jd_item_id = _product_id(url, 'jd')
+            if jd_item_id:
+                api_rows = _jd_browser_reviews(driver, jd_item_id, limit, cancelled, emit)
+                if api_rows:
+                    for raw in api_rows:
+                        review = normalize_comment(raw, source, 'owned_browser_jd_api')
+                        if not review or review['comment_id'] in seen:
+                            continue
+                        reviews.append(review)
+                        seen.add(review['comment_id'])
+                        if len(reviews) >= limit:
+                            break
+                    if reviews:
+                        if on_batch:
+                            on_batch(reviews)
+                        return ReviewBatch(reviews, {'jd_api': 'ok', 'attribution': 'by_productId_parameter'})
         try:
             driver.get(url)
         except BrowserNavigationError as exc:
