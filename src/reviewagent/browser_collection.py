@@ -41,7 +41,7 @@ def _page_state(driver, platform):
     path = urlsplit(current_url).path.lower()
     host = (urlsplit(current_url).hostname or "").lower()
     login_address = host.startswith(("passport.", "login.")) or "/login" in path
-    state = driver.execute_script("""
+    state = driver.execute_script(r"""
         if (location.protocol !== 'https:' || !document.body || !document.body.innerText.trim()) return 'blank_page';
         const shown = s => [...document.querySelectorAll(s)].some(e => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden');
         if (shown('[id*="captcha"], .geetest_panel, .verify-wrap, .nc-container')) return 'verification_required';
@@ -218,7 +218,7 @@ def _next_comments(driver):
 def _popup_comments(driver):
     from reviewagent.scrapers.jd_drissionpage_scraper import RATE_CARD_CSS_FALLBACKS, RATE_DESC_CSS_FALLBACKS
     import json
-    script = """
+    script = r"""
         const cards = [...document.querySelectorAll(CARDS)].filter(e => e.getClientRects().length);
         return cards.flatMap(card => {
             const body = card.querySelector(DESCRIPTIONS);
@@ -282,7 +282,7 @@ def _await_access(driver, platform, url, cancelled, emit):
 
 def product_metadata(driver):
     """Read public structured fields; missing identifiers remain unconfirmed."""
-    data = driver.execute_script("""
+    data = driver.execute_script(r"""
         const products = [];
         const visit = data => {
             if (Array.isArray(data)) {data.forEach(visit); return;}

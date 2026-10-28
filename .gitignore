@@ -35,3 +35,9 @@ plugins/dsh-review-agent/lib/_*.csv
 build/
 dist/
 *.egg-info/
+
+# 本机运行数据与归档
+runtime/
+_archive/
+.codex-tools/
+!docs/verification/**/*.log

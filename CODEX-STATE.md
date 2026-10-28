@@ -11,8 +11,9 @@
 - 不推送、不发布、不上传私有材料、不迁移或覆盖用户原有数据库，不在对话中暴露凭据。
 
 ## 工作位置
-- 工作树：C:/Users/wzb02/.codex/worktrees/reviewagent-upgrade/review-analysis-agent
-- 分支 codex/reviewagent-upgrade，基线 origin/v2 6da2a1a；包含大量未提交升级，不重置。
+- 工作目录：E:/review-analysis-agent（分支 codex/reviewagent-upgrade，已提交 1dcc71d）；原 codex 工作树已删除，全部升级并入本目录。旧 main 提交 52b7751 仍在历史里。
+- 运行时数据：E:/review-analysis-agent/runtime（11 条真实记录从隔离目录复制进来）；启动脚本 run_local.py（端口 64628）。
+- 旧 main 的残留文件（旧备份、旧桌面入口、assets、unrelated portfolio）已移到 E:/review-analysis-agent/_archive/，未删除。
 - 原项目 E:/review-analysis-agent 和 E:/DeepSeek/review-agent 未覆盖。
 - 沙盒对工作树写入受限：源码使用 apply_patch；二进制原图复制此前通过已批准的提权 cmd 完成。
 
@@ -79,6 +80,13 @@
 - 最后失败未执行的批次正要做：collection.collect_into_analysis 传 on_metadata、检查点保存 object/candidates；analysis_tasks 增 discovery_checkpoint 并传 on_state/on_checkpoint；same_product 候选保留 specs_confirmed；collection.discover_into_analysis 改调用 browser_collection.discover_sources。优先完成这批。
 - 其余未完成：来源身份确认 API/UI、商品分组比较 UI、可编辑卖点/客服话术/选题/排期、通用运营权限措辞、补回归测试、更新文档/源码预览。测试与真模型/平台登录统一验收仍尚未开始。
 - 原预览还是旧 snapshot；不要覆盖原检查证据。后续新预览需独立副本且显式注入假模型（新预算路径 agent=None 会用真实客户端，旧脚本只替换类已不够）。
+
+## 2026-10-28 迁移到项目目录（DSH 会话）
+- 用户要求本地文件统一放 E:/review-analysis-agent，散落材料并入项目。已完成：worktree 提交 1dcc71d 后并入 E:；runtime（含专用浏览器配置与 11 条记录）复制到 runtime/；新增 run_local.py；验证日志收进 docs/verification/。
+- 服务改为从 E: 启动（PID 见 runtime/server-owner.json），64628 健康、llm_configured=false，记录未丢。
+- 项目 venv（Python 3.14）补齐 pytest/httpx；全量 225 项测试 0 失败、3 跳过（tests/test_upgrade_workbench.py 的 operations 用例改为传 agent，并补运营助手提示的测试替身）。
+- browser_collection.py 三处内嵌 JS 改为原始字符串，消除 SyntaxWarning。
+- 真实登录态过期：当前打开天猫详情会跳 login.taobao.com；已开专用窗口等待扫码后抓取评论 DOM 结构。UI（workbench.js/css/html）本轮未改。
 
 ## 2026-10-28 后续实施进度
 - 上述被额度阻止的检索接线批次已完整补上：collection 调 discover_sources；采集传 product_metadata 回调；检查点保存 object/candidates；任务保存检索状态；候选保留 specs_confirmed。

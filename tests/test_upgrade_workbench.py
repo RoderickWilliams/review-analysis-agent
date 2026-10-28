@@ -127,12 +127,17 @@ def test_deep_insights_keep_verifiable_quotes(monkeypatch):
                 return json.dumps(response_for_prompt(prompt), ensure_ascii=False)
             if '"improvements"' in prompt:
                 return json.dumps({"improvements": [{"pain_point_id": "pp-1", "action": "调整杯盖密封接缝", "rationale": "对应漏水原文", "effort": 2, "impact": 3, "verification": "记录复测漏水次数"}]}, ensure_ascii=False)
+            if "运营助手" in prompt:
+                payload = json.loads(prompt.rsplit("\n", 1)[-1])
+                return json.dumps({"items": [{"id": item["id"], "label": "调整杯盖密封接缝",
+                                              "detail": "按原句核对接缝与密封圈装配，复测后再对外说明",
+                                              "metric": "记录复测漏水次数"} for item in payload]}, ensure_ascii=False)
             return json.dumps({"pain_points": [{"statement": "杯盖接缝漏水", "category": "质量", "severity": 3, "evidence": [{"review_id": "leak-1", "quote": "杯盖接缝一直漏水"}]}]}, ensure_ascii=False)
     agent = InsightAgent(client=FakeLLMClient())
     completed = tasks.start(analysis["analysis_id"], agent=agent)
     assert completed["status"] == "completed"
     assert completed["report"]["pain_points"]["items"][0]["verified"]
-    planned = tasks.start(analysis["analysis_id"], "operations")
+    planned = tasks.start(analysis["analysis_id"], "operations", agent=agent)
     assert planned["report"]["actions"][0]["evidence_ids"] == ["leak-1"]
 
 

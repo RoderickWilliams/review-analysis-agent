@@ -1,0 +1,17 @@
+platform,content_type,product_or_topic,url,source_note
+淘宝,商品详情,PAF 5.0 羽绒服,https://item.taobao.com/item.htm?id=693852879255,公开讨论中给出的淘宝原始商品链接
+淘宝,商品详情,New Balance 白色长袜,https://item.taobao.com/item.htm?id=876204682423,公开购物清单中的淘宝原始商品链接
+淘宝,商品详情,SIMPLE PROJECT 迷彩裤,https://item.taobao.com/item.htm?id=779278925154,公开品牌清单中的淘宝原始商品链接
+淘宝,商品详情,OPICLOTH 黑色牛仔裤,https://item.taobao.com/item.htm?id=814786089360,公开品牌清单中的淘宝原始商品链接
+天猫,商品详情,红米 Book 16 Pro 2025,https://detail.tmall.com/item.htm?id=920905490841,公开页面中带商品检索词的天猫详情链接
+天猫,商品详情,Abercrombie & Fitch 豹纹工装夹克,https://detail.tmall.com/item.htm?id=968022766982,公开购物清单中的天猫原始商品链接
+天猫,商品详情,Stussy Carton Tee,https://detail.tmall.com/item.htm?id=941105449214,公开购物清单中的天猫原始商品链接
+天猫,商品详情,主板与 CPU 套装,https://detail.tmall.com/item.htm?id=698567350393,公开购买咨询中的天猫原始商品链接
+京东,商品详情,JBL TUNE BUDS 2 主动降噪耳机,https://item.jd.com/product/O6nIk1e7MelYrOF5hQnjow.html,京东公开索引可解析商品标题与评价
+京东,商品详情,荣耀 Earbuds 4 真无线耳机,https://item.jd.com/product/MLFb5IqRI24jkVhQGJZ4_Q.html,京东公开索引可解析商品标题
+京东,商品详情,联想 ANC 入耳式蓝牙耳机,https://item.jd.com/product/n5y_ElTwTdkr8tYdC9THRg.html,京东公开索引可解析商品标题与相关推荐
+京东,商品详情,JBL TUNE 530C 头戴式有线耳机,https://item.jd.com/product/psfdM8Je2QxbjUurIQOqFQ.html,京东公开索引可解析商品标题与评价
+小红书,商品提及笔记,MIU MIU 11W 与 YSL 墨镜,https://www.xiaohongshu.com/discovery/item/665f95200000000006005624?xsec_source=app_share,公开笔记数据明确提及两款墨镜
+小红书,卖货笔记,索菲亚全屋家具 19999 元活动,https://www.xiaohongshu.com/discovery/item/5f3f8c4a000000001006fb0,公开内容洞察报告收录的品牌促销笔记
+小红书,商品提及笔记,儿童房飘窗收纳柜与书桌,https://www.xiaohongshu.com/discovery/item/5e219609000000001006605,公开内容洞察报告收录的家居商品笔记
+小红书,商品提及笔记,客厅收纳产品与方案,https://www.xiaohongshu.com/discovery/item/60e42a0a0000000021037099,公开内容洞察报告收录的收纳笔记

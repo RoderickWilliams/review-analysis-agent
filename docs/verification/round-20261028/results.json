@@ -1,0 +1,20 @@
+{
+  "python_syntax": {
+    "files": 92,
+    "errors": []
+  },
+  "javascript_syntax": {
+    "files": 5,
+    "errors": []
+  },
+  "pytest": {
+    "exit_code": 1
+  },
+  "wheel": {
+    "exit_code": 0
+  },
+  "resources": {
+    "exit_code": 0,
+    "output": "reviewagent-1.0.0-py3-none-any.whl: 静态资源齐全，未发现禁止打包的文件名\n"
+  }
+}
