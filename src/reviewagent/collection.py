@@ -68,7 +68,7 @@ def normalize_scope(request):
 
 def limits(request):
     if request.get("tier") == "custom":
-        return min(20, request.get("candidate_limit", 5)), min(500, request.get("per_product_limit", 300)), 20
+        return min(20, request.get("candidate_limit", 10)), min(500, request.get("per_product_limit", 300)), 20
     return TIERS.get(request.get("tier"), TIERS["standard"])
 
 
@@ -304,7 +304,7 @@ def discover_into_analysis(analysis, cancelled, *, on_checkpoint=None, on_state=
         platforms = [request["discovery_platform"]]
     if not platforms:
         raise ValueError("请至少选择一个检索平台")
-    maximum = request.get("candidate_limit", 5)
+    maximum = request.get("candidate_limit", 10)
     import unicodedata
     query = unicodedata.normalize("NFKC", analysis["object"].get("title") or analysis["input"]).strip().casefold()
     previous = list(analysis.get("candidates", []))

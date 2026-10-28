@@ -87,7 +87,7 @@ class AnalysisCreateRequest(ReviewsPayload):
     reviews: List[Dict[str, Any]] = Field(default_factory=list, max_length=5000)
     save: bool = True
     platforms: List[str] = Field(default_factory=lambda: ["jd", "taobao", "xhs"], max_length=3)
-    candidate_limit: int = Field(5, ge=1, le=20)
+    candidate_limit: int = Field(10, ge=1, le=20)
     per_product_limit: int = Field(300, ge=1, le=500)
 
 

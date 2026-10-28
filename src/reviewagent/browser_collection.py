@@ -699,9 +699,16 @@ def discover_sources(query, platforms, maximum, cancelled, *, on_state=None, on_
         platform = platform_key(requested)
         driver = None
         try:
-            driver = open_driver(platform, headless=False)
+            driver = open_driver(platform, headless=True)
             driver.get(searches[platform])
             _wait(3, cancelled)
+            state = _page_state(driver, platform)
+            if state in {"needs_login", "verification_required", "identity_verification", "login_complete"}:
+                # 后台搜索遇到登录/校验时才把窗口弹出来，登录完成后继续当前搜索。
+                driver.quit()
+                driver = open_driver(platform, headless=False)
+                driver.get(searches[platform])
+                _wait(2, cancelled)
             _await_access(driver, platform, searches[platform], cancelled, lambda status, message: on_state({"platform": platform, "status": status, "message": message}) if on_state else None)
             anchors = driver.execute_script("""
                 return [...document.querySelectorAll('a[href]')].slice(0, 3000).map(a => ({url:a.href,

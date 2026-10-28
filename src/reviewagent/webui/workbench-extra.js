@@ -41,7 +41,7 @@ function renderCandidateSelection(){
   $$('[data-unselect-url]',box).forEach(button=>button.addEventListener('click',()=>{wizard.selected.delete(button.dataset.unselectUrl);renderCandidateWizard()}));
 }
 async function searchCandidatePlatform(){
-  try{if(!state.config?.scraping_enabled){await api('/v1/collection/configure',jsonBody({enabled:true}));await connect()}const wizard=state.candidateWizard;if(!wizard)return;acceptAnalysis(await api(apiPath(''),{method:'PATCH',body:JSON.stringify({discovery_platform:wizard.platform,candidate_limit:5})}));await startJob('discover');renderCandidateWizard()}catch(error){$('#modal-error').textContent=error.message;$('#modal-error').hidden=false}
+  try{if(!state.config?.scraping_enabled){await api('/v1/collection/configure',jsonBody({enabled:true}));await connect()}const wizard=state.candidateWizard;if(!wizard)return;acceptAnalysis(await api(apiPath(''),{method:'PATCH',body:JSON.stringify({discovery_platform:wizard.platform,candidate_limit:10})}));await startJob('discover');renderCandidateWizard()}catch(error){$('#modal-error').textContent=error.message;$('#modal-error').hidden=false}
 }
 function bindPlatformChoices(){
   const tier=$('[name="tier"]',$('#modal')),boxes=$$('[name="platforms"]',$('#modal'));if(!tier||!boxes.length)return;
