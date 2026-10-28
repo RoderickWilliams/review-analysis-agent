@@ -1,153 +1,202 @@
-# ReviewAgent · 评论研究工作台
+<p align="center">
+  <img src="static/reviewagent-logo.png" alt="ReviewAgent Crawler" width="420">
+</p>
 
-面向电商运营的本地评论分析工具：从一个商品链接或一批评论原文出发，采集真实评论、做情绪与可信度分析、
-提炼有原句支持的痛点，再整理成可编辑的运营草稿（卖点、客服话术、内容选题、排期）和行动清单。
+<p align="center">
+  <strong>ReviewAgent Crawler</strong><br>
+  独立运行的跨平台评论采集工具：输入商品或笔记链接，输出结构化 JSON。
+</p>
 
-所有分析在本机运行，模型 Key 只保存在服务内存里，评论原文、结果和历史记录都留在本机目录。
+# ReviewAgent Crawler (`v2`)
 
-## 当前状态（2026-10-28）
+## 项目介绍
 
-真实链路目前只验证到**采集**这一段，以下结果来自本机实际运行：
+`v2` 是 ReviewAgent 的独立爬虫工具分支，专门负责电商与内容平台评论的链接识别、真实采集、字段归一和 JSON 输出。
 
-| 能力 | 状态 |
-| --- | --- |
-| 天猫商品链接识别、短链展开（e.tb.cn / 分享文案） | 已验证 |
-| 天猫详情页评论采集（含“查看全部评价”“已折叠”评价） | 已验证：同一链接取到 33 条，其中 14 条有正文 |
-| 专用 Chrome 窗口、QR 登录、身份校验等待 | 已验证能进入登录/校验流程；账号状态需人工完成 |
-| 京东、淘宝详情链接、小红书 | 代码路径存在，本轮未在真实链接上复测 |
-| 模型分析、洞察、运营草稿 | 代码与预算逻辑完成；**未做过一次真实模型调用**，需要用户在本机配置模型 |
-| 多链接分组比较、导出、历史恢复 | 离线用例覆盖；真实数据上未验收 |
+主要能力：
 
-不要把这些状态当成“全部功能正常”。每条真实结果都能在运行目录的分析记录里对照。
+- 支持淘宝 / 天猫、京东和小红书商品或笔记链接。
+- 识别 `e.tb.cn`、`3.cn`、`xhslink.com`、`xhslink.cn` 等分享短链。
+- 优先尝试平台公开接口，必要时使用 ReviewAgent 专用浏览器。
+- 支持 Chrome、Edge、Firefox 和自动浏览器选择。
+- 用户首次登录后，在指定的本机运行目录中复用专用浏览器状态。
+- 支持评论分页、滚动、折叠评价、字段归一、评论 ID 去重和正文占位过滤。
+- 输出平台、采集时间、评论数量、采集事实、错误代码和评论数组。
+- 遇到登录、验证码、频控页、精简页或页面降级时返回明确状态，不生成评论凑数。
 
-## 工作台能做什么
+完整的评论分析与运营工作台位于 [`main` 分支](https://github.com/RoderickWilliams/review-analysis-agent/tree/main)。
 
-- **总览**：实际样本量、成功/需复核数量、情绪分布、发布日期分布、来源缺口。
-- **评论库**：全文搜索、来源与状态筛选、排序、分页，点开看原文与逐条结果。
-- **用户洞察**：只保留能在原句里核对到的痛点，附证据链接；改进建议与选题可人工编辑。
-- **商品与规格**：同品牌、同型号、同关键规格才合并；竞品和不同规格分组比较。
-- **运营草稿**：卖点、客服话术、内容选题、排期按需生成，服务端固定证据编号，人工改动会保留。
-- **分析历史**：完整恢复输入、评论、结果和进度；清除可撤销。
-- **导出**：行动清单 CSV、评论原文 CSV、离线 HTML 报告。
+## 项目架构
 
-界面为固定尺寸卡片式工作台（浅灰绿侧栏 + 白色工作区），长内容在框内滚动。
-
-## 采集链路
-
-### 天猫 / 淘宝
-
-1. 解析链接（含 `e.tb.cn` 短链与完整分享文案），天猫按 `detail.tmall.com/item.htm?id=` 取商品 ID。
-2. 先尝试公开评论接口；失败再打开本机专用浏览器。
-3. 进入详情页后用**可信鼠标事件**点击“查看全部评价”（脚本 `click()` 会被页面忽略）。
-4. 页面自身接口 `mtop.taobao.rate.detaillist.get` 分页取数：`foldFlag=0` 取主列表，
-   `foldFlag=1` 取“已折叠”评价；直到空页或达到采集上限。
-5. 只有星级、正文是平台占位文案的评价不计入文本证据，数量写进缺口说明。
-6. 同一原文按 comment_id 去重；页面标注的总数与实际取得数分别记录。
-
-细节与实测数据见 [docs/collection-20261028.md](docs/collection-20261028.md)。
-
-### 京东 / 小红书
-
-- 京东：优先公开评论接口；需要时用专用浏览器读取评价弹层、滚动与分页。
-- 小红书：优先本机只读采集后端（关闭 OCR），没有结果再用专用浏览器确认页面与登录状态。
-
-### 账号与风控
-
-- 登录用专用浏览器配置，不读取日常浏览器的 Cookie；登录状态保存在该配置目录。
-- 同一平台串行采集，平台之间保留 20–40 秒间隔；遇到账号异常、验证码或访问受限立即停止该平台。
-- 验证码与身份校验由人工完成，工具不破解、不轮换 Cookie 绕过限制。
-
-## 快速开始（Windows）
-
-```cmd
-cd E:\review-analysis-agent
-.venv\Scripts\python.exe -m pip install -e ".[api,scrape,import]"
-.venv\Scripts\python.exe run_local.py --port 64628
+```mermaid
+flowchart LR
+    A[crawler.py] --> B[平台与短链识别]
+    B --> C[商品或笔记身份核对]
+    C --> D[公开评论接口]
+    D -->|不可用| E[专用浏览器]
+    D --> F[字段归一与去重]
+    E --> F
+    F --> G[JSON 输出]
 ```
 
-浏览器打开 http://127.0.0.1:64628/app/ 。
+核心文件：
 
-如果使用仓库自带的 venv（Python 3.14，已装 FastAPI、Selenium、DrissionPage、pandas、openai）：
-
-```cmd
-venv\Scripts\python.exe run_local.py
-```
-
-`run_local.py` 会：
-
-- 把数据目录固定为项目下的 `runtime/`（data、output、cache），不读 `.env` 里的密钥；
-- 清空从环境变量继承的模型 Key，模型只能在工作台左下角配置；
-- 以 `chrome + 直连` 启动采集。
-
-## 命令行采集
-
-不打开工作台也能采集评论，输出 JSON：
-
-```cmd
-venv\Scripts\python.exe crawler.py --url "https://detail.tmall.com/item.htm?id=568742960823" --limit 300 --out reviews.json
-```
-
-参数、输出字段和退出码见 [docs/crawler.md](docs/crawler.md)。它共用同一套采集实现，不调用模型、不写数据库。
-
-## 模型配置与费用
-
-工作台左下角“配置模型”打开设置，粘贴 API Key 后自动识别可用的模型接口；Key 只保存在进程内存，
-重启服务后需要重新填写。未配置模型时只能采集评论，不能分析。
-
-预算策略：一次完整分析默认上限 1.5 元人民币，按模型实际 usage 记账；评论阶段与洞察阶段分别有停止线，
-超出预算时保留已取得结果并写明模型覆盖范围。运行前会先做预留，重试不会重复计费同一批。
-
-支持 DeepSeek（默认 `deepseek-flash`）与 OpenAI 兼容接口；不同供应商的单价需要按人民币口径确认。
-
-## 数据与隐私
-
-- 评论原文、分析结果、历史记录：`runtime/data`、`runtime/output`。
-- 专用浏览器配置与登录状态：`runtime/browser-profiles`。
-- 分析时评论文本会发送给你配置的模型供应商；不配置模型就不会发出。
-- 不读取、不导出、不持久化你的 API Key；日志里不打印 Key、Cookie 和带签名的链接参数。
-
-## 目录结构
-
-```
+```text
+crawler.py                         命令行入口
 src/reviewagent/
-  http_api.py            FastAPI 服务与接口
-  analysis_tasks.py      任务编排、预算、重试与状态
-  collection.py          多来源采集汇总、分组、缺口
-  browser_collection.py  专用浏览器采集与天猫评论分页
-  public_collection.py   公开评论接口与字段归一
-  browser_session.py     专用浏览器、CDP 驱动、点击与标签页
-  auto_login.py          QR 登录与身份校验状态
-  product_groups.py      商品身份与分组
-  operations.py          运营草稿生成
-  model_budget.py        人民币预算账本
-  store.py               记录持久化
-  webui/                 工作台前端（勿随意改动）
-docs/                    设计、验收范围、采集记录
-tests/                   离线用例（模型全部为测试替身）
-run_local.py             本机启动脚本
+  object_resolver.py              平台、短链和商品身份解析
+  browser_collection.py           平台采集统一入口
+  browser_session.py              专用浏览器与可信交互
+  public_collection.py            公开接口采集
+  review_data.py                  字段归一、去重和证据字段
+  scrapers/
+    taobao_*.py                   淘宝 / 天猫适配
+    jd_*.py                       京东适配
+    xhs_reader.py                 小红书只读采集后端
+docs/crawler.md                   参数、输出与退出码说明
+tests/                             链接解析与采集契约测试
 ```
 
-## 测试
+### 采集策略
+
+- **淘宝 / 天猫**：解析稳定商品 ID，进入完整详情与评价链路，区分主评价、折叠评价和只有星级的占位记录。
+- **京东**：核对商品 ID，并通过“只看本商品”或等效 SKU 信息确认评论归属。
+- **小红书**：按笔记读取社交评论，并保留其社交来源属性。
+- **通用规则**：采集上限不是必须采满的配额；页面实际只有少量评论时按实际数量结束。
+
+### 输出结构
+
+```json
+{
+  "url": "https://detail.tmall.com/item.htm?id=568742960823",
+  "platform": "tmall",
+  "collected_at": "2026-10-28T17:54:58+08:00",
+  "status": "ok",
+  "count": 14,
+  "facts": {
+    "displayed": 33,
+    "folded": 22,
+    "rating_only": 19,
+    "selected": 14
+  },
+  "reviews": [
+    {
+      "review_text": "……",
+      "review_date": "2026-10-08",
+      "reviewer_name": "匿名买家",
+      "rating": 5,
+      "sku": "……",
+      "comment_id": "……",
+      "platform": "tmall"
+    }
+  ]
+}
+```
+
+失败或暂停时，`status` 为 `paused` 或 `failed`，并提供 `code`、`error` 和空的 `reviews` 数组，方便下游程序区分“没有评论”和“本次没有成功读取评论”。
+
+## 部署实现
+
+### 环境要求
+
+- Python 3.10+
+- Chrome、Edge 或 Firefox
+- Windows 10/11（当前主要支持环境）
+
+### 安装
 
 ```cmd
-set PYTHONPATH=src
-venv\Scripts\python.exe -m pytest -q
+git clone --branch v2 --single-branch https://github.com/RoderickWilliams/review-analysis-agent.git reviewagent-crawler
+cd reviewagent-crawler
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install -e ".[scrape]"
 ```
 
-2026-10-28 全量 232 项通过、3 项跳过（小红书后端缺失时的既有跳过）。测试里的模型响应都是替身，
-因此测试通过不等于模型质量或真实链路通过。
+需要启用 Scrapling 后端时：
 
-## 已知限制
+```cmd
+.venv\Scripts\python.exe -m pip install -e ".[scrape,scrapling]"
+```
 
-- 天猫只展示部分评价时，其余“已折叠”评价需要页面暴露 `lib.mtop` 才能取到；取不到就按实际可见条数记录并标注缺口。
-- 只有星级没有正文的评价不会进入文本分析；这是有意的，避免占位文案把情绪分布拉高。
-- 淘宝详情链接、京东、小红书本轮没有复测，不能写成已通过。
-- 真实模型分析一次都没跑过，成本和效果都要等用户配置 Key 后验证。
-- 打包产物（wheel、EXE、Docker）沿用旧配置，未在本次改动后重新构建验证。
+### 基本用法
 
-## 分支说明
+```cmd
+.venv\Scripts\python.exe crawler.py ^
+  --url "https://detail.tmall.com/item.htm?id=568742960823" ^
+  --limit 300 ^
+  --out output\reviews.json
+```
 
-- `main`：完整工作台（即当前目录内容）。
-- `v2`：可独立运行的采集工具入口（`crawler.py`），与 main 共用采集实现，不依赖界面。
+京东示例：
 
-GitHub 上的内容在用户明确说“推送到 GitHub”之前不会更新。
+```cmd
+.venv\Scripts\python.exe crawler.py ^
+  --url "https://item.jd.com/100394190476.html" ^
+  --platform jd ^
+  --out output\jd-reviews.json
+```
+
+小红书示例：
+
+```cmd
+.venv\Scripts\python.exe crawler.py ^
+  --url "https://xhslink.cn/o/example" ^
+  --platform xhs ^
+  --out output\xhs-comments.json
+```
+
+### 参数
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `--url` | 必填 | 商品或笔记的 HTTPS 链接 |
+| `--platform` | `auto` | `jd`、`taobao`、`tmall`、`xhs` 或自动判断 |
+| `--limit` | `300` | 单链接最多读取的记录数 |
+| `--out` | `reviews.json` | 输出 JSON 路径 |
+| `--home` | `runtime/` | 专用浏览器配置、缓存和运行数据目录 |
+| `--browser` | `chrome` | `chrome`、`edge`、`firefox` 或 `auto` |
+| `--quiet` | 关闭 | 不打印采集过程状态 |
+
+当前 `--url` 接受纯 HTTPS 链接。完整平台分享文案需要先提取其中的 URL，再传给 CLI。
+
+### 退出码
+
+| 退出码 | 含义 |
+| --- | --- |
+| `0` | 采集流程完成；实际数量可能低于 `--limit` |
+| `1` | 参数或本地环境错误 |
+| `2` | 平台暂停或采集失败，例如登录、频控、精简页或导航失败 |
+
+### 登录与运行目录
+
+首次需要登录时，工具使用 `--home` 下的专用浏览器配置。用户自行扫码、输入验证码或完成身份校验，登录状态保存在本机并在后续任务中复用。
+
+```text
+runtime/
+  browser-profiles/      专用浏览器登录状态
+  cache/                 平台与驱动缓存
+  output/                可选的采集产物目录
+```
+
+工具默认使用直连网络，不修改系统代理。任务结束时只关闭自己打开的专用窗口，不关闭用户原有浏览器窗口。
+
+### 作为上游数据源
+
+`crawler.py` 的 JSON 输出可以直接交给 pandas、Notebook、自有 API 或模型流程：
+
+```python
+import json
+from pathlib import Path
+
+payload = json.loads(Path("output/reviews.json").read_text(encoding="utf-8"))
+
+if payload["status"] == "ok":
+    reviews = payload["reviews"]
+else:
+    raise RuntimeError(payload.get("error", "采集未完成"))
+```
+
+请只采集你有权访问的数据，并遵守目标平台条款、适用法律和内部数据政策。工具不会破解验证码、绕过访问控制或通过账号轮换规避平台限制。
+
+本项目使用 [MIT License](LICENSE)。

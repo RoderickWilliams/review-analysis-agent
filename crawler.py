@@ -28,7 +28,7 @@ def platform_from_url(url: str) -> str:
         return "jd"
     if host.endswith(("tmall.com", "taobao.com", "tb.cn")):
         return "tmall" if host.startswith("detail.") else "taobao"
-    if host.endswith(("xiaohongshu.com", "xhslink.com")):
+    if host.endswith(("xiaohongshu.com", "xhslink.com", "xhslink.cn")):
         return "xhs"
     raise SystemExit("无法从链接判断平台，请用 --platform 指定 jd / taobao / tmall / xhs")
 
