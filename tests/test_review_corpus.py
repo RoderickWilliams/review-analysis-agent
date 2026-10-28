@@ -10,7 +10,7 @@ def test_append_flagged_dedupes_by_text(monkeypatch, tmp_path):
     assert review_corpus.append_flagged(reviews, results) == 0
     rows = review_corpus._read_rows()
     assert len(rows) == 1
-    assert rows[0]["verdict"] == "suspicious"
+    assert rows[0]["label"] == "suspicious"
 
 
 def test_authentic_reviews_are_not_saved(monkeypatch, tmp_path):
@@ -27,6 +27,13 @@ def test_format_examples_lists_saved_reviews(monkeypatch, tmp_path):
             [{"review_id": "r%d" % index, "review_text": "模板评论第%d条：质量很好物流很快" % index,
               "rating": 5, "platform": "jd"}],
             [{"review_id": "r%d" % index, "final_analysis": {"final_validity": "fake"}}])
-    text = review_corpus.format_examples(limit=5)
-    assert "参考样本" in text
+    text = review_corpus.format_examples(negative=5)
+    assert "疑似模板/刷评样本" in text
     assert text.count("模板评论第") == 5
+
+def test_positive_examples_are_separated(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    review_corpus.add_examples([{"text": "超萌！超萌！像活的一样", "platform": "tmall"}], "authentic")
+    text = review_corpus.format_examples(negative=3, positive=3)
+    assert "真实用户样本" in text
+    assert "超萌" in text
