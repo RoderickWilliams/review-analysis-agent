@@ -283,6 +283,7 @@ def _comment_page_diagnostics(driver):
 def _wait_for_comment_section(driver, platform, url, cancelled, emit):
     """Wait for hydrated review controls, not just a product document title."""
     deadline = time.monotonic() + 90
+    started = time.monotonic()
     scrolls = 0
     emit('loading_comments', '商品页面仍在加载，等待评价区域出现（最多90秒），请保持窗口打开')
     while time.monotonic() < deadline:
@@ -300,6 +301,15 @@ def _wait_for_comment_section(driver, platform, url, cancelled, emit):
             # Restore the legacy lazy-loading action before declaring reviews absent.
             _scroll_comments(driver)
             scrolls += 1
+        thin = driver.execute_script(r"""
+            const text = document.body?.innerText || '';
+            return {len: text.trim().length, hasReviews: /用户评价|商品评价|宝贝评价/.test(text),
+                    height: document.documentElement.scrollHeight};
+        """) or {}
+        if (time.monotonic() - started > 30 and isinstance(thin.get('len'), int) and thin['len'] < 600
+                and not thin.get('hasReviews') and (thin.get('height') or 0) < 1200):
+            raise CollectionPaused('平台只返回了精简商品页（仅购买区，评价模块未下发）；这通常是访问频率限制，已停止本次采集',
+                                   code='degraded_page')
         _wait(3, cancelled)
     import json
     raise CollectionPaused('等待90秒后评价区域仍未加载完成；页面诊断：' + json.dumps(_comment_page_diagnostics(driver), ensure_ascii=False), code='comment_section_not_loaded')

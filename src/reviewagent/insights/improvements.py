@@ -87,6 +87,11 @@ def generate_improvements(
         pid = normalize_text(item.get("pain_point_id"))
         action = truncate(item.get("action"), 120)
         if pid not in by_id:
+            # Models often echo a short id or the group-prefixed id; accept an unambiguous suffix match.
+            matches = [key for key in by_id if key.endswith("-" + pid) or pid.endswith("-" + key)]
+            if len(matches) == 1:
+                pid = matches[0]
+        if pid not in by_id:
             rejected.append({"pain_point_id": pid, "reason": "痛点 id 不在已验证清单内"})
             continue
         if not action:

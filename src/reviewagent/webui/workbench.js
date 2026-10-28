@@ -32,7 +32,7 @@ function showModal(title,body,submit,handler){
 }
 function field(name,title,value='',type='text',extra=''){return `<label class="field"><span>${esc(title)}</span><input name="${esc(name)}" type="${type}" value="${esc(value)}" ${extra}></label>`}
 function select(name,title,options,value){return `<label class="field"><span>${esc(title)}</span><select name="${esc(name)}">${options.map(([v,l])=>`<option value="${esc(v)}" ${v===String(value)?'selected':''}>${esc(l)}</option>`).join('')}</select></label>`}
-function setView(view){state.view=view;state.page=1;render();$('#content').scrollTop=0;if(view==='history')loadHistory();}
+function setView(view){state.view=view;state.page=1;notify('');render();$('#content').scrollTop=0;if(view==='history')loadHistory();}
 function acceptAnalysis(analysis,{resumePoll=true}={}){
   if(state.analysis?.analysis_id!==analysis.analysis_id){state.group='all';state.platform='all';state.filter='all';state.query=''}
   state.analysis=analysis;storage.set('selected',analysis.analysis_id);$('#export').disabled=false;
@@ -106,7 +106,7 @@ function clearHistory(){
     const data=await api('/v1/analysis',{method:'DELETE'});
     stopPoll();state.analysis=null;state.history=[];state.historyError='';state.view='history';storage.set('selected','');$('#export').disabled=true;
     if(data.cleared){state.lastClear=data.batch_id;storage.set('last-clear',data.batch_id)}
-    $('#modal').close();notify('');render();await loadHistory();notify('已重置 '+data.cleared+' 份分析记录；模型设置和浏览器登录状态保留。');
+    state.view='overview';$('#modal').close();notify('');render();await loadHistory();toast('已重置 '+data.cleared+' 份分析记录，已回到工作台主页');
   });
   $('#modal-submit').className='button danger';
 }
@@ -137,7 +137,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isCom
 $('#top-settings').addEventListener('click',settings);$('#top-help').addEventListener('click',help);$('#new-analysis').addEventListener('click',newAnalysis);$('#new-workspace').addEventListener('click',()=>setView('history'));$('#global-search').addEventListener('click',focusSearch);$('#settings').addEventListener('click',settings);$('#help').addEventListener('click',help);$('#reset-workspace').addEventListener('click',clearHistory);$('#export').addEventListener('click',exportModal);
 $('#cancel-job').addEventListener('click',async()=>{try{acceptAnalysis(await api(apiPath('/cancel'),jsonBody({})))}catch(err){notify(err.message,true)}});
 window.addEventListener('pagehide',stopPoll);window.addEventListener('pageshow',event=>{if(event.persisted&&state.analysis)refreshCurrent()});matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(storage.get('theme')==='system')applyTheme()});
-async function connect(){try{state.config=await api('/healthz');$('#connection-status').textContent='本地服务已连接';$('#connection-dot').className='ready';$('#model-label').textContent=state.config.llm_configured?state.config.model:'模型未配置';$('#version').textContent=state.config.version;await loadHistory(false);if(state.historyError)notify(state.historyError,true);else notify('');render()}catch(err){$('#connection-status').textContent='服务未连接';$('#connection-dot').className='';notify(err.message,true)}}
+async function connect(){try{state.config=await api('/healthz');$('#connection-status').textContent='本地服务已连接';$('#connection-dot').className='ready';$('#model-label').textContent=state.config.llm_configured?state.config.model:'模型未配置';await loadHistory(false);if(state.historyError)notify(state.historyError,true);else notify('');render()}catch(err){$('#connection-status').textContent='服务未连接';$('#connection-dot').className='';notify(err.message,true)}}
 async function boot(){state.lastClear=storage.get('last-clear')||'';applyTheme();render();await connect();const id=storage.get('selected');if(id)await openAnalysis(id);showModelOnboarding()}
 boot();
 

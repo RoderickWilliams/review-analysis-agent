@@ -254,7 +254,7 @@ def list_analyses(limit: Optional[int] = None) -> List[Dict[str, Any]]:
         if limit is None:
             rows = conn.execute("SELECT report FROM analyses WHERE status != 'trashed' ORDER BY created_at DESC, id DESC").fetchall()
         else:
-            rows = conn.execute("SELECT report FROM analyses ORDER BY created_at DESC, id DESC LIMIT ?", (limit,)).fetchall()
+            rows = conn.execute("SELECT report FROM analyses WHERE status != 'trashed' ORDER BY created_at DESC, id DESC LIMIT ?", (limit,)).fetchall()
     out: List[Dict[str, Any]] = []
     for row in rows:
         try:
