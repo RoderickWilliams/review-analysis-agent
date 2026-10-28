@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="static/reviewagent-logo.png" alt="ReviewAgent Crawler" width="420">
-</p>
-
-<p align="center">
   <strong>ReviewAgent Crawler</strong><br>
   独立运行的跨平台评论采集工具：输入商品或笔记链接，输出结构化 JSON。
 </p>
