@@ -30,11 +30,6 @@ ReviewAgent 是一个为电商运营人员设计的本地评论研究工具。�
 - **成本控制**：根据模型价格与预算控制 token 使用量，保留已完成结果和模型实际覆盖范围。
 - **本地优先**：API Key 仅保存在服务进程内存中；评论、报告和专用浏览器状态默认保存在本机。
 
-<p align="center">
-  <img src="showcase/assets/workspace-home.png" alt="ReviewAgent 工作台首页" width="48%">
-  <img src="showcase/assets/workspace-insights.png" alt="ReviewAgent 用户洞察" width="48%">
-</p>
-
 仓库分支：
 
 - `main`：完整 ReviewAgent 工作台、分析链路、运营输出、展示页和部署配置。
