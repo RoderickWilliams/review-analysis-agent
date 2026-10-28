@@ -375,6 +375,12 @@ class _CdpDriver:
             return True
         return False
 
+    def click_at(self, x, y):
+        """Send a trusted mouse click; page handlers can ignore scripted element.click()."""
+        self.tab.run_cdp("Input.dispatchMouseEvent", type="mouseMoved", x=int(x), y=int(y))
+        self.tab.run_cdp("Input.dispatchMouseEvent", type="mousePressed", x=int(x), y=int(y), button="left", clickCount=1)
+        self.tab.run_cdp("Input.dispatchMouseEvent", type="mouseReleased", x=int(x), y=int(y), button="left", clickCount=1)
+
     def review_payloads(self):
         payloads = []
         for _ in range(50):

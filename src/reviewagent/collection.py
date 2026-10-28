@@ -221,6 +221,7 @@ def collect_into_analysis(analysis, cancelled, *, on_checkpoint=None, on_state=N
                     item['requested_limit'] = per_product
                 checkpoint()
             raw = collect_source(source, per_product, cancelled, on_state=on_state, on_batch=accept_batch, on_metadata=accept_metadata)
+            facts = getattr(raw, 'facts', None) or {}
             accept_batch(raw)
             item["status"] = "cancelled" if cancelled() else "completed" if item["selected"] >= item['target'] else "partial" if item["selected"] else "needs_input"
             if not raw:
@@ -232,9 +233,27 @@ def collect_into_analysis(analysis, cancelled, *, on_checkpoint=None, on_state=N
                 message = f"采集上限 {per_product} 条，当前核对目标 {item['target']} 条，本次读取 {len(raw)} 条，其中有效选入 {item['selected']} 条。"
                 if invalid:
                     message += f"有 {invalid} 条未通过字段校验。"
-                message += "未能确认是否还有未加载评论。"
-                detail = {"code": "insufficient_reviews", "reason": "本次未采满目标数量，未采满的具体原因尚未确定", "reason_confirmed": False,
-                          "message": message, "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"}
+                if facts.get('rating_only'):
+                    message += ("另有 %s 条评价只有星级、没有买家正文，未作为文本证据计入；"
+                                "已通过页面评论接口补取折叠评价。" % facts['rating_only'])
+                    reason, confirmed = "部分评价只有星级，没有可分析正文", True
+                elif facts.get('rate_api') == 'ok':
+                    message += "已通过页面评论接口补取被折叠的评价，仍未采满的部分缺少可分析正文。"
+                    reason, confirmed = "接口列表已取回，部分条目没有正文", True
+                elif facts.get('folded'):
+                    message += ("平台把 %s 条评价折叠为“对你帮助不大”，页面只展示其余评价；"
+                                "本次已按实际可见内容采集。" % facts['folded'])
+                    reason, confirmed = "平台折叠了部分低帮助度评价，当前页面不再展开", True
+                elif facts.get('displayed'):
+                    message += "页面标注 %s 条评价，未采满部分可能仍未展开。" % facts['displayed']
+                    reason, confirmed = "本次未采满目标数量，未采满的具体原因尚未确定", False
+                else:
+                    message += "未能确认是否还有未加载评论。"
+                    reason, confirmed = "本次未采满目标数量，未采满的具体原因尚未确定", False
+                suggested = ("直接分析已取得的正文评论即可；其余只有星级，重试也取不到买家正文"
+                              if facts.get('rating_only') else "先分析已有真实评论，可稍后重试或补充链接")
+                detail = {"code": "insufficient_reviews", "reason": reason, "reason_confirmed": confirmed,
+                          "message": message, "suggested_action": suggested}
                 item.update(detail)
                 gaps.append({"platform": source.get("platform"), "url": url, **detail})
         except CollectionPaused as exc:

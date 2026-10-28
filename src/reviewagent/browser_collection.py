@@ -8,7 +8,7 @@ import random
 import threading
 from datetime import date
 from types import SimpleNamespace
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from reviewagent.auto_login import AutoLoginManager
 from reviewagent.browser_session import BrowserNavigationError, open_driver, platform_key, record_authenticated
@@ -22,6 +22,22 @@ class CollectionPaused(ValueError):
     def __init__(self, message, *, code="needs_input"):
         super().__init__(message)
         self.code = code
+
+
+_DEFAULT_COMMENT = re.compile(r"^该用户觉得商品(?:非常好|还不错|一般|不好|很差)[，,]?\s*给出\s*\d\s*星好评$")
+
+
+def _is_default_comment(text):
+    """Star-only reviews carry a platform placeholder instead of buyer words."""
+    return bool(_DEFAULT_COMMENT.match((text or "").strip()))
+
+
+class ReviewBatch(list):
+    """Collected rows plus the page facts used to explain a collection gap."""
+
+    def __init__(self, rows=(), facts=None):
+        super().__init__(rows)
+        self.facts = facts or {}
 
 
 def _allowed_url(url, platform):
@@ -130,24 +146,118 @@ def _clean_taobao_card(row):
     return row if body else None
 
 
-def _open_comments(driver, *, all_only=False):
-    return driver.execute_script("""
+def _find_comment_entry(driver, *, all_only=False):
+    """Return the innermost review entry with its click point.
+
+    Tmall keeps the handler on the child element, so clicking a text wrapper does nothing.
+    """
+    return driver.execute_script(r"""
         const allOnly = arguments[0];
-        const names = /^(商品评价|宝贝评价|用户评价|评价|累计评价|全部评价|全部评论|查看全部评价|查看全部评论)([（(]?\\d+[+万w]?[）)]?)?$/;
-        const eligible = e => {
+        const names = /^(商品评价|宝贝评价|用户评价|评价|累计评价|全部评价|全部评论|查看全部评价|查看全部评论)([（(]?\d+[+万w]?[）)]?)?$/;
+        const nodes = [...document.querySelectorAll('a,button,li,span,div')].filter(e => {
             const label = (e.innerText || '').trim();
-            return e.getClientRects().length && names.test(label) && (allOnly ? /全部/.test(label) : !/全部/.test(label));
-        };
-        const selectors = ['#comment-root .all-btn', '[class*="allComment"]', '[class*="all-rate"]'];
-        for (const selector of selectors) {
-            const button = [...document.querySelectorAll(selector)].find(eligible);
-            if (button) {button.scrollIntoView({block:'center'}); button.click(); return true;}
-        }
-        for (const button of document.querySelectorAll('a,button,li,span,div')) {
-            if (eligible(button)) {button.scrollIntoView({block:'center'}); button.click(); return true;}
-        }
-        return false;
+            return e.getClientRects().length && names.test(label) && (/全部/.test(label) === !!allOnly);
+        });
+        if (!nodes.length) return null;
+        const leaf = nodes.find(e => !nodes.some(other => other !== e && e.contains(other))) || nodes[0];
+        leaf.scrollIntoView({block: 'center', inline: 'center'});
+        const rect = leaf.getBoundingClientRect();
+        return {x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2),
+                text: (leaf.innerText || '').trim(), tag: leaf.tagName};
     """, all_only)
+
+
+def _open_comments(driver, *, all_only=False):
+    """Expand the review list; scripted clicks are ignored by some Tmall handlers."""
+    target = _find_comment_entry(driver, all_only=all_only)
+    if target and hasattr(driver, "click_at"):
+        try:
+            driver.click_at(target["x"], target["y"])
+            return True
+        except Exception:
+            pass
+    if not target and not all_only:
+        target = _find_comment_entry(driver, all_only=True)
+        if target and hasattr(driver, "click_at"):
+            try:
+                driver.click_at(target["x"], target["y"])
+                return True
+            except Exception:
+                pass
+    if target and not hasattr(driver, "click_at"):
+        # Selenium-backed browsers still accept scripted clicks; only the CDP driver needs trusted input.
+        return bool(driver.execute_script(r"""
+            const allOnly = arguments[0];
+            const names = /^(商品评价|宝贝评价|用户评价|评价|累计评价|全部评价|全部评论|查看全部评价|查看全部评论)([（(]?\d+[+万w]?[）)]?)?$/;
+            const nodes = [...document.querySelectorAll('a,button,li,span,div')].filter(e => {
+                const label = (e.innerText || '').trim();
+                return e.getClientRects().length && names.test(label) && (/全部/.test(label) === !!allOnly);
+            });
+            if (!nodes.length) return false;
+            const leaf = nodes.find(e => !nodes.some(other => other !== e && e.contains(other))) || nodes[0];
+            leaf.scrollIntoView({block: 'center'});
+            leaf.click();
+            return true;
+        """, all_only))
+    return False
+
+
+_TMALL_RATE_JS = r"""
+const page = arguments[0], fold = arguments[1];
+if (!(window.lib && window.lib.mtop && window.lib.mtop.request)) return null;
+const data = {showTrueCount: false, auctionNumId: AUCTION, pageNo: page, pageSize: 20,
+              orderType: '', searchImpr: '-8', expression: '', skuVids: '',
+              rateSrc: 'pc_rate_list', rateType: '', foldFlag: fold};
+return window.lib.mtop.request({api: 'mtop.taobao.rate.detaillist.get', v: '6.0', type: 'GET', data: data})
+  .then(r => {const d = (r && r.data) || {};
+             const list = d.rateList || (d.data && d.data.rateList) || [];
+             return {rows: list, total: Number(d.total || 0)};})
+  .catch(() => ({rows: [], total: -1}));
+"""
+
+
+def _tmall_rate_rows(driver, item_id, limit, cancelled):
+    """Page the page's own rate API, including reviews Tmall folds out of the list.
+
+    Returns (rows, ok). ok is False when the page did not expose the mtop library.
+    """
+    import json as _json
+    rows, ok = [], False
+    script = _TMALL_RATE_JS.replace("AUCTION", _json.dumps(str(item_id)))
+    for fold in ("0", "1"):
+        page = 1
+        while len(rows) < limit and page <= 10:
+            if cancelled():
+                return rows, ok
+            try:
+                data = driver.execute_script(script, page, fold)
+            except Exception:
+                return rows, ok
+            if not isinstance(data, dict) or data.get("total") == -1:
+                return rows, ok
+            ok = True
+            batch = data.get("rows") or []
+            if not batch:
+                break
+            rows.extend(item for item in batch if isinstance(item, dict))
+            page += 1
+    return rows[:limit], ok
+
+
+def _folded_reviews(driver):
+    """Return Tmall's folded-review count and the point of its notice."""
+    data = driver.execute_script(r"""
+        const nodes = [...document.querySelectorAll('*')].filter(e => e.getClientRects().length
+            && /已折叠\s*\d+\s*条/.test((e.innerText || '').trim()));
+        if (!nodes.length) return null;
+        const leaf = nodes.sort((a, b) => (a.innerText || '').length - (b.innerText || '').length)[0];
+        const count = ((leaf.innerText || '').trim().match(/已折叠\s*(\d+)\s*条/) || [])[1];
+        leaf.scrollIntoView({block: 'center', inline: 'center'});
+        const rect = leaf.getBoundingClientRect();
+        return {count: count ? Number(count) : 0, x: Math.round(rect.left + rect.width / 2),
+                y: Math.round(rect.top + rect.height / 2)};
+    """)
+    return data or {}
 
 
 def _comment_page_diagnostics(driver):
@@ -386,6 +496,8 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
         if isinstance(displayed, int) and not isinstance(displayed, bool) and displayed > 0:
             limit = min(limit, displayed)
         emit('collecting', '正在采集接口响应与评价弹窗，逐批保存真实原文')
+        folded = {}
+        facts = {}
         if platform != 'xhs':
             opened = _open_comments(driver)
             emit('opening_comments', '已点击评价入口' if opened else '尚未定位到可点击的评价入口，正在检查页面结构')
@@ -395,6 +507,35 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
                 expanded = _open_comments(driver, all_only=True)
                 emit('opening_comments', '已点击查看全部评价，等待评论列表加载' if expanded else '已进入评价区域，检查已加载评论与全部评价入口')
                 _wait(3, cancelled)
+                folded = _folded_reviews(driver)
+                if folded.get('count'):
+                    emit('expanded_reviews', '平台折叠了 %d 条评价，尝试展开；若平台仍不展示，则按实际可见条数采集并标注缺口' % folded['count'])
+                    try:
+                        driver.click_at(folded['x'], folded['y'])
+                    except Exception:
+                        pass
+                    _wait(2, cancelled)
+                item_id = (parse_qs(urlsplit(url).query).get('id') or [''])[0]
+                if item_id.isdigit():
+                    batch_rows, ok = _tmall_rate_rows(driver, item_id, limit, cancelled)
+                    facts['rate_api'] = 'ok' if ok else 'unavailable'
+                    if ok:
+                        emit('rate_api', '已通过页面评论接口补取 %d 条（含折叠评价），逐条去重' % len(batch_rows))
+                    for raw in batch_rows:
+                        review = normalize_comment(raw, source, 'owned_browser_rate_api')
+                        if review and _is_default_comment(review.get('review_text')):
+                            facts['rating_only'] = facts.get('rating_only', 0) + 1
+                            continue
+                        fingerprint = (review.get('reviewer_name'), review.get('review_date'), review.get('review_text')) if review else None
+                        if not review or review['comment_id'] in seen or fingerprint in seen:
+                            continue
+                        reviews.append(review)
+                        seen.add(review['comment_id'])
+                        seen.add(fingerprint)
+                        if len(reviews) >= limit:
+                            break
+                    if on_batch and reviews:
+                        on_batch(reviews)
         stagnant = 0
         deadline = time.monotonic() + 180
         for _ in range(60):
@@ -410,6 +551,8 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
                     raw_rows.extend(comment_rows(body, platform))
             for raw in raw_rows:
                 review = normalize_comment(raw, source, 'owned_browser_response_dom')
+                if review and _is_default_comment(review.get('review_text')):
+                    continue
                 fingerprint = (review.get('reviewer_name'), review.get('review_date'), review.get('review_text')) if review else None
                 if not review or review['comment_id'] in seen or fingerprint in seen:
                     continue
@@ -427,13 +570,18 @@ def _collect_source(source, limit, cancelled, *, on_state=None, on_batch=None, o
                 break
             if stagnant == 2 and platform != 'xhs':
                 _next_comments(driver)
+                if platform == 'taobao':
+                    _open_comments(driver, all_only=True)
             _scroll_comments(driver)
             _wait(min(12, 2 * 2 ** stagnant), cancelled)
         if not reviews:
             import json
             detail = _comment_page_diagnostics(driver)
             raise CollectionPaused('未读取到评论正文；页面诊断：' + json.dumps(detail, ensure_ascii=False), code='no_review_text')
-        return reviews
+        facts.update({'displayed': displayed if isinstance(displayed, int) and not isinstance(displayed, bool) else None,
+                      'folded': folded.get('count') if folded else None,
+                      'selected': len(reviews)})
+        return ReviewBatch(reviews, facts)
     except CollectionPaused:
         raise
     except Exception as exc:

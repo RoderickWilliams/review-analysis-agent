@@ -37,7 +37,8 @@ def normalize_comment(raw, source, method):
     if not content:
         return None
     from reviewagent.browser_collection import _review_date
-    date = raw.get("creationTime") or raw.get("rateDate") or raw.get("date") or raw.get("time") or ""
+    date = (raw.get("feedbackDate") or raw.get("creationTime") or raw.get("rateDate") or raw.get("date")
+            or raw.get("time") or "")
     user = raw.get("user") if isinstance(raw.get("user"), dict) else {}
     rating = raw.get("score") if "score" in raw else raw.get("rateScore")
     if isinstance(rating, bool) or str(rating) not in {"1", "2", "3", "4", "5"}:
@@ -47,11 +48,12 @@ def normalize_comment(raw, source, method):
     identity = str(raw.get("id") or raw.get("rateId") or raw.get("comment_id") or "")
     if not identity:
         identity = hashlib.sha256((content + "|" + str(date) + "|" + str(user.get("nick") or raw.get("nickname") or "")).encode()).hexdigest()
-    sku = raw.get("auctionSku") or raw.get("sku") or raw.get("referenceName") or ""
+    sku = raw.get("auctionSku") or raw.get("skuValueStr") or raw.get("sku") or raw.get("referenceName") or ""
     return {"review_text": content, "raw_card_text": str(raw.get("raw_card_text") or ""), "rating": rating, "source_url": source.get("url") or source.get("source_url"),
             "platform": source.get("platform"), "source_platform": source.get("platform"), "comment_id": identity,
             "review_date": _review_date(date), "review_date_raw": str(date), "sku": sku if isinstance(sku, str) else "",
-            "reviewer_name": str(raw.get("nickname") or raw.get("displayUserNick") or raw.get("user_name") or user.get("nick") or ""),
+            "reviewer_name": str(raw.get("userNick") or raw.get("reduceUserNick") or raw.get("nickname")
+                               or raw.get("displayUserNick") or raw.get("user_name") or user.get("nick") or ""),
             "product_name": source.get("title", ""), "is_demo": False, "extraction_method": method,
             "content_kind": "social_comment" if source.get("platform") == "xhs" else "product_review"}
 
