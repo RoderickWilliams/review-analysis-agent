@@ -1,0 +1,46 @@
+{
+ "captured_at": "2026-10-28T15:08:37.453Z",
+ "taobao": {
+  "record_id": "ra_417f4ec326034bdb",
+  "short_link": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+  "short_link_http_status": 200,
+  "short_link_html_item_id_match": "568742960823",
+  "landing": "detail.tmall.com/item.htm",
+  "page_title": "Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫",
+  "page_diagnostic_text_length": 240,
+  "page_diagnostic_note": "仅购买区文本，评价模块未下发；窗口已关闭，未截图。",
+  "gap_code": "comment_section_not_loaded",
+  "gap_note": "当时运行的服务进程启动于 19:13，早于 degraded_page 识别修复；源码已在后续提交中包含该识别，但按“同一阻碍不重复请求”未再复测。"
+ },
+ "jd": {
+  "record_id": "ra_bfbe71167985448d",
+  "landing": "https://item.jd.com/100394190476.html",
+  "title": "叩素钥匙扣挂件豆袋安抚玩偶公仔捏捏陪伴手偶毛绒玩具娃娃生日礼物",
+  "page_diagnostic_host": "pc-frequent-pro.pf.jd.com",
+  "page_diagnostic_title": "PC频控页 -京东商城",
+  "page_diagnostic_snippet": "暂时无法展示该商品的信息，请稍后重试或反馈问题",
+  "public_api_message": "活动太火爆，请稍微再试",
+  "filter_check": "未到达评价区，无法勾选“只看本商品”；无逐条商品ID/SKU 可核对，归属不明",
+  "cancelled_at": "2026-10-28T22:58:56+08:00",
+  "cancel_reason": "修复前会把 5 个未确认候选逐个采集，每个带 20-40 秒冷却；已取消，避免长时间循环"
+ },
+ "xhs": {
+  "record_id": "ra_fe37d2164e3b4732",
+  "short_link": "https://xhslink.cn/o/7zUsGv1lB2l",
+  "landing": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78",
+  "note_id": "69120b0d0000000003011c78",
+  "title": "",
+  "reader": "xhs_batch_reader（本机只读后端，关闭 OCR）",
+  "comments": 10,
+  "unique_texts": 10,
+  "with_user": 10,
+  "with_date": 0,
+  "content_kind": "social_comment",
+  "before_fix_record": "ra_8b05ee9832244236（xhslink.cn 未识别，platform=unknown）"
+ },
+ "workspace_reset_during_batch": {
+  "note": "测试期间发生一次工作区重置，Taobao/JD 记录被置为 trashed（API 返回“任务不存在”）；已用只读 SQLite 查询把记录 JSON 恢复为产物，未恢复或修改运行中的记录。重置并非本对话执行。",
+  "observed_between": "2026-10-28T22:58 ~ 23:03"
+ },
+ "model_costs": 0
+}

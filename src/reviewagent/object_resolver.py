@@ -28,7 +28,7 @@ MAX_HTML_BYTES = 3_000_000
 JD_HOSTS = {"item.jd.com", "item.m.jd.com", "u.jd.com", "3.cn", "jd.com", "www.jd.com"}
 TMALL_HOSTS = {"detail.tmall.com", "detail.m.tmall.com", "tmall.com", "www.tmall.com", "m.tmall.com"}
 TAOBAO_HOSTS = {"item.taobao.com", "item.m.taobao.com", "taobao.com", "www.taobao.com", "m.taobao.com", "m.tb.cn", "e.tb.cn"}
-XHS_HOSTS = {"www.xiaohongshu.com", "xiaohongshu.com", "xhslink.com", "www.xhslink.com"}
+XHS_HOSTS = {"www.xiaohongshu.com", "xiaohongshu.com", "xhslink.com", "www.xhslink.com", "xhslink.cn", "www.xhslink.cn"}
 
 PLATFORM_LABELS = {
     "jd": "京东",
@@ -90,7 +90,7 @@ def _request(url: str, *, allow_redirects: bool = True) -> requests.Response:
     for redirect in range(5):
         parsed = urlparse(url)
         host = (parsed.hostname or "").lower()
-        allowed = host in {"3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com"} or any(host == domain or host.endswith("." + domain) for domain in ("jd.com", "tmall.com", "taobao.com", "xiaohongshu.com"))
+        allowed = host in {"3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com", "xhslink.cn", "www.xhslink.cn"} or any(host == domain or host.endswith("." + domain) for domain in ("jd.com", "tmall.com", "taobao.com", "xiaohongshu.com"))
         if parsed.scheme not in {"http", "https"} or not allowed or parsed.username or parsed.password or parsed.port not in {None, 80, 443}:
             raise requests.RequestException("商品来源地址不受支持")
         response = requests.get(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html", "Accept-Language": "zh-CN,zh;q=0.9"}, timeout=HTTP_TIMEOUT, allow_redirects=False, stream=True)
@@ -122,7 +122,7 @@ def _unwrap_short_url(url: str, platform: str) -> Tuple[str, List[str]]:
     """展开京东 / 淘宝短链；失败时保留原链接并记录 warning。"""
     warnings: List[str] = []
     host = _host(url)
-    if host not in {"u.jd.com", "3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com"}:
+    if host not in {"u.jd.com", "3.cn", "m.tb.cn", "e.tb.cn", "xhslink.com", "www.xhslink.com", "xhslink.cn", "www.xhslink.cn"}:
         return url, warnings
     try:
         response = _request(url)

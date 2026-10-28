@@ -1,0 +1,1538 @@
+{
+ "analysis_id": "ra_fe37d2164e3b4732",
+ "created_at": "2026-10-28T23:05:37+08:00",
+ "updated_at": "2026-10-28T23:06:40+08:00",
+ "status": "partial",
+ "status_label": "部分完成，可重试",
+ "input": "冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~",
+ "request": {
+  "input": "冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~",
+  "extra_links": [],
+  "ownership": "own",
+  "tier": "standard",
+  "window_months": 12,
+  "reviews": [
+   {
+    "review_text": "超有质感的礼物🎁 Van Reed节日限定香氛护手霜",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "好运桃桃",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69c6a6a10000000015007716",
+    "comment_like": 3,
+    "ip_location": "河南",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_5f721af0bc6ea5b5d3cd",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "是正品吗",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "🌙🌙",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69593ad7000000001602743e",
+    "comment_like": 5,
+    "ip_location": "广东",
+    "sub_comment_count": 3,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_f22f83a196108d22b9b6",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "这款护手霜质地轻盈，一抹即化，滋润不油腻，让你的双手时刻保持水润状态。它的香味也是绝绝子，淡雅清新，心情都变得美美哒！最重要的是，它的价格超级亲民，性价比超高，真的是学生党和上班族的不二之选！",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "张甜甜",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b450000000031001e17",
+    "comment_like": 1,
+    "ip_location": "山东",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_c008c671ce1b9d5ec324",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "会不会太便宜了[偷笑R]",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "Akon,,",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "696799920000000005033cd3",
+    "comment_like": 3,
+    "ip_location": "江苏",
+    "sub_comment_count": 1,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_8c24a3d2b24ae8a92eea",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "很惊艳，很好看，用来送人了",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "祈福.",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b46000000003102ca9a",
+    "comment_like": 2,
+    "ip_location": "黑龙江",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_2dd88a766abec3e9b6bf",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "包装很细致，送朋友的，就闻着都很香非常满意",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "traveler.",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b46000000003102ca97",
+    "comment_like": 1,
+    "ip_location": "陕西",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_58a0252799ba8783be2e",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "必须的好评  我的好龟龟收到后很惊喜她说有种高奢的感觉！！！！！棒棒棒棒棒！！！！！",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "仓樱拍子",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b430000000030024100",
+    "comment_like": 0,
+    "ip_location": "河北",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_3c3bb1dd03dcd2b0823b",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "真的很精致，适合送闺蜜，气味都很好闻，比较中性，男女都可以用，看起来贵贵的[赞R]",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "Ning.",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b450000000031001e14",
+    "comment_like": 0,
+    "ip_location": "福建",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_665d21c489e5b6782808",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "送朋友的生日礼物～护手霜没有拆开 包装好高档 一打开盒子就香香的 希望他会喜欢",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "F.",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b44000000003102ca8f",
+    "comment_like": 0,
+    "ip_location": "河南",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_a91df8c7d8fdfb7be525",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   },
+   {
+    "review_text": "特别赞的礼盒，很适合送朋友，护手霜味道超级好闻，礼盒包装也很精美[黄金薯R][黄金薯R][黄金薯R]",
+    "rating": null,
+    "rating_missing": true,
+    "platform": "xhs",
+    "source_platform": "xhs",
+    "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "product_id": "69120b0d0000000003011c78",
+    "reviewer_name": "糯米桃气包",
+    "review_date": "",
+    "sku": "",
+    "note_id": "69120b0d0000000003011c78",
+    "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+    "comment_id": "69120b460000000031033801",
+    "comment_like": 4,
+    "ip_location": "河南",
+    "sub_comment_count": 0,
+    "is_demo": false,
+    "content_kind": "social_comment",
+    "extraction_method": "xhs_batch_reader",
+    "imported_at": "2026-10-28T23:06:40+08:00",
+    "review_id": "review_4946ab864fe822315820",
+    "group_id": "group_30161c334052b71c",
+    "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+   }
+  ],
+  "save": true,
+  "platforms": [
+   "xhs"
+  ],
+  "candidate_limit": 5,
+  "per_product_limit": 300
+ },
+ "reviews": [
+  {
+   "review_text": "超有质感的礼物🎁 Van Reed节日限定香氛护手霜",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "好运桃桃",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69c6a6a10000000015007716",
+   "comment_like": 3,
+   "ip_location": "河南",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_5f721af0bc6ea5b5d3cd",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "是正品吗",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "🌙🌙",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69593ad7000000001602743e",
+   "comment_like": 5,
+   "ip_location": "广东",
+   "sub_comment_count": 3,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_f22f83a196108d22b9b6",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "这款护手霜质地轻盈，一抹即化，滋润不油腻，让你的双手时刻保持水润状态。它的香味也是绝绝子，淡雅清新，心情都变得美美哒！最重要的是，它的价格超级亲民，性价比超高，真的是学生党和上班族的不二之选！",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "张甜甜",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b450000000031001e17",
+   "comment_like": 1,
+   "ip_location": "山东",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_c008c671ce1b9d5ec324",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "会不会太便宜了[偷笑R]",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "Akon,,",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "696799920000000005033cd3",
+   "comment_like": 3,
+   "ip_location": "江苏",
+   "sub_comment_count": 1,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_8c24a3d2b24ae8a92eea",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "很惊艳，很好看，用来送人了",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "祈福.",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b46000000003102ca9a",
+   "comment_like": 2,
+   "ip_location": "黑龙江",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_2dd88a766abec3e9b6bf",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "包装很细致，送朋友的，就闻着都很香非常满意",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "traveler.",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b46000000003102ca97",
+   "comment_like": 1,
+   "ip_location": "陕西",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_58a0252799ba8783be2e",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "必须的好评  我的好龟龟收到后很惊喜她说有种高奢的感觉！！！！！棒棒棒棒棒！！！！！",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "仓樱拍子",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b430000000030024100",
+   "comment_like": 0,
+   "ip_location": "河北",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_3c3bb1dd03dcd2b0823b",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "真的很精致，适合送闺蜜，气味都很好闻，比较中性，男女都可以用，看起来贵贵的[赞R]",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "Ning.",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b450000000031001e14",
+   "comment_like": 0,
+   "ip_location": "福建",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_665d21c489e5b6782808",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "送朋友的生日礼物～护手霜没有拆开 包装好高档 一打开盒子就香香的 希望他会喜欢",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "F.",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b44000000003102ca8f",
+   "comment_like": 0,
+   "ip_location": "河南",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_a91df8c7d8fdfb7be525",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  },
+  {
+   "review_text": "特别赞的礼盒，很适合送朋友，护手霜味道超级好闻，礼盒包装也很精美[黄金薯R][黄金薯R][黄金薯R]",
+   "rating": null,
+   "rating_missing": true,
+   "platform": "xhs",
+   "source_platform": "xhs",
+   "source_url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "product_id": "69120b0d0000000003011c78",
+   "reviewer_name": "糯米桃气包",
+   "review_date": "",
+   "sku": "",
+   "note_id": "69120b0d0000000003011c78",
+   "note_title": "冷门但小众高级的闺蜜礼物（平价版）",
+   "comment_id": "69120b460000000031033801",
+   "comment_like": 4,
+   "ip_location": "河南",
+   "sub_comment_count": 0,
+   "is_demo": false,
+   "content_kind": "social_comment",
+   "extraction_method": "xhs_batch_reader",
+   "imported_at": "2026-10-28T23:06:40+08:00",
+   "review_id": "review_4946ab864fe822315820",
+   "group_id": "group_30161c334052b71c",
+   "analysis_context": "{\"brand\": \"\", \"group_id\": \"group_30161c334052b71c\", \"model\": \"\", \"product\": \"冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~\", \"specs\": {}}"
+  }
+ ],
+ "results": [],
+ "object": {
+  "input": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+  "input_type": "url",
+  "platform": "xhs",
+  "platform_label": "小红书",
+  "status": "needs_capture",
+  "status_label": "已识别链接，详情需采集",
+  "platform_id": "69120b0d0000000003011c78",
+  "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+  "title": "",
+  "brand": "",
+  "shop": "",
+  "category": [],
+  "image_url": "",
+  "variants": [],
+  "metadata_score": 15,
+  "confidence": 0.15,
+  "confidence_label": "低",
+  "parser": "none",
+  "fetched_at": "2026-10-28T23:05:37+08:00",
+  "evidence": [],
+  "gaps": [
+   {
+    "code": "xhs_auth",
+    "label": "小红书页面需要登录或风控校验",
+    "detail": "当前阶段只做无登录对象解析；该平台的商品/笔记正文没有稳定公开接口，不在本阶段猜测。",
+    "severity": "high"
+   }
+  ],
+  "warnings": [
+   "已从链接中提取 ID：69120b0d0000000003011c78，但没有拿到标题和规格，不能据此推断商品。"
+  ],
+  "next_actions": [
+   {
+    "label": "粘贴评论样本",
+    "detail": "有真实评论后仍可生成口碑诊断与痛点报告。"
+   }
+  ],
+  "message": "已识别为小红书链接；本阶段不登录，商品详情与评论留待采集。",
+  "input_url": "https://xhslink.cn/o/7zUsGv1lB2l"
+ },
+ "candidates": [],
+ "match_summary": {
+  "total_candidates": 0,
+  "shown": 0,
+  "exact": 0,
+  "similar": 0,
+  "variant": 0,
+  "competitor": 0,
+  "uncertain": 0,
+  "sibling_variants": 0,
+  "user_supplied": 0,
+  "platforms": [
+   "小红书"
+  ],
+  "auto_discovery": "not_started",
+  "auto_discovery_reason": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+  "search_keywords": [],
+  "notes": [],
+  "gaps": [
+   {
+    "code": "no_same_product_candidates",
+    "label": "没有同款候选",
+    "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+    "severity": "medium"
+   }
+  ]
+ },
+ "report": {
+  "version": "v2-skeleton-1",
+  "generated_at": "2026-10-28T23:06:40+08:00",
+  "stage": "partial",
+  "stage_label": "已有评论，分析未完成",
+  "input": "冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~",
+  "object": {
+   "type": "note",
+   "type_label": "笔记",
+   "platform": "xhs",
+   "platform_label": "小红书",
+   "platform_id": "69120b0d0000000003011c78",
+   "title": "",
+   "brand": "",
+   "shop": "",
+   "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+   "image_url": "",
+   "category": [],
+   "variants": [],
+   "variant_count": 0,
+   "status": "needs_capture",
+   "status_label": "已识别链接，详情需采集",
+   "confidence": 0.15,
+   "confidence_label": "低",
+   "metadata_score": 15,
+   "parser": "none",
+   "fetched_at": "2026-10-28T23:05:37+08:00",
+   "ownership": "own",
+   "ownership_label": "自家商品",
+   "reviews_available": true
+  },
+  "data_status": {
+   "status": "partial",
+   "status_label": "已有评论，分析未完成",
+   "object_resolved": true,
+   "reviews_captured": 10,
+   "llm_used": false,
+   "note": "对象与候选来自公开页面；评论为空时所有口碑指标返回 null，不用占位数字。",
+   "analyzed_reviews": 0,
+   "insights_stale": false
+  },
+  "dashboard": {
+   "score": null,
+   "score_label": "信息可信度",
+   "score_note": "模型内容信号；无法认证评论真实性",
+   "valid_samples": 0,
+   "review_count": 10,
+   "sample_note": "原始评论条数；有效样本需去重与可信度计算后确定",
+   "risk": "unknown",
+   "risk_label": "未评估",
+   "pain_count": 0,
+   "pain_note": "评论未分析",
+   "opportunity_count": 0,
+   "opportunity_note": "痛点未生成",
+   "candidate_count": 0,
+   "candidate_note": "同款 + 近似款候选",
+   "coverage_platforms": 1,
+   "coverage_note": "已解析对象的平台数，不是评论覆盖"
+  },
+  "overview": {
+   "status": "available",
+   "conclusion": "已确认小红书对象「https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l」，找到 0 个同款/近似款候选，并收到 10 条评论；情绪与痛点结论需要完整分析后补充。",
+   "bullets": [
+    {
+     "label": "对象",
+     "value": "小红书 · 未解析标题"
+    },
+    {
+     "label": "商品 ID",
+     "value": "69120b0d0000000003011c78"
+    },
+    {
+     "label": "同款候选",
+     "value": "0 个"
+    },
+    {
+     "label": "评论样本",
+     "value": "10 条"
+    },
+    {
+     "label": "报告阶段",
+     "value": "已有评论，分析未完成"
+    }
+   ],
+   "data_status": {
+    "status": "partial",
+    "status_label": "已有评论，分析未完成",
+    "object_resolved": true,
+    "reviews_captured": 10,
+    "llm_used": false,
+    "note": "对象与候选来自公开页面；评论为空时所有口碑指标返回 null，不用占位数字。",
+    "analyzed_reviews": 0,
+    "insights_stale": false
+   }
+  },
+  "diagnosis": {
+   "status": "partial",
+   "status_label": "已有评论，分析部分完成",
+   "summary": "已收到 10 条评论，可信度分 91，风险等级 low。情绪分布与痛点需要完整分析后才能生成。",
+   "score": null,
+   "risk": "unknown",
+   "review_count": 10,
+   "trust": {
+    "overall_trust_score": 91,
+    "burst_detected": false,
+    "duplicate_groups": [],
+    "rating_anomaly": false,
+    "length_uniformity_score": 27.07,
+    "repeated_phrases": [
+     {
+      "phrase": "送朋友的",
+      "count": 2
+     }
+    ],
+    "mismatch_count": 0,
+    "risk_level": "low",
+    "status": "available",
+    "summary": "共分析 10 条评论。未检测到明显的时间突发。未发现高度重复的评论。评分分布正常。检测到 1 个跨评论重复短语，如「送朋友的」（出现于 2 条评论）。综合信任分 91，风险等级：low。 当前样本量 10 条。分数与区间来自启发式规则，尚未进行真实性概率校准；样本条数不能单独证明结论可靠。",
+    "input_count": 10,
+    "valid_text_count": 10,
+    "excluded_count": 0,
+    "coverage": {
+     "text_count": 10,
+     "rating_count": 0,
+     "dated_count": 0,
+     "sentiment_count": 0
+    },
+    "signals": [
+     {
+      "signal": "temporal_burst",
+      "label": "时间突发",
+      "detected": false,
+      "detail": "",
+      "magnitude": 0,
+      "penalty": 0
+     },
+     {
+      "signal": "duplicate_groups",
+      "label": "近重复评论",
+      "detected": false,
+      "detail": "0 组，涉及 0 条",
+      "magnitude": 0,
+      "penalty": 0
+     },
+     {
+      "signal": "rating_anomaly",
+      "label": "评分分布异常",
+      "detected": false,
+      "detail": "",
+      "magnitude": 0,
+      "penalty": 0
+     },
+     {
+      "signal": "length_uniformity",
+      "label": "长度均匀度",
+      "detected": false,
+      "detail": "均匀度 27.1",
+      "magnitude": 27.07,
+      "penalty": 4.06
+     },
+     {
+      "signal": "repeated_phrases",
+      "label": "跨评论重复短语",
+      "detected": true,
+      "detail": "1 个短语",
+      "magnitude": 1,
+      "penalty": 5
+     },
+     {
+      "signal": "rating_sentiment_mismatch",
+      "label": "评分-情感矛盾",
+      "detected": false,
+      "detail": "0 条矛盾；仅提示一致性，不作真实性扣分",
+      "magnitude": 0,
+      "penalty": 0
+     }
+    ],
+    "posterior": {
+     "score": 91,
+     "mean": 0.91,
+     "ci95": [
+      0.6073,
+      0.9851
+     ],
+     "ci95_score": [
+      60.7,
+      98.5
+     ],
+     "effective_n": 10,
+     "observed_n": 10,
+     "method": "wilson-normal-approx",
+     "reliable": false,
+     "adequate_sample_size": false,
+     "calibrated": false,
+     "interpretation": "启发式分数区间，不是真实性概率或经过校准的置信保证"
+    },
+    "sensitivity": {
+     "without_each_signal": {
+      "temporal_burst": 91,
+      "duplicate_groups": 91,
+      "rating_anomaly": 91,
+      "length_uniformity": 95,
+      "repeated_phrases": 96,
+      "rating_sentiment_mismatch": 91
+     },
+     "delta": {
+      "temporal_burst": 0,
+      "duplicate_groups": 0,
+      "rating_anomaly": 0,
+      "length_uniformity": 4,
+      "repeated_phrases": 5,
+      "rating_sentiment_mismatch": 0
+     },
+     "max_delta": 5
+    }
+   },
+   "signals": [
+    {
+     "signal": "temporal_burst",
+     "label": "时间突发",
+     "detected": false,
+     "detail": "",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "duplicate_groups",
+     "label": "近重复评论",
+     "detected": false,
+     "detail": "0 组，涉及 0 条",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "rating_anomaly",
+     "label": "评分分布异常",
+     "detected": false,
+     "detail": "",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "length_uniformity",
+     "label": "长度均匀度",
+     "detected": false,
+     "detail": "均匀度 27.1",
+     "magnitude": 27.07,
+     "penalty": 4.06
+    },
+    {
+     "signal": "repeated_phrases",
+     "label": "跨评论重复短语",
+     "detected": true,
+     "detail": "1 个短语",
+     "magnitude": 1,
+     "penalty": 5
+    },
+    {
+     "signal": "rating_sentiment_mismatch",
+     "label": "评分-情感矛盾",
+     "detected": false,
+     "detail": "0 条矛盾；仅提示一致性，不作真实性扣分",
+     "magnitude": 0,
+     "penalty": 0
+    }
+   ],
+   "reasons": [
+    "可信度已计算；情绪分类与痛点抽取尚未运行。"
+   ]
+  },
+  "pain_points": {
+   "status": "insufficient_data",
+   "status_label": "未生成",
+   "summary": "没有评论原文，无法抽取痛点；空列表不代表没有痛点。",
+   "items": []
+  },
+  "improvements": {
+   "status": "insufficient_data",
+   "status_label": "未生成",
+   "summary": "改进方向必须由痛点与证据支撑；当前没有评论证据。",
+   "items": []
+  },
+  "topics": {
+   "status": "insufficient_data",
+   "status_label": "未生成",
+   "summary": "内容选题需要人群、痛点与场景；当前只有商品信息。",
+   "items": []
+  },
+  "content_kit": {
+   "status": "insufficient_data",
+   "status_label": "未生成",
+   "summary": "主图 brief、详情页 8 段与 15 秒脚本都依赖评论证据，暂不生成。",
+   "data": null
+  },
+  "competitors": {
+   "status": "empty",
+   "status_label": "没有候选",
+   "summary": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+   "items": []
+  },
+  "ops_plan": {
+   "status": "insufficient_data",
+   "status_label": "未生成",
+   "summary": "运营方案需要痛点、转化证据与商家数据；当前样本不足。",
+   "groups": []
+  },
+  "actions": [],
+  "next_actions": [
+   {
+    "priority": "P0",
+    "label": "粘贴评论样本",
+    "detail": "有真实评论后仍可生成口碑诊断与痛点报告。",
+    "kind": "input"
+   },
+   {
+    "priority": "P1",
+    "label": "补同款或近似款链接",
+    "detail": "当前候选只来自同一 SPU；补充跨平台链接后，才能比较不同平台的口碑差异。",
+    "kind": "input"
+   }
+  ],
+  "coverage": {
+   "mode": "anonymous",
+   "tier": "standard",
+   "window_months": 12,
+   "platforms": [
+    {
+     "platform": "xhs",
+     "label": "小红书",
+     "role": "主商品",
+     "object_count": 1,
+     "review_count": 10,
+     "status": "reviews_present",
+     "status_label": "已有评论，未做完整分析"
+    }
+   ],
+   "object_count": 1,
+   "review_count": 10,
+   "note": "本阶段不登录、不采集评论；平台覆盖只统计已经解析到的对象，不代表评论样本覆盖。"
+  },
+  "same_products": {
+   "summary": {
+    "total_candidates": 0,
+    "shown": 0,
+    "exact": 0,
+    "similar": 0,
+    "variant": 0,
+    "competitor": 0,
+    "uncertain": 0,
+    "sibling_variants": 0,
+    "user_supplied": 0,
+    "platforms": [
+     "小红书"
+    ],
+    "auto_discovery": "not_started",
+    "auto_discovery_reason": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+    "search_keywords": [],
+    "notes": [],
+    "gaps": [
+     {
+      "code": "no_same_product_candidates",
+      "label": "没有同款候选",
+      "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+      "severity": "medium"
+     }
+    ]
+   },
+   "items": []
+  },
+  "gaps": [
+   {
+    "code": "xhs_auth",
+    "label": "小红书页面需要登录或风控校验",
+    "detail": "当前阶段只做无登录对象解析；该平台的商品/笔记正文没有稳定公开接口，不在本阶段猜测。",
+    "severity": "high"
+   },
+   {
+    "code": "no_same_product_candidates",
+    "label": "没有同款候选",
+    "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+    "severity": "medium"
+   }
+  ],
+  "evidence": [
+   {
+    "id": "review_5f721af0bc6ea5b5d3cd",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "超有质感的礼物🎁 Van Reed节日限定香氛护手霜",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_f22f83a196108d22b9b6",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "是正品吗",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_c008c671ce1b9d5ec324",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "这款护手霜质地轻盈，一抹即化，滋润不油腻，让你的双手时刻保持水润状态。它的香味也是绝绝子，淡雅清新，心情都变得美美哒！最重要的是，它的价格超级亲民，性价比超高，真的是学生党和上班族的不二之选！",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_8c24a3d2b24ae8a92eea",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "会不会太便宜了[偷笑R]",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_2dd88a766abec3e9b6bf",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "很惊艳，很好看，用来送人了",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_58a0252799ba8783be2e",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "包装很细致，送朋友的，就闻着都很香非常满意",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_3c3bb1dd03dcd2b0823b",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "必须的好评  我的好龟龟收到后很惊喜她说有种高奢的感觉！！！！！棒棒棒棒棒！！！！！",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_665d21c489e5b6782808",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "真的很精致，适合送闺蜜，气味都很好闻，比较中性，男女都可以用，看起来贵贵的[赞R]",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_a91df8c7d8fdfb7be525",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "送朋友的生日礼物～护手霜没有拆开 包装好高档 一打开盒子就香香的 希望他会喜欢",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   },
+   {
+    "id": "review_4946ab864fe822315820",
+    "type": "review",
+    "title": "评论原文",
+    "quote": "特别赞的礼盒，很适合送朋友，护手霜味道超级好闻，礼盒包装也很精美[黄金薯R][黄金薯R][黄金薯R]",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "review_date": "",
+    "source_kind": "collected",
+    "fields": [
+     "review_text",
+     "rating",
+     "review_date"
+    ],
+    "fetched_at": "2026-10-28T23:06:40+08:00"
+   }
+  ],
+  "method": {
+   "resolver": "none",
+   "matching": "品牌、型号与关键规格齐全一致才归并；标题相似和同 SPU 仅作关联线索",
+   "llm_used": false,
+   "review_analysis": "trust_only",
+   "report_version": "v2-skeleton-1",
+   "limitations": [
+    "未登录，评论接口未接入。",
+    "价格、销量、评论数未从商品页稳定取得，统一为 null。",
+    "候选来源见检索记录；未启动检索时仅含已提供链接与 SPU 关联项。"
+   ]
+  },
+  "groups": [
+   {
+    "group_id": "group_30161c334052b71c",
+    "brand": "",
+    "model": "",
+    "key_specs": {},
+    "status": "pending_identity",
+    "title": "冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~",
+    "spec_label": "规格待确认",
+    "review_ids": [
+     "review_5f721af0bc6ea5b5d3cd",
+     "review_f22f83a196108d22b9b6",
+     "review_c008c671ce1b9d5ec324",
+     "review_8c24a3d2b24ae8a92eea",
+     "review_2dd88a766abec3e9b6bf",
+     "review_58a0252799ba8783be2e",
+     "review_3c3bb1dd03dcd2b0823b",
+     "review_665d21c489e5b6782808",
+     "review_a91df8c7d8fdfb7be525",
+     "review_4946ab864fe822315820"
+    ],
+    "source_urls": [
+     "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l"
+    ],
+    "platforms": [
+     "xhs"
+    ],
+    "statistics": {
+     "total": 0,
+     "successful_count": 0,
+     "failed_count": 0,
+     "pending_count": 10,
+     "cancelled_count": 0,
+     "sentiment_distribution": {
+      "positive": 0,
+      "negative": 0,
+      "neutral": 0
+     },
+     "validity_distribution": {
+      "authentic": 0,
+      "suspicious": 0,
+      "fake": 0,
+      "unknown": 0
+     },
+     "sarcastic_count": 0,
+     "suspicious_count": 0,
+     "avg_trust_score": null,
+     "authentic_positive_rate": null
+    },
+    "review_count": 10
+   }
+  ],
+  "comparison_scope": "各品牌、型号及关键规格分别统计；未知规格单独待确认",
+  "collection": {
+   "sources": [
+    {
+     "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+     "platform": "xhs",
+     "status": "partial",
+     "received": 10,
+     "selected": 10,
+     "target": 300,
+     "invalid": 0,
+     "window_start": "2025-10-28",
+     "supplemented_older": 0,
+     "unknown_dates": 10,
+     "oldest_known_date": null,
+     "code": "insufficient_reviews",
+     "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+     "reason_confirmed": false,
+     "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+     "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+    }
+   ],
+   "gaps": [
+    {
+     "platform": "xhs",
+     "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+     "code": "insufficient_reviews",
+     "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+     "reason_confirmed": false,
+     "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+     "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+    }
+   ],
+   "new_reviews": 10,
+   "total_limit": 5000,
+   "settings_key": [
+    12,
+    300
+   ],
+   "resume_method": "completed_sources_skipped_current_source_reloaded_and_deduplicated",
+   "platform_summary": [
+    {
+     "platform": "xhs",
+     "product_count": 1,
+     "actual_count": 10,
+     "target_count": 300,
+     "shortfall": 290,
+     "failures": [
+      {
+       "platform": "xhs",
+       "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+       "code": "insufficient_reviews",
+       "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+       "reason_confirmed": false,
+       "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+       "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+      }
+     ]
+    }
+   ],
+   "failure_policy": "analyze_available_reviews_with_explicit_gaps",
+   "status": "needs_input"
+  },
+  "trust_report": {
+   "overall_trust_score": 91,
+   "burst_detected": false,
+   "duplicate_groups": [],
+   "rating_anomaly": false,
+   "length_uniformity_score": 27.07,
+   "repeated_phrases": [
+    {
+     "phrase": "送朋友的",
+     "count": 2
+    }
+   ],
+   "mismatch_count": 0,
+   "risk_level": "low",
+   "status": "available",
+   "summary": "共分析 10 条评论。未检测到明显的时间突发。未发现高度重复的评论。评分分布正常。检测到 1 个跨评论重复短语，如「送朋友的」（出现于 2 条评论）。综合信任分 91，风险等级：low。 当前样本量 10 条。分数与区间来自启发式规则，尚未进行真实性概率校准；样本条数不能单独证明结论可靠。",
+   "input_count": 10,
+   "valid_text_count": 10,
+   "excluded_count": 0,
+   "coverage": {
+    "text_count": 10,
+    "rating_count": 0,
+    "dated_count": 0,
+    "sentiment_count": 0
+   },
+   "signals": [
+    {
+     "signal": "temporal_burst",
+     "label": "时间突发",
+     "detected": false,
+     "detail": "",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "duplicate_groups",
+     "label": "近重复评论",
+     "detected": false,
+     "detail": "0 组，涉及 0 条",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "rating_anomaly",
+     "label": "评分分布异常",
+     "detected": false,
+     "detail": "",
+     "magnitude": 0,
+     "penalty": 0
+    },
+    {
+     "signal": "length_uniformity",
+     "label": "长度均匀度",
+     "detected": false,
+     "detail": "均匀度 27.1",
+     "magnitude": 27.07,
+     "penalty": 4.06
+    },
+    {
+     "signal": "repeated_phrases",
+     "label": "跨评论重复短语",
+     "detected": true,
+     "detail": "1 个短语",
+     "magnitude": 1,
+     "penalty": 5
+    },
+    {
+     "signal": "rating_sentiment_mismatch",
+     "label": "评分-情感矛盾",
+     "detected": false,
+     "detail": "0 条矛盾；仅提示一致性，不作真实性扣分",
+     "magnitude": 0,
+     "penalty": 0
+    }
+   ],
+   "posterior": {
+    "score": 91,
+    "mean": 0.91,
+    "ci95": [
+     0.6073,
+     0.9851
+    ],
+    "ci95_score": [
+     60.7,
+     98.5
+    ],
+    "effective_n": 10,
+    "observed_n": 10,
+    "method": "wilson-normal-approx",
+    "reliable": false,
+    "adequate_sample_size": false,
+    "calibrated": false,
+    "interpretation": "启发式分数区间，不是真实性概率或经过校准的置信保证"
+   },
+   "sensitivity": {
+    "without_each_signal": {
+     "temporal_burst": 91,
+     "duplicate_groups": 91,
+     "rating_anomaly": 91,
+     "length_uniformity": 95,
+     "repeated_phrases": 96,
+     "rating_sentiment_mismatch": 91
+    },
+    "delta": {
+     "temporal_burst": 0,
+     "duplicate_groups": 0,
+     "rating_anomaly": 0,
+     "length_uniformity": 4,
+     "repeated_phrases": 5,
+     "rating_sentiment_mismatch": 0
+    },
+    "max_delta": 5
+   }
+  },
+  "statistics": {
+   "total": 0,
+   "successful_count": 0,
+   "failed_count": 0,
+   "pending_count": 10,
+   "cancelled_count": 0,
+   "sentiment_distribution": {
+    "positive": 0,
+    "negative": 0,
+    "neutral": 0
+   },
+   "validity_distribution": {
+    "authentic": 0,
+    "suspicious": 0,
+    "fake": 0,
+    "unknown": 0
+   },
+   "sarcastic_count": 0,
+   "suspicious_count": 0,
+   "avg_trust_score": null,
+   "authentic_positive_rate": null
+  },
+  "model_cost": {},
+  "model_coverage": {
+   "local_count": 10,
+   "modeled_count": 0
+  }
+ },
+ "progress": {
+  "stage": "collecting",
+  "done": 10,
+  "total": 5000,
+  "message": "已保存 10 条真实评论；继续读取或查看来源缺口"
+ },
+ "groups": [
+  {
+   "group_id": "group_30161c334052b71c",
+   "brand": "",
+   "model": "",
+   "key_specs": {},
+   "status": "pending_identity",
+   "title": "冷门但小众高级的闺蜜礼物（平价版） 花小钱办大事看... https://xhslink.cn/o/7zUsGv1lB2l 跳转【小红书】看看笔记详情~",
+   "spec_label": "规格待确认",
+   "review_ids": [
+    "review_5f721af0bc6ea5b5d3cd",
+    "review_f22f83a196108d22b9b6",
+    "review_c008c671ce1b9d5ec324",
+    "review_8c24a3d2b24ae8a92eea",
+    "review_2dd88a766abec3e9b6bf",
+    "review_58a0252799ba8783be2e",
+    "review_3c3bb1dd03dcd2b0823b",
+    "review_665d21c489e5b6782808",
+    "review_a91df8c7d8fdfb7be525",
+    "review_4946ab864fe822315820"
+   ],
+   "source_urls": [
+    "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l"
+   ],
+   "platforms": [
+    "xhs"
+   ],
+   "statistics": {
+    "total": 0,
+    "successful_count": 0,
+    "failed_count": 0,
+    "pending_count": 10,
+    "cancelled_count": 0,
+    "sentiment_distribution": {
+     "positive": 0,
+     "negative": 0,
+     "neutral": 0
+    },
+    "validity_distribution": {
+     "authentic": 0,
+     "suspicious": 0,
+     "fake": 0,
+     "unknown": 0
+    },
+    "sarcastic_count": 0,
+    "suspicious_count": 0,
+    "avg_trust_score": null,
+    "authentic_positive_rate": null
+   },
+   "review_count": 10
+  }
+ ],
+ "operation": "collect",
+ "error": null,
+ "collection": {
+  "sources": [
+   {
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "platform": "xhs",
+    "status": "partial",
+    "received": 10,
+    "selected": 10,
+    "target": 300,
+    "invalid": 0,
+    "window_start": "2025-10-28",
+    "supplemented_older": 0,
+    "unknown_dates": 10,
+    "oldest_known_date": null,
+    "code": "insufficient_reviews",
+    "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+    "reason_confirmed": false,
+    "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+    "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+   }
+  ],
+  "gaps": [
+   {
+    "platform": "xhs",
+    "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+    "code": "insufficient_reviews",
+    "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+    "reason_confirmed": false,
+    "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+    "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+   }
+  ],
+  "new_reviews": 10,
+  "total_limit": 5000,
+  "settings_key": [
+   12,
+   300
+  ],
+  "resume_method": "completed_sources_skipped_current_source_reloaded_and_deduplicated",
+  "platform_summary": [
+   {
+    "platform": "xhs",
+    "product_count": 1,
+    "actual_count": 10,
+    "target_count": 300,
+    "shortfall": 290,
+    "failures": [
+     {
+      "platform": "xhs",
+      "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+      "code": "insufficient_reviews",
+      "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+      "reason_confirmed": false,
+      "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。",
+      "suggested_action": "先分析已有真实评论，可稍后重试或补充链接"
+     }
+    ]
+   }
+  ],
+  "failure_policy": "analyze_available_reviews_with_explicit_gaps",
+  "status": "needs_input"
+ },
+ "authentication": {
+  "xhs": {
+   "platform": "xhs",
+   "status": "backend_collection",
+   "message": "尝试本机小红书只读采集器，只读取笔记评论，不启用OCR模型",
+   "updated_at": "2026-10-28T23:05:58+08:00"
+  }
+ }
+}

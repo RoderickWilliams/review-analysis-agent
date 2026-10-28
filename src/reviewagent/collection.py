@@ -108,7 +108,13 @@ def _sources(analysis):
     selected_urls = request.get("selected_urls")
     if selected_urls is not None:
         maximum = len(selected_urls)
-    sources = [analysis["object"]] + list(analysis.get("candidates", []))
+    candidates = list(analysis.get("candidates", []))
+    if selected_urls is None:
+        # 未经用户确认的同款候选不自动采集，避免把其他商品评论混进当前对象；
+        # 用户补充的链接会带 user_supplied 标记，照常采集。
+        sources = [analysis["object"]] + [item for item in candidates if item.get("user_supplied")]
+    else:
+        sources = [analysis["object"]] + candidates
     platforms = request.get("platforms", ["jd", "taobao", "xhs"])
     buckets = {platform: [] for platform in platforms}
     seen = set()

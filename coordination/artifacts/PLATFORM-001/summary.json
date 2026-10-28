@@ -1,0 +1,53 @@
+{
+ "taobao": {
+  "id": "ra_417f4ec326034bdb",
+  "reviews": 0,
+  "gaps": [],
+  "summary": []
+ },
+ "jd": {
+  "id": "ra_bfbe71167985448d",
+  "reviews": 0,
+  "gaps": [],
+  "summary": []
+ },
+ "xhs": {
+  "id": "ra_fe37d2164e3b4732",
+  "status": "partial",
+  "created": "2026-10-28T23:05:37+08:00",
+  "updated": "2026-10-28T23:06:40+08:00",
+  "reviews": 10,
+  "platform": "xhs",
+  "url": "https://www.xiaohongshu.com/discovery/item/69120b0d0000000003011c78?app_platform=android&ignoreEngage=true&app_version=9.51.1&share_from_user_hidden=true&xsec_source=app_share&type=normal&noteAttributes=goods&xsec_token=CBTnh5byhvJaFy-uSgMin5I7uZ2j_Pq9OvTXlSKHpLoxg%3D&author_share=1&back_chain_id=goods_note_share&xhsshare=CopyLink&shareRedId=N0pFNzw5PDw2NzUyOTgwNjY0OTc3Ozw5&apptime=1793198539&share_id=275fc4f611904f7eb9e1cd8e351a0fe6&share_channel=copy_link&track_code=7zUsGv1lB2l",
+  "platform_id": "69120b0d0000000003011c78",
+  "title": "",
+  "gaps": [
+   {
+    "code": "insufficient_reviews",
+    "reason": "本次未采满目标数量，未采满的具体原因尚未确定",
+    "message": "采集上限 300 条，当前核对目标 300 条，本次读取 10 条，其中有效选入 10 条。未能确认是否还有未加载评论。"
+   }
+  ],
+  "summary": [
+   {
+    "platform": "xhs",
+    "actual": 10,
+    "target": 300,
+    "shortfall": 290
+   }
+  ]
+ },
+ "xhs_before_fix": {
+  "id": "ra_8b05ee9832244236",
+  "status": "draft",
+  "created": "2026-10-28T23:03:12+08:00",
+  "updated": "2026-10-28T23:03:15+08:00",
+  "reviews": 0,
+  "platform": "unknown",
+  "url": "https://xhslink.cn/o/7zUsGv1lB2l",
+  "platform_id": "",
+  "title": "",
+  "gaps": [],
+  "summary": []
+ }
+}

@@ -1,0 +1,539 @@
+{
+ "id": "ra_417f4ec326034bdb",
+ "db_status": "trashed",
+ "report": {
+  "analysis_id": "ra_417f4ec326034bdb",
+  "created_at": "2026-10-28T22:49:56+08:00",
+  "updated_at": "2026-10-28T22:52:00+08:00",
+  "status": "trashed",
+  "status_label": "部分完成，可重试",
+  "input": "【淘宝】大促价保 https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv CZ001 「Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔」\n点击链接直接打开 或者 淘宝搜索直接打开",
+  "request": {
+   "input": "【淘宝】大促价保 https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv CZ001 「Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔」\n点击链接直接打开 或者 淘宝搜索直接打开",
+   "extra_links": [],
+   "ownership": "own",
+   "tier": "standard",
+   "window_months": 12,
+   "reviews": [],
+   "save": true,
+   "platforms": [
+    "taobao"
+   ],
+   "candidate_limit": 5,
+   "per_product_limit": 300
+  },
+  "reviews": [],
+  "results": [],
+  "object": {
+   "input": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+   "input_type": "url",
+   "platform": "taobao",
+   "platform_label": "淘宝",
+   "status": "needs_capture",
+   "status_label": "已识别链接，详情需采集",
+   "platform_id": "",
+   "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+   "title": "",
+   "brand": "",
+   "shop": "",
+   "category": [],
+   "image_url": "",
+   "variants": [],
+   "metadata_score": 0,
+   "confidence": 0.15,
+   "confidence_label": "低",
+   "parser": "none",
+   "fetched_at": "2026-10-28T22:49:56+08:00",
+   "evidence": [],
+   "gaps": [
+    {
+     "code": "taobao_auth",
+     "label": "淘宝页面需要登录或风控校验",
+     "detail": "当前阶段只做无登录对象解析；该平台的商品/笔记正文没有稳定公开接口，不在本阶段猜测。",
+     "severity": "high"
+    }
+   ],
+   "warnings": [
+    "短链接没有跳转到商品页，可能已失效。",
+    "链接中没有提取到稳定 ID，可能是短链或分享页。"
+   ],
+   "next_actions": [
+    {
+     "label": "粘贴评论样本",
+     "detail": "有真实评论后仍可生成口碑诊断与痛点报告。"
+    }
+   ],
+   "message": "已识别为淘宝链接；本阶段不登录，商品详情与评论留待采集。",
+   "input_url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv"
+  },
+  "candidates": [],
+  "match_summary": {
+   "total_candidates": 0,
+   "shown": 0,
+   "exact": 0,
+   "similar": 0,
+   "variant": 0,
+   "competitor": 0,
+   "uncertain": 0,
+   "sibling_variants": 0,
+   "user_supplied": 0,
+   "platforms": [
+    "淘宝"
+   ],
+   "auto_discovery": "not_started",
+   "auto_discovery_reason": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+   "search_keywords": [],
+   "notes": [],
+   "gaps": [
+    {
+     "code": "no_same_product_candidates",
+     "label": "没有同款候选",
+     "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+     "severity": "medium"
+    }
+   ]
+  },
+  "report": {
+   "version": "v2-skeleton-1",
+   "generated_at": "2026-10-28T22:52:00+08:00",
+   "stage": "metadata_only",
+   "stage_label": "仅对象元数据",
+   "input": "【淘宝】大促价保 https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv CZ001 「Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔」 点击链接直接打开 或者 淘宝搜索直接打开",
+   "object": {
+    "type": "unknown",
+    "type_label": "关键词",
+    "platform": "taobao",
+    "platform_label": "淘宝",
+    "platform_id": "",
+    "title": "",
+    "brand": "",
+    "shop": "",
+    "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+    "image_url": "",
+    "category": [],
+    "variants": [],
+    "variant_count": 0,
+    "status": "needs_capture",
+    "status_label": "已识别链接，详情需采集",
+    "confidence": 0.15,
+    "confidence_label": "低",
+    "metadata_score": 0,
+    "parser": "none",
+    "fetched_at": "2026-10-28T22:49:56+08:00",
+    "ownership": "own",
+    "ownership_label": "自家商品",
+    "reviews_available": false
+   },
+   "data_status": {
+    "status": "metadata_only",
+    "status_label": "仅对象元数据",
+    "object_resolved": false,
+    "reviews_captured": 0,
+    "llm_used": false,
+    "note": "对象与候选来自公开页面；评论为空时所有口碑指标返回 null，不用占位数字。",
+    "analyzed_reviews": 0,
+    "insights_stale": false
+   },
+   "dashboard": {
+    "score": null,
+    "score_label": "信息可信度",
+    "score_note": "模型内容信号；无法认证评论真实性",
+    "valid_samples": 0,
+    "review_count": 0,
+    "sample_note": "原始评论条数；有效样本需去重与可信度计算后确定",
+    "risk": "unknown",
+    "risk_label": "未评估",
+    "pain_count": 0,
+    "pain_note": "评论未分析",
+    "opportunity_count": 0,
+    "opportunity_note": "痛点未生成",
+    "candidate_count": 0,
+    "candidate_note": "同款 + 近似款候选",
+    "coverage_platforms": 1,
+    "coverage_note": "已解析对象的平台数，不是评论覆盖"
+   },
+   "overview": {
+    "status": "available",
+    "conclusion": "已确认淘宝对象「https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv」，并找到 0 个同 SPU 规格候选。评论尚未采集，报告停在对象与候选层，不生成口碑结论。",
+    "bullets": [
+     {
+      "label": "对象",
+      "value": "淘宝 · 未解析标题"
+     },
+     {
+      "label": "商品 ID",
+      "value": "无"
+     },
+     {
+      "label": "同款候选",
+      "value": "0 个"
+     },
+     {
+      "label": "评论样本",
+      "value": "未采集"
+     },
+     {
+      "label": "报告阶段",
+      "value": "仅对象元数据"
+     }
+    ],
+    "data_status": {
+     "status": "metadata_only",
+     "status_label": "仅对象元数据",
+     "object_resolved": false,
+     "reviews_captured": 0,
+     "llm_used": false,
+     "note": "对象与候选来自公开页面；评论为空时所有口碑指标返回 null，不用占位数字。",
+     "analyzed_reviews": 0,
+     "insights_stale": false
+    }
+   },
+   "diagnosis": {
+    "status": "insufficient_data",
+    "status_label": "缺少评论",
+    "summary": "评论样本为 0，因此没有口碑总分、风险等级和情绪分布。当前只确认了商品对象与同规格候选，不能据此判断用户满意或不满。",
+    "score": null,
+    "risk": "unknown",
+    "review_count": 0,
+    "trust": {
+     "overall_trust_score": null,
+     "burst_detected": false,
+     "duplicate_groups": [],
+     "rating_anomaly": false,
+     "length_uniformity_score": 0.0,
+     "repeated_phrases": [],
+     "mismatch_count": 0,
+     "risk_level": "unknown",
+     "status": "insufficient_data",
+     "summary": "无评论数据可供分析。",
+     "input_count": 0,
+     "valid_text_count": 0,
+     "excluded_count": 0
+    },
+    "signals": [],
+    "reasons": [
+     "当前报告只覆盖商品页对象层。",
+     "情绪 9 类、有效性 8 类与痛点抽取需要原始评论，不能用商品标题代替。"
+    ]
+   },
+   "pain_points": {
+    "status": "insufficient_data",
+    "status_label": "未生成",
+    "summary": "没有评论原文，无法抽取痛点；空列表不代表没有痛点。",
+    "items": []
+   },
+   "improvements": {
+    "status": "insufficient_data",
+    "status_label": "未生成",
+    "summary": "改进方向必须由痛点与证据支撑；当前没有评论证据。",
+    "items": []
+   },
+   "topics": {
+    "status": "insufficient_data",
+    "status_label": "未生成",
+    "summary": "内容选题需要人群、痛点与场景；当前只有商品信息。",
+    "items": []
+   },
+   "content_kit": {
+    "status": "insufficient_data",
+    "status_label": "未生成",
+    "summary": "主图 brief、详情页 8 段与 15 秒脚本都依赖评论证据，暂不生成。",
+    "data": null
+   },
+   "competitors": {
+    "status": "empty",
+    "status_label": "没有候选",
+    "summary": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+    "items": []
+   },
+   "ops_plan": {
+    "status": "insufficient_data",
+    "status_label": "未生成",
+    "summary": "运营方案需要痛点、转化证据与商家数据；当前样本不足。",
+    "groups": []
+   },
+   "actions": [],
+   "next_actions": [
+    {
+     "priority": "P0",
+     "label": "粘贴评论样本",
+     "detail": "有真实评论后仍可生成口碑诊断与痛点报告。",
+     "kind": "input"
+    },
+    {
+     "priority": "P0",
+     "label": "补评论样本",
+     "detail": "把商品评论粘贴进来，或开启登录采集；有原始评论后才能计算情绪、有效样本、痛点与运营动作。",
+     "kind": "data"
+    },
+    {
+     "priority": "P1",
+     "label": "补同款或近似款链接",
+     "detail": "当前候选只来自同一 SPU；补充跨平台链接后，才能比较不同平台的口碑差异。",
+     "kind": "input"
+    }
+   ],
+   "coverage": {
+    "mode": "anonymous",
+    "tier": "standard",
+    "window_months": 12,
+    "platforms": [
+     {
+      "platform": "taobao",
+      "label": "淘宝",
+      "role": "主商品",
+      "object_count": 1,
+      "review_count": 0,
+      "status": "object_only",
+      "status_label": "已解析对象，未采集评论"
+     }
+    ],
+    "object_count": 1,
+    "review_count": 0,
+    "note": "本阶段不登录、不采集评论；平台覆盖只统计已经解析到的对象，不代表评论样本覆盖。"
+   },
+   "same_products": {
+    "summary": {
+     "total_candidates": 0,
+     "shown": 0,
+     "exact": 0,
+     "similar": 0,
+     "variant": 0,
+     "competitor": 0,
+     "uncertain": 0,
+     "sibling_variants": 0,
+     "user_supplied": 0,
+     "platforms": [
+      "淘宝"
+     ],
+     "auto_discovery": "not_started",
+     "auto_discovery_reason": "尚未启动平台检索；当前候选只来自已提供的元数据与关联规格，可在工作台检索同款。",
+     "search_keywords": [],
+     "notes": [],
+     "gaps": [
+      {
+       "code": "no_same_product_candidates",
+       "label": "没有同款候选",
+       "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+       "severity": "medium"
+      }
+     ]
+    },
+    "items": []
+   },
+   "gaps": [
+    {
+     "code": "taobao_auth",
+     "label": "淘宝页面需要登录或风控校验",
+     "detail": "当前阶段只做无登录对象解析；该平台的商品/笔记正文没有稳定公开接口，不在本阶段猜测。",
+     "severity": "high"
+    },
+    {
+     "code": "no_reviews_captured",
+     "label": "评论未采集",
+     "detail": "本阶段只解析商品页，没有登录采集评论；口碑分、风险、痛点和运营建议都缺少原始样本。",
+     "severity": "high"
+    },
+    {
+     "code": "no_same_product_candidates",
+     "label": "没有同款候选",
+     "detail": "主商品没有返回其他规格，也没有补充链接。可以粘贴同款链接，或按关键词人工搜索。",
+     "severity": "medium"
+    }
+   ],
+   "evidence": [],
+   "method": {
+    "resolver": "none",
+    "matching": "品牌、型号与关键规格齐全一致才归并；标题相似和同 SPU 仅作关联线索",
+    "llm_used": false,
+    "review_analysis": "not_run",
+    "report_version": "v2-skeleton-1",
+    "limitations": [
+     "未登录，评论接口未接入。",
+     "价格、销量、评论数未从商品页稳定取得，统一为 null。",
+     "候选来源见检索记录；未启动检索时仅含已提供链接与 SPU 关联项。"
+    ]
+   },
+   "groups": [],
+   "comparison_scope": "各品牌、型号及关键规格分别统计；未知规格单独待确认",
+   "collection": {
+    "sources": [
+     {
+      "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+      "platform": "taobao",
+      "status": "comment_section_not_loaded",
+      "received": 0,
+      "selected": 0,
+      "target": 300,
+      "code": "comment_section_not_loaded",
+      "reason": "等待后评价区域仍未加载完成",
+      "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+      "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+      "reason_confirmed": true
+     }
+    ],
+    "gaps": [
+     {
+      "platform": "taobao",
+      "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+      "code": "comment_section_not_loaded",
+      "reason": "等待后评价区域仍未加载完成",
+      "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+      "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+      "reason_confirmed": true
+     }
+    ],
+    "new_reviews": 0,
+    "total_limit": 5000,
+    "settings_key": [
+     12,
+     300
+    ],
+    "resume_method": "completed_sources_skipped_current_source_reloaded_and_deduplicated",
+    "platform_summary": [
+     {
+      "platform": "taobao",
+      "product_count": 1,
+      "actual_count": 0,
+      "target_count": 300,
+      "shortfall": 300,
+      "failures": [
+       {
+        "platform": "taobao",
+        "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+        "code": "comment_section_not_loaded",
+        "reason": "等待后评价区域仍未加载完成",
+        "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+        "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+        "reason_confirmed": true
+       }
+      ]
+     }
+    ],
+    "failure_policy": "analyze_available_reviews_with_explicit_gaps",
+    "status": "needs_input"
+   },
+   "trust_report": {
+    "overall_trust_score": null,
+    "burst_detected": false,
+    "duplicate_groups": [],
+    "rating_anomaly": false,
+    "length_uniformity_score": 0.0,
+    "repeated_phrases": [],
+    "mismatch_count": 0,
+    "risk_level": "unknown",
+    "status": "insufficient_data",
+    "summary": "无评论数据可供分析。",
+    "input_count": 0,
+    "valid_text_count": 0,
+    "excluded_count": 0
+   },
+   "statistics": {
+    "total": 0,
+    "successful_count": 0,
+    "failed_count": 0,
+    "pending_count": 0,
+    "cancelled_count": 0,
+    "sentiment_distribution": {
+     "positive": 0,
+     "negative": 0,
+     "neutral": 0
+    },
+    "validity_distribution": {
+     "authentic": 0,
+     "suspicious": 0,
+     "fake": 0,
+     "unknown": 0
+    },
+    "sarcastic_count": 0,
+    "suspicious_count": 0,
+    "avg_trust_score": null,
+    "authentic_positive_rate": null
+   },
+   "model_cost": {},
+   "model_coverage": {
+    "local_count": 0,
+    "modeled_count": 0
+   }
+  },
+  "progress": {
+   "stage": "needs_input",
+   "done": 0,
+   "total": 5000,
+   "message": "尚未取得评论；请查看采集失败原因"
+  },
+  "groups": [],
+  "operation": "collect",
+  "error": null,
+  "collection": {
+   "sources": [
+    {
+     "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+     "platform": "taobao",
+     "status": "comment_section_not_loaded",
+     "received": 0,
+     "selected": 0,
+     "target": 300,
+     "code": "comment_section_not_loaded",
+     "reason": "等待后评价区域仍未加载完成",
+     "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+     "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+     "reason_confirmed": true
+    }
+   ],
+   "gaps": [
+    {
+     "platform": "taobao",
+     "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+     "code": "comment_section_not_loaded",
+     "reason": "等待后评价区域仍未加载完成",
+     "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+     "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+     "reason_confirmed": true
+    }
+   ],
+   "new_reviews": 0,
+   "total_limit": 5000,
+   "settings_key": [
+    12,
+    300
+   ],
+   "resume_method": "completed_sources_skipped_current_source_reloaded_and_deduplicated",
+   "platform_summary": [
+    {
+     "platform": "taobao",
+     "product_count": 1,
+     "actual_count": 0,
+     "target_count": 300,
+     "shortfall": 300,
+     "failures": [
+      {
+       "platform": "taobao",
+       "url": "https://e.tb.cn/h.jUVuziuunaR8cSd?tk=UgrkTB2KzVv",
+       "code": "comment_section_not_loaded",
+       "reason": "等待后评价区域仍未加载完成",
+       "message": "等待90秒后评价区域仍未加载完成；页面诊断：{\"host\": \"detail.tmall.com\", \"path\": \"/item.htm\", \"title\": \"Folkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔-tmall.com天猫\", \"ready_state\": \"complete\", \"text_length\": 240, \"text_preview\": \"小浣熊\\n搜索\\n搜本店\\nfolkmanis旗舰店\\n4.7\\n90天新增30条好评\\n平均18小时发货\\n平均22小时退款\\n客服\\n进店\\nFolkmanis小浣熊玩偶娃娃毛绒婴儿仿真玩具礼物早教手偶抱睡公仔\\n可开发票\\n￥408\\n预计10月31日送达\\n快递: 免运费\\n江苏南京 至 西安市 雁塔区 \\n退货宝大促价保假一赔四极速退款7天无理由退换\\n颜色分类\\n切换大图模式\\n小浣熊【33*48cm】早教手偶丨精致礼品\\n推荐\\n数量\\n有货\\n加入购物车\\n立即购买\\n收藏\\n问问\\nAI\\n有什么想了解的，问我吧\", \"frames\": [{\"host\": \"www.taobao.com\", \"path\": \"/wow/z/tbhome/default/kissy-search-suggest-iframe\", \"visible\": false}], \"labels\": [], \"classes\": [], \"login_gate\": false, \"no_reviews\": false}",
+       "suggested_action": "检查商品页资源加载、登录或平台提示；本次未能判断实际评论数量",
+       "reason_confirmed": true
+      }
+     ]
+    }
+   ],
+   "failure_policy": "analyze_available_reviews_with_explicit_gaps",
+   "status": "needs_input"
+  },
+  "authentication": {
+   "taobao": {
+    "platform": "taobao",
+    "status": "loading_comments",
+    "message": "商品页面仍在加载，等待评价区域出现（最多90秒），请保持窗口打开",
+    "updated_at": "2026-10-28T22:50:29+08:00"
+   }
+  },
+  "trash": {
+   "batch_id": "clear_71c8b07fc37b4c618b1d7404f68b56de",
+   "previous_status": "partial",
+   "cleared_at": "2026-10-28T22:53:54+08:00"
+  }
+ }
+}

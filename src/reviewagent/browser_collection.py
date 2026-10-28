@@ -44,7 +44,7 @@ def _allowed_url(url, platform):
     parsed = urlsplit(url)
     host = (parsed.hostname or "").lower().rstrip(".")
     domains = {"jd": ("jd.com",), "taobao": ("taobao.com", "tmall.com", "tb.cn"),
-               "xhs": ("xiaohongshu.com", "xhslink.com")}[platform_key(platform)]
+               "xhs": ("xiaohongshu.com", "xhslink.com", "xhslink.cn")}[platform_key(platform)]
     return parsed.scheme == "https" and not parsed.username and not parsed.password and parsed.port in {None, 443} and any(host == d or host.endswith("." + d) for d in domains)
 
 

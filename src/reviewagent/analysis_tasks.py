@@ -35,6 +35,11 @@ def create_record(payload):
     built = build_analysis_report(primary, matched, ownership=request.get("ownership", "own"),
                                   input_text=request["input"], tier=request.get("tier", "standard"),
                                   window_months=request.get("window_months", 12), reviews=reviews)
+    extra_urls = {(item.get("url") or item.get("source_url") or "").strip() for item in extras}
+    extra_urls.discard("")
+    for candidate in built["candidates"]:
+        if (candidate.get("url") or candidate.get("source_url") or "").strip() in extra_urls:
+            candidate["user_supplied"] = True
     analysis = {
         "analysis_id": "ra_" + uuid.uuid4().hex[:16], "created_at": now(), "updated_at": now(),
         "status": "draft", "status_label": "待分析" if reviews else "待导入评论",
