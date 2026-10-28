@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReviewAgent · 评论研究工作台</title>
+<style>
+:root{
+  --paper:#f3f2ec; --card:#fbfaf6; --ink:#1b2a25; --muted:#5f6f68; --line:#dcd9cc;
+  --green:#1f5c45; --green-2:#2c7a5b; --mint:#dcebe0; --gold:#b98b48;
+  --radius:14px; --shadow:0 20px 50px -30px rgba(27,42,37,.45);
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --serif:"Iowan Old Style","Songti SC",Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{width:min(1140px,92vw);margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--green);font-weight:600}
+
+/* nav */
+header{position:sticky;top:0;z-index:20;background:rgba(243,242,236,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:34px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+.brand img{width:30px;height:30px;border-radius:8px}
+.nav-links{display:flex;gap:26px;margin-left:8px;font-size:14px;color:var(--muted)}
+.nav-links a:hover{color:var(--ink)}
+.nav-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600;border:1px solid transparent;transition:.18s}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:#174a37;transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line);background:transparent}
+.btn-ghost:hover{border-color:#bfc9c2;background:#efeee6}
+
+/* hero */
+.hero{padding:84px 0 28px}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+h1{font-family:var(--serif);font-weight:600;font-size:56px;line-height:1.08;letter-spacing:-.02em;margin:18px 0 22px}
+h1 em{font-style:normal;color:var(--green);border-bottom:3px solid var(--mint)}
+.lede{font-size:18px;color:#394743;max-width:30em}
+.hero-cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.hero-note{margin-top:18px;font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green-2);margin-right:6px;vertical-align:middle}
+
+/* browser frame */
+.frame{border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+.frame-bar{display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-bottom:1px solid #eceade;background:#f7f6f0}
+.frame-bar i{width:9px;height:9px;border-radius:50%;background:#d8d4c4}
+.frame-bar span{margin-left:10px;font-size:11px;color:#8a958f;font-family:var(--sans)}
+.frame img{width:100%}
+
+/* metrics */
+.metrics{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:56px;background:#eeede5}
+.metrics .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.metric{padding:26px 22px 24px;border-left:1px solid var(--line)}
+.metric:first-child{border-left:0}
+.metric b{display:block;font-family:var(--serif);font-size:34px;line-height:1.1;letter-spacing:-.02em}
+.metric small{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}
+
+/* sections */
+section{padding:88px 0}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:44px}
+h2{font-family:var(--serif);font-size:38px;line-height:1.15;letter-spacing:-.015em;margin:12px 0 0;font-weight:600}
+.section-head p{color:var(--muted);max-width:34em;margin:0 0 6px}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:26px}
+.card h3{font-size:17px;margin:14px 0 8px;letter-spacing:-.01em}
+.card p{color:var(--muted);font-size:14.5px;margin:0}
+.num{font-family:var(--serif);font-size:15px;color:var(--green);border:1px solid var(--mint);background:#eaf3ec;border-radius:8px;width:30px;height:30px;display:grid;place-items:center}
+
+/* workflow */
+.flow{display:grid;gap:26px}
+.step{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:26px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step .text h3{font-family:var(--serif);font-size:26px;margin:10px 0 10px;letter-spacing:-.01em}
+.step .text p{color:var(--muted);margin:0 0 12px}
+.step .text ul{margin:0;padding-left:18px;color:#3b4a45;font-size:14.5px}
+.step .text li{margin:5px 0}
+.shot{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.shot img{width:100%}
+.caption{font-size:12px;color:#8a958f;padding:8px 12px;border-top:1px solid #eceade;background:#f7f6f0}
+
+/* feature grid */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.feature{background:var(--card);padding:30px 26px}
+.feature h3{font-size:16px;margin:0 0 8px}
+.feature p{color:var(--muted);font-size:14px;margin:0}
+.feature .tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);font-weight:600}
+
+/* status */
+.status{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.status-col{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:26px}
+.status-col h3{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin:0 0 14px}
+.status-col.off h3{color:var(--gold)}
+.status-col ul{margin:0;padding:0;list-style:none}
+.status-col li{display:flex;gap:10px;padding:9px 0;border-top:1px dashed #e6e3d7;font-size:14.5px}
+.status-col li:first-child{border-top:0}
+.status-col li span{flex:0 0 16px;color:var(--green)}
+.status-col.off li span{color:var(--gold)}
+
+/* demo */
+.demo{background:#15241f;color:#e9eee9;border-radius:20px;padding:56px;display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center}
+.demo h2{color:#fff;margin-top:14px}
+.demo p{color:#a9bdb2}
+.demo .eyebrow{color:#8fd0b0}
+.demo-frame{border:1px solid #2c4638;border-radius:14px;overflow:hidden;background:#0f1b17;min-height:340px;display:grid;place-items:center;position:relative}
+.demo-frame iframe{width:100%;height:380px;border:0;background:#fff}
+.demo-hint{position:absolute;inset:auto 0 0 0;padding:10px 14px;font-size:12px;color:#8fa89b;background:linear-gradient(transparent,#0f1b17 60%)}
+
+footer{border-top:1px solid var(--line);padding:36px 0 52px;color:var(--muted);font-size:13px}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+
+@media(max-width:960px){
+  .hero-grid,.step,.demo,.status{grid-template-columns:1fr}
+  h1{font-size:42px}
+  .metrics .wrap{grid-template-columns:1fr 1fr}
+  .metric:nth-child(3){border-left:0}
+  .cards,.features{grid-template-columns:1fr}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="">ReviewAgent</a>
+    <nav class="nav-links">
+      <a href="#capability">能力</a>
+      <a href="#workflow">流程</a>
+      <a href="#status">真实状态</a>
+      <a href="#demo">演示</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="#status">查看状态</a>
+      <a class="btn btn-primary" href="http://127.0.0.1:64628/app/" target="_blank" rel="noopener">打开工作台 →</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Review Intelligence · 本地运行</div>
+        <h1>把散落的评论，<br>变成<em>下一步运营动作</em></h1>
+        <p class="lede">从一个商品链接开始：采集淘宝、天猫、京东、小红书的真实评论，逐条判断情绪与内容疑点，再把能在原句里核对到的痛点，整理成卖点、客服话术、选题和行动清单。</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#demo">看看它怎么工作</a>
+          <a class="btn btn-ghost" href="#workflow">工作流程</a>
+        </div>
+        <div class="hero-note">
+          <span><i class="dot"></i>本地运行，评论不出本机</span>
+          <span><i class="dot"></i>模型 Key 只在内存</span>
+          <span><i class="dot"></i>单次分析上限 1.5 元</span>
+        </div>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><i></i><i></i><i></i><span>127.0.0.1:64628/app</span></div>
+        <img src="assets/workspace-overview.png" alt="ReviewAgent 研究总览：样本、情绪分布与来源缺口">
+      </div>
+    </div>
+  </section>
+
+  <div class="metrics">
+    <div class="wrap">
+      <div class="metric"><b>33</b><small>同一商品链接采到的真实评论</small></div>
+      <div class="metric"><b>14</b><small>其中有买家正文，可做文本分析</small></div>
+      <div class="metric"><b>5</b><small>带原句证据的用户痛点</small></div>
+      <div class="metric"><b>0.11 元</b><small>一次完整分析的实测模型费用</small></div>
+    </div>
+  </div>
+
+  <section id="capability">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">解决什么问题</div>
+          <h2>评论很多，能落地的判断很少</h2>
+        </div>
+        <p>平台把评价折叠、筛选、排序，运营看到的往往是十几条精选。真正影响决策的信息散在原文里，靠人工翻不现实。</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="num">1</div>
+          <h3>采不全</h3>
+          <p>详情页默认只给预览，其余折叠隐藏。工作台用页面自身的评论接口分页取数，按实际总数采集，缺口写清楚。</p>
+        </article>
+        <article class="card">
+          <div class="num">2</div>
+          <h3>看不完</h3>
+          <p>几百条原文不可能逐条读。逐条分析后按情绪、疑点、可信度归类，需要复核的单独挑出来。</p>
+        </article>
+        <article class="card">
+          <div class="num">3</div>
+          <h3>落不了地</h3>
+          <p>痛点必须能在原句里核对。卖点、话术、选题和行动清单都带着证据编号，人工改过会保留。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="workflow" style="background:#eeede5;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">工作流程</div>
+          <h2>四步，从链接到行动</h2>
+        </div>
+        <p>每一步都能看到实际数量、失败原因和缺口，不用猜平台到底有没有评论。</p>
+      </div>
+      <div class="flow">
+        <div class="step">
+          <div class="text">
+            <div class="eyebrow">Step 01 · 采集</div>
+            <h3>一个链接，取回全部可见评论</h3>
+            <ul>
+              <li>支持淘宝分享文案、短链和天猫详情链接</li>
+              <li>真实鼠标事件展开“查看全部评价”</li>
+              <li>分页取主列表与折叠评价，按 comment_id 去重</li>
+              <li>只有星级的占位评价不进文本证据，单独计数</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/workspace-history.png" alt="分析历史与采集记录">
+            <div class="caption">分析历史：输入、样本数、状态和打开入口</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="text">
+            <div class="eyebrow">Step 02 · 分析</div>
+            <h3>逐条判断，再汇总信号</h3>
+            <ul>
+              <li>情绪、内容疑点、可信度分开呈现</li>
+              <li>失败条目不并入统计，避免污染比例</li>
+              <li>按人民币预算分批调用模型，超出即停</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/workspace-overview.png" alt="研究总览">
+            <div class="caption">研究总览：样本、情绪分布和来源边界</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="text">
+            <div class="eyebrow">Step 03 · 洞察</div>
+            <h3>只留下能核对原句的痛点</h3>
+            <ul>
+              <li>每条痛点附原句和评论编号</li>
+              <li>无法核对的提议单独列出，不计入结论</li>
+              <li>同品牌、同型号、同规格才合并比较</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/workspace-insights.png" alt="用户洞察">
+            <div class="caption">洞察页：痛点、证据与改进方向</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="text">
+            <div class="eyebrow">Step 04 · 行动</div>
+            <h3>生成可编辑的运营草稿</h3>
+            <ul>
+              <li>卖点、客服话术、内容选题、排期分别生成</li>
+              <li>负责人、截止时间和验证指标由运营填写</li>
+              <li>导出 CSV、离线 HTML，历史可恢复</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/workspace-overview.png" alt="行动计划与草稿">
+            <div class="caption">行动计划：优先级、证据与验证方式</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">产品能力</div>
+          <h2>为运营设计的工作台</h2>
+        </div>
+        <p>不是又一个评论爬虫，而是从采集到行动的完整链路；每个结论都能回到原文。</p>
+      </div>
+      <div class="features">
+        <div class="feature"><div class="tag">采集</div><h3>多平台来源</h3><p>淘宝/天猫、京东、小红书，同一份研究里分组比较；来源按平台计，不按链接数虚增。</p></div>
+        <div class="feature"><div class="tag">账号</div><h3>专用浏览器与人工登录</h3><p>独立配置保存登录状态，扫码与身份校验由人完成；同平台串行，触发限制立即停止。</p></div>
+        <div class="feature"><div class="tag">预算</div><h3>按人民币记账</h3><p>每次分析先预留再计费，评论与洞察分阶段停止线，重试沿用同一账本。</p></div>
+        <div class="feature"><div class="tag">可信度</div><h3>证据优先</h3><p>痛点、卖点、话术都绑定评论编号；无法核对的提议不进结论。</p></div>
+        <div class="feature"><div class="tag">交付</div><h3>可编辑、可导出</h3><p>草稿支持人工修改并保留修改；行动清单、原文和完整报告都能导出。</p></div>
+        <div class="feature"><div class="tag">本地</div><h3>数据留在本机</h3><p>评论、结果与历史存放在本机目录；Key 只在服务内存，重启即清。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="status" style="padding-top:20px">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">真实状态</div>
+          <h2>哪些跑通了，哪些还没有</h2>
+        </div>
+        <p>下面是截至 2026-10-28 的实际验证结果。没验证过的能力不写在左边。</p>
+      </div>
+      <div class="status">
+        <div class="status-col">
+          <h3>已验证（本机实测）</h3>
+          <ul>
+            <li><span>✓</span>淘宝分享文案与短链识别</li>
+            <li><span>✓</span>天猫详情页评论采集：33 条（含折叠 22 条）</li>
+            <li><span>✓</span>逐条模型分析 14 条正文，费用 0.11 元</li>
+            <li><span>✓</span>5 条带原句证据的痛点</li>
+            <li><span>✓</span>按需生成 3 条行动草稿</li>
+            <li><span>✓</span>离线测试 232 项通过</li>
+          </ul>
+        </div>
+        <div class="status-col off">
+          <h3>尚未验证</h3>
+          <ul>
+            <li><span>·</span>京东、小红书真实链接复测</li>
+            <li><span>·</span>淘宝详情链接（非天猫）复测</li>
+            <li><span>·</span>多链接分组比较的真实数据验收</li>
+            <li><span>·</span>Windows 安装包与 Docker 镜像重建</li>
+            <li><span>·</span>连续高频采集下的平台限流表现</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo" style="padding-top:0">
+    <div class="wrap">
+      <div class="demo">
+        <div>
+          <div class="eyebrow">内嵌演示</div>
+          <h2>直接在工作台里看一份真实结果</h2>
+          <p>右侧嵌入本机工作台。需要先在本机启动服务（<code>venv\Scripts\python.exe run_local.py</code>），打开后从“分析历史”进入那份 33 条评论的研究。演示环境不配置模型，只展示已有数据。</p>
+          <a class="btn btn-primary" href="http://127.0.0.1:64628/app/" target="_blank" rel="noopener" style="margin-top:18px">在新窗口打开 →</a>
+        </div>
+        <div class="demo-frame">
+          <iframe src="http://127.0.0.1:64628/app/" title="ReviewAgent 工作台演示" loading="lazy"></iframe>
+          <div class="demo-hint">内嵌需要本机服务运行；未启动时显示空白</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>ReviewAgent · 本地评论研究工作台 · 2026</div>
+    <div>采集遵循平台公开页面与人工登录，不破解验证码；分析费用按人民币记账。</div>
+  </div>
+</footer>
+</body>
+</html>
