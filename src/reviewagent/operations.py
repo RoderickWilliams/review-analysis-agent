@@ -66,7 +66,6 @@ def build_operations(analysis, requested_kind="all"):
         quote = evidence[0].get("quote", "") if evidence else ""
         variants = [
             ("support_script", "客服话术草稿", "客服知识库", f"您好，您提到的「{statement}」需要结合具体规格和使用情况核对。请补充商品型号、规格及问题出现的场景。\n【待核对后填写处理步骤、售后政策与可承诺时效】"),
-            ("content_topic", "小红书图文模板", "小红书", f"封面文案：{statement}，我家踩过的坑替你避一下\n正文：先说场景（引用原句「{quote}」）→ 再讲怎么核对 → 最后给选购建议\n配图建议：封面放商品实拍+大字标题；第2张展示问题细节；第3-5张对比/使用场景\n话题：#毛绒玩具 #礼物推荐 #避坑指南\n【待补：真实参数与实拍素材】"),
         ]
         for kind, title, channel, body in variants:
             draft_id = _id(kind, point)
@@ -107,6 +106,20 @@ def build_operations(analysis, requested_kind="all"):
         if previous_drafts.get(draft_id, {}).get("edited"):
             draft.update(previous_drafts[draft_id])
         drafts.append(draft)
+        topic_id = _id("content_topic", {"group_id": review.get("group_id", ""), "evidence": [{"review_id": rid}],
+                                          "statement": text[:24]})
+        topic = {"id": topic_id, "kind": "content_topic", "title": "小红书种草：" + text[:16],
+                 "body": (f"封面文案：{text[:18]}，真实分享\n"
+                          f"正文：第一人称讲我为什么推荐它，引用原句「{text[:120]}」→ 使用场景 → 适合谁\n"
+                          "配图建议：封面商品实拍+大字标题；第2-4张展示细节与使用场景；第5张对比\n"
+                          "话题：#毛绒玩具 #礼物推荐 #真实测评\n【待补：真实参数与实拍素材】"),
+                 "channel": "小红书", "scheduled_date": "", "state": "draft",
+                 "group_id": review.get("group_id", ""), "group_title": review.get("group_title", ""),
+                 "evidence_ids": [rid], "evidence": [{"review_id": rid, "quote": text[:200]}],
+                 "notes": "只从正向评论写种草笔记；缺陷不写成卖点。", "updated_at": stamp, "edited": False}
+        if previous_drafts.get(topic_id, {}).get("edited"):
+            topic.update(previous_drafts[topic_id])
+        drafts.append(topic)
     actions = _sorted_actions(actions)
     action_ids = {item["id"] for item in actions}
     for previous in previous_actions:
@@ -140,8 +153,8 @@ def generate_operations(analysis, requested_kind, agent, cancelled=lambda: False
     items = [item for item in candidate[key] if not item.get("edited") and not item.get("needs_review")
              and (key == "actions" or item.get("kind") == requested_kind)]
     if not items or cancelled():
-        if requested_kind == "selling_point" and not cancelled():
-            raise ValueError("没有可用的真实好评：正向评论不足，无法提炼卖点")
+        if requested_kind in {"selling_point", "content_topic"} and not cancelled():
+            raise ValueError("没有可用的真实好评：正向评论不足，无法" + ("提炼卖点" if requested_kind == "selling_point" else "写种草笔记"))
         return {}
     points = analysis.get("enrichment", {}).get("pain_points", {}).get("items", [])
     evidence = {entry["review_id"]: entry for point in points if point.get("verified")
@@ -161,10 +174,10 @@ def generate_operations(analysis, requested_kind, agent, cancelled=lambda: False
     payload = [{"id": item["id"], "group": item.get("group_title"),
                 "evidence": [evidence[rid] for rid in item["evidence_ids"]]} for item in supported]
     if requested_kind == "content_topic":
-        topic_prompt = ("你是小红书图文笔记策划。基于下方评论证据，为每个 id 写一份可直接发布的小红书图文模板，"
-                        "不是分析结论，也不是运营讨论。只根据提供的原句写，不编造商品参数、功效或价格；未知写【待补】。"
-                        "字段：title（小红书标题，20字以内，有具体钩子，不用夸张标题党）、"
-                        "body（必须按三段写：正文——用第一人称口语讲清场景与避坑建议，200-400字；"
+        topic_prompt = ("你是小红书种草笔记写手。基于下方的正向评论原句，为每个 id 写一篇可以直接发布的种草笔记，"
+                        "不是避坑、吐槽或分析；不要写投诉、缺陷、色差提醒或“提前说明问题”，只写为什么值得买、适合谁。"
+                        "不编造商品参数、功效、价格，未知写【待补】。字段：title（小红书标题，20字以内，有具体好处或场景）、"
+                        "body（按三段写：正文——第一人称分享推荐理由、真实感受与适用场景，200-400字；"
                         "配图建议——封面与3-6张配图各自拍什么；话题——5个相关#话题）、"
                         "channel（固定写 小红书）。返回JSON对象 {items:[{id,title,body,channel}]}，id照抄。"
                         "证据不足的项省略。\n" + json.dumps(payload, ensure_ascii=False))

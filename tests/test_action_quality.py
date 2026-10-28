@@ -121,6 +121,9 @@ def test_content_topic_template_is_xhs_post():
     points = [point("p1", "毛绒玩具开线", "P1", "r1")]
     improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
     base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r2", "review_text": "毛绒很细腻，抱着很舒服，送人也有面子", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r2", "status": "succeeded",
+                        "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}]
     built = ops.build_operations(base, "content_topic")
     topics = [d for d in built["drafts"] if d["kind"] == "content_topic"]
     assert topics and topics[0]["channel"] == "小红书"
@@ -131,6 +134,9 @@ def test_content_topic_generation_forces_xhs_channel():
     points = [point("p1", "毛绒玩具开线", "P1", "r1")]
     improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
     base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r2", "review_text": "毛绒很细腻，抱着很舒服，送人也有面子", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r2", "status": "succeeded",
+                        "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}]
 
     class FakeAgent:
         model = "test-model"
@@ -150,6 +156,9 @@ def test_content_topic_accepts_list_and_structured_body():
     points = [point("p1", "毛绒玩具开线", "P1", "r1")]
     improvements = [{"pain_point_id": "p1", "action": "检查缝线", "priority": "P1", "effort": 1, "impact": 2}]
     base = analysis(points, improvements)
+    base["reviews"] = [{"review_id": "r2", "review_text": "毛绒很细腻，抱着很舒服，送人也有面子", "group_id": "g1", "group_title": "商品A"}]
+    base["results"] = [{"review_id": "r2", "status": "succeeded",
+                        "final_analysis": {"final_sentiment": "positive", "final_validity": "authentic"}}]
 
     class FakeAgent:
         model = "test-model"
