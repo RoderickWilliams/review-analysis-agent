@@ -56,6 +56,8 @@ def _page_state(driver, platform):
         return "unsupported_redirect"
     path = urlsplit(current_url).path.lower()
     host = (urlsplit(current_url).hostname or "").lower()
+    if platform_key(platform) == "jd" and (host.endswith(".pf.jd.com") or "frequent" in host):
+        return "rate_limited"
     login_address = host.startswith(("passport.", "login.")) or "/login" in path
     state = driver.execute_script(r"""
         if (location.protocol !== 'https:' || !document.body || !document.body.innerText.trim()) return 'blank_page';
@@ -63,7 +65,7 @@ def _page_state(driver, platform):
         if (shown('[id*="captcha"], .geetest_panel, .verify-wrap, .nc-container')) return 'verification_required';
         const text = document.body?.innerText || '';
         if (text.length < 10000 && /账号异常|账户异常|账号被冻结|账户被冻结|账号被封禁|账号存在风险|账号被限制/.test(text)) return 'account_restricted';
-        if (text.length < 2000 && /访问频繁|操作频繁|请求过于频繁|访问受限|Access Denied|Too Many Requests/i.test(text)) return 'rate_limited';
+        if (text.length < 2000 && /访问频繁|操作频繁|请求过于频繁|访问受限|Access Denied|Too Many Requests|暂时无法展示该商品的信息/i.test(text)) return 'rate_limited';
         if (shown('.login-container, .login-modal, .login-mask, #login-dialog')) return 'needs_login';
         if (/登录后.{0,12}(查看|浏览).{0,8}(评价|评论)|请先登录.{0,12}(评价|评论)/.test(text)) return 'needs_login';
         if ([...document.querySelectorAll('iframe[src]')].some(e => e.getClientRects().length && /^https:\/\/(?:login|passport)\.(?:taobao|tmall)\.com\//i.test(e.src))) return 'needs_login';
@@ -280,6 +282,15 @@ def _comment_page_diagnostics(driver):
     """) or {}
 
 
+def _degraded_page(snapshot):
+    """平台只下发购买区、没有评价模块时返回 True；数据来自页面快照，不推断。"""
+    if not isinstance(snapshot, dict):
+        return False
+    length = snapshot.get("len")
+    return (isinstance(length, int) and not isinstance(length, bool) and length < 600
+            and not snapshot.get("hasReviews") and (snapshot.get("height") or 0) < 1200)
+
+
 def _wait_for_comment_section(driver, platform, url, cancelled, emit):
     """Wait for hydrated review controls, not just a product document title."""
     deadline = time.monotonic() + 90
@@ -306,8 +317,7 @@ def _wait_for_comment_section(driver, platform, url, cancelled, emit):
             return {len: text.trim().length, hasReviews: /用户评价|商品评价|宝贝评价/.test(text),
                     height: document.documentElement.scrollHeight};
         """) or {}
-        if (time.monotonic() - started > 30 and isinstance(thin.get('len'), int) and thin['len'] < 600
-                and not thin.get('hasReviews') and (thin.get('height') or 0) < 1200):
+        if time.monotonic() - started > 30 and _degraded_page(thin):
             raise CollectionPaused('平台只返回了精简商品页（仅购买区，评价模块未下发）；这通常是访问频率限制，已停止本次采集',
                                    code='degraded_page')
         _wait(3, cancelled)

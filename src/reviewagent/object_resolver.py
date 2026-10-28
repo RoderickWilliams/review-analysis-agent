@@ -118,6 +118,35 @@ def _request(url: str, *, allow_redirects: bool = True) -> requests.Response:
     raise requests.RequestException("商品链接无法展开")
 
 
+def _taobao_item_id_from_html(html: str) -> Tuple[str, str]:
+    """只从可信字段取淘宝/天猫商品 ID：规范链接、item.htm?id= 链接、itemId/auctionId 字段。
+
+    返回 (item_id, host)；host 为空表示 HTML 没有给出明确的主机。
+    """
+    text = html or ""
+    # 可信度从高到低：canonical → 内嵌 itemId/auctionId → itemId 参数 → item.htm 链接。
+    # 页面正文里的推荐商品链接排在最后，避免把别人的商品 ID 当成本商品。
+    match = re.search(r'<link[^>]*rel=["\']canonical["\'][^>]*href=["\'][^"\']*?[?&]id=(\d{6,})', text, re.I)
+    if match:
+        return match.group(1), ""
+    match = re.search(r'"(?:itemId|auctionId)"\s*:\s*"?(\d{6,})"?', text)
+    if match:
+        return match.group(1), ""
+    match = re.search(r'(?:itemId|auctionNumId)=(\d{6,})', text)
+    if match:
+        return match.group(1), ""
+    match = re.search(r'//(detail\.tmall\.com|item\.taobao\.com)/item\.htm\?[^"\'\s<>]*?[?&]id=(\d{6,})', text)
+    if match:
+        return match.group(2), match.group(1)
+    return "", ""
+
+
+def _canonical_taobao_url(item_id: str, host: str, platform: str, final_url: str) -> str:
+    final_host = _host(final_url)
+    host = host or ("detail.tmall.com" if platform == "tmall" or final_host.startswith("detail.tmall") or "tmall" in final_url else "item.taobao.com")
+    return f"https://{host}/item.htm?id={item_id}"
+
+
 def _unwrap_short_url(url: str, platform: str) -> Tuple[str, List[str]]:
     """展开京东 / 淘宝短链；失败时保留原链接并记录 warning。"""
     warnings: List[str] = []
@@ -127,8 +156,28 @@ def _unwrap_short_url(url: str, platform: str) -> Tuple[str, List[str]]:
     try:
         response = _request(url)
         final = response.url or url
-        if final != url and detect_platform(final) in {"jd", "taobao", "tmall", "xhs"} and not _host(final).startswith(("login.", "passport.")) and not any(word in urlparse(final).path.lower() for word in ("login", "passport", "captcha", "verify")):
+        html = ""
+        if platform in {"taobao", "tmall"}:
+            html = getattr(response, "text", None)
+            if html is None:
+                content = getattr(response, "content", b"") or b""
+                html = content.decode("utf-8", "replace") if isinstance(content, bytes) else str(content or "")
+        stable_id, item_host = _taobao_item_id_from_html(html) if html else ("", "")
+        reachable = (final != url and detect_platform(final) in {"jd", "taobao", "tmall", "xhs"}
+                     and not _host(final).startswith(("login.", "passport."))
+                     and not any(word in urlparse(final).path.lower() for word in ("login", "passport", "captcha", "verify")))
+        if reachable:
+            if platform in {"taobao", "tmall"} and not _tmall_or_taobao_id(final):
+                if stable_id:
+                    warnings.append("短链最终地址不带商品 ID，已按页面可信字段重建规范采集入口。")
+                    return _canonical_taobao_url(stable_id, item_host, platform, final), warnings
+                # 最终地址只剩移动端一次性参数时，保留原始短链，避免把分享参数当采集入口。
+                warnings.append("短链最终地址不含商品 ID；保留原始短链，采集时再解析。")
+                return url, warnings
             return final, warnings
+        if platform in {"taobao", "tmall"} and stable_id and final == url:
+            warnings.append("短链最终地址不带商品 ID，已按页面可信字段重建规范采集入口。")
+            return _canonical_taobao_url(stable_id, item_host, platform, final), warnings
         warnings.append("短链接没有跳转到商品页，可能已失效。")
     except requests.RequestException as exc:
         warnings.append(f"短链接展开失败：{exc.__class__.__name__}。")

@@ -99,6 +99,23 @@ def attach_reviews(analysis_id, reviews, *, append=False):
     return mutate_record(analysis_id, apply)
 
 
+def recover_interrupted():
+    """服务启动时把没有本进程活动 worker 的遗留任务标记为中断。
+
+    只改状态，不删除评论、结果或草稿；单 Uvicorn worker 架构下 _active 即真相。
+    """
+    recovered = []
+    with _lock:
+        active = set(_active)
+    for item in store.list_analyses():
+        analysis_id = item.get("analysis_id")
+        if item.get("status") in BUSY and analysis_id not in active:
+            store.update_analysis(analysis_id, {"status": "interrupted",
+                                                "status_label": "任务已中断，可继续", "error": None})
+            recovered.append(analysis_id)
+    return recovered
+
+
 def get_record(analysis_id):
     with _lock:
         analysis = store.get_analysis(analysis_id)

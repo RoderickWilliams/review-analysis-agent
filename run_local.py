@@ -37,6 +37,9 @@ def main() -> None:
         json.dumps({"pid": os.getpid(), "script": str(ROOT / "run_local.py"), "port": args.port}),
         encoding="utf-8",
     )
+    from reviewagent.analysis_tasks import recover_interrupted
+
+    recover_interrupted()
     import uvicorn
 
     uvicorn.run("reviewagent.http_api:app", host=args.host, port=args.port, log_level="warning")

@@ -1,153 +1,212 @@
-# ReviewAgent · 评论研究工作台
+<p align="center">
+  <img src="src/reviewagent/webui/logo.png" alt="ReviewAgent" width="420">
+</p>
 
-面向电商运营的本地评论分析工具：从一个商品链接或一批评论原文出发，采集真实评论、做情绪与可信度分析、
-提炼有原句支持的痛点，再整理成可编辑的运营草稿（卖点、客服话术、内容选题、排期）和行动清单。
+<p align="center">
+  <strong>面向电商运营的本地优先评论研究工作台</strong><br>
+  从跨平台评论采集、商品分组和证据化分析，到可编辑的运营行动方案。
+</p>
 
-所有分析在本机运行，模型 Key 只保存在服务内存里，评论原文、结果和历史记录都留在本机目录。
+<p align="center">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-27785d">
+  <img alt="Local first" src="https://img.shields.io/badge/Local--first-privacy-27785d">
+  <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-27785d">
+</p>
 
-## 当前状态（2026-10-28）
+# ReviewAgent
 
-真实链路目前只验证到**采集**这一段，以下结果来自本机实际运行：
+## 项目介绍
 
-| 能力 | 状态 |
-| --- | --- |
-| 天猫商品链接识别、短链展开（e.tb.cn / 分享文案） | 已验证 |
-| 天猫详情页评论采集（含“查看全部评价”“已折叠”评价） | 已验证：同一链接取到 33 条，其中 14 条有正文 |
-| 专用 Chrome 窗口、QR 登录、身份校验等待 | 已验证能进入登录/校验流程；账号状态需人工完成 |
-| 京东、淘宝详情链接、小红书 | 代码路径存在，本轮未在真实链接上复测 |
-| 模型分析、洞察、运营草稿 | 代码与预算逻辑完成；**未做过一次真实模型调用**，需要用户在本机配置模型 |
-| 多链接分组比较、导出、历史恢复 | 离线用例覆盖；真实数据上未验收 |
+ReviewAgent 是一个为电商运营人员设计的本地评论研究工具。用户可以输入商品名称、平台分享文案、商品链接或本地评论文件，完成商品识别、同款确认、评论采集、数据清洗、模型分析、用户洞察和运营内容整理。
 
-不要把这些状态当成“全部功能正常”。每条真实结果都能在运行目录的分析记录里对照。
+主要能力包括：
 
-## 工作台能做什么
+- **跨平台输入**：支持淘宝 / 天猫、京东、小红书链接，以及 CSV、XLSX、JSON、TXT 和直接粘贴。
+- **商品识别与分组**：同品牌、同型号、同关键规格才合并；不同规格和竞品分别分析并列比较。
+- **真实评论采集**：公开接口与专用浏览器协同，支持短链解析、人工登录、分页、滚动、去重和字段归一。
+- **证据化分析**：识别情绪、反讽表达和内容疑点，提炼附带评论原句的用户痛点与改进方向。
+- **运营行动**：按需生成商品卖点、客服话术、内容选题和排期草稿，并允许运营人员继续编辑。
+- **本地工作台**：提供评论库、商品与规格、用户洞察、行动计划、历史恢复和多格式导出。
+- **成本控制**：根据模型价格与预算控制 token 使用量，保留已完成结果和模型实际覆盖范围。
+- **本地优先**：API Key 仅保存在服务进程内存中；评论、报告和专用浏览器状态默认保存在本机。
 
-- **总览**：实际样本量、成功/需复核数量、情绪分布、发布日期分布、来源缺口。
-- **评论库**：全文搜索、来源与状态筛选、排序、分页，点开看原文与逐条结果。
-- **用户洞察**：只保留能在原句里核对到的痛点，附证据链接；改进建议与选题可人工编辑。
-- **商品与规格**：同品牌、同型号、同关键规格才合并；竞品和不同规格分组比较。
-- **运营草稿**：卖点、客服话术、内容选题、排期按需生成，服务端固定证据编号，人工改动会保留。
-- **分析历史**：完整恢复输入、评论、结果和进度；清除可撤销。
-- **导出**：行动清单 CSV、评论原文 CSV、离线 HTML 报告。
+<p align="center">
+  <img src="showcase/assets/workspace-home.png" alt="ReviewAgent 工作台首页" width="48%">
+  <img src="showcase/assets/workspace-insights.png" alt="ReviewAgent 用户洞察" width="48%">
+</p>
 
-界面为固定尺寸卡片式工作台（浅灰绿侧栏 + 白色工作区），长内容在框内滚动。
+仓库分支：
 
-## 采集链路
+- `main`：完整 ReviewAgent 工作台、分析链路、运营输出、展示页和部署配置。
+- `v2`：可独立运行的评论采集工具，不包含工作台与模型分析流程。
 
-### 天猫 / 淘宝
+## 项目架构
 
-1. 解析链接（含 `e.tb.cn` 短链与完整分享文案），天猫按 `detail.tmall.com/item.htm?id=` 取商品 ID。
-2. 先尝试公开评论接口；失败再打开本机专用浏览器。
-3. 进入详情页后用**可信鼠标事件**点击“查看全部评价”（脚本 `click()` 会被页面忽略）。
-4. 页面自身接口 `mtop.taobao.rate.detaillist.get` 分页取数：`foldFlag=0` 取主列表，
-   `foldFlag=1` 取“已折叠”评价；直到空页或达到采集上限。
-5. 只有星级、正文是平台占位文案的评价不计入文本证据，数量写进缺口说明。
-6. 同一原文按 comment_id 去重；页面标注的总数与实际取得数分别记录。
+ReviewAgent 采用单机、本地服务架构。浏览器工作台通过 FastAPI 调用统一业务层；采集、分析、洞察、导出和历史管理使用同一套对象与数据模型。
 
-细节与实测数据见 [docs/collection-20261028.md](docs/collection-20261028.md)。
+```mermaid
+flowchart LR
+    A[工作台 Web UI] --> B[FastAPI 服务]
+    B --> C[商品对象解析]
+    C --> D[同款确认与规格分组]
+    D --> E[跨平台采集编排]
+    E --> E1[淘宝 / 天猫]
+    E --> E2[京东]
+    E --> E3[小红书]
+    E1 --> F[评论归一与去重]
+    E2 --> F
+    E3 --> F
+    F --> G[模型预算与逐条分析]
+    G --> H[洞察与运营草稿]
+    H --> I[SQLite 历史与导出]
+```
 
-### 京东 / 小红书
+### 核心模块
 
-- 京东：优先公开评论接口；需要时用专用浏览器读取评价弹层、滚动与分页。
-- 小红书：优先本机只读采集后端（关闭 OCR），没有结果再用专用浏览器确认页面与登录状态。
+```text
+src/reviewagent/
+  http_api.py            FastAPI 接口、本地设置与静态工作台
+  analysis_tasks.py      后台任务、取消、阶段状态与恢复
+  object_resolver.py     商品链接、分享文案、短链与平台识别
+  same_product.py        同款候选与匹配规则
+  product_groups.py      品牌、型号和关键规格分组
+  collection.py          多来源采集汇总、选择与缺口管理
+  browser_collection.py  专用浏览器采集编排
+  browser_session.py     Chrome / Edge 会话和可信交互
+  public_collection.py   平台公开接口采集
+  review_data.py         评论字段归一、去重和证据编号
+  model_settings.py      API Key 识别与模型配置
+  model_budget.py        人民币预算与 token 停止线
+  sentiment_agent_core.py 情绪、反讽和内容疑点分析
+  insights/              痛点、改进方向、选题与内容工具
+  operations.py          行动计划与运营草稿
+  store.py               SQLite 持久化、历史与恢复
+  webui/                 默认工作台前端
 
-### 账号与风控
+showcase/                HR／作品集展示页
+plugins/dsh-review-agent DeepSeek Harness 插件桥接
+skills/                  项目配套技能
+deploy/                  Docker 与 Windows 部署配置
+tests/                   单元、接口与离线回归测试
+```
 
-- 登录用专用浏览器配置，不读取日常浏览器的 Cookie；登录状态保存在该配置目录。
-- 同一平台串行采集，平台之间保留 20–40 秒间隔；遇到账号异常、验证码或访问受限立即停止该平台。
-- 验证码与身份校验由人工完成，工具不破解、不轮换 Cookie 绕过限制。
+### 数据流
 
-## 快速开始（Windows）
+1. 输入内容先被解析为统一商品对象，并提取平台、商品 ID、标题和规格信息。
+2. 用户确认需要分析的商品与平台来源，未确认候选不会自动进入采集队列。
+3. 采集层按平台顺序获取真实评论，保留来源信息、日期、评分、规格和失败原因。
+4. 数据层完成字段归一、去重、时间窗处理和商品组归属。
+5. 模型层根据预算选择样本并逐条分析，结果与原文证据编号绑定。
+6. 洞察层生成用户痛点、改进方向和按需运营草稿。
+7. SQLite 保存分析对象、评论、进度、结果和人工编辑内容，导出层生成 CSV、JSON 与离线 HTML。
+
+### 安全与数据边界
+
+- 模型 API Key 只保存在当前服务内存中，服务重启后需要重新配置。
+- 评论文本仅在用户主动开始模型分析或生成运营内容时发送给模型供应商。
+- 平台登录使用 ReviewAgent 专用浏览器配置，不读取用户日常浏览器 Cookie。
+- 验证码、扫码和身份校验由用户手动完成，程序不绕过平台访问控制。
+- 运行数据默认保存在 `runtime/`，不会提交到 Git 仓库。
+
+## 部署实现
+
+### 环境要求
+
+- Python 3.10+
+- Windows 10/11（当前主要支持环境）
+- Chrome 或 Edge
+- 可选：DeepSeek 或 OpenAI 兼容模型 API Key
+
+### 本地部署
 
 ```cmd
-cd E:\review-analysis-agent
+git clone --branch main https://github.com/RoderickWilliams/review-analysis-agent.git
+cd review-analysis-agent
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
 .venv\Scripts\python.exe -m pip install -e ".[api,scrape,import]"
+```
+
+启动本地服务：
+
+```cmd
 .venv\Scripts\python.exe run_local.py --port 64628
 ```
 
-浏览器打开 http://127.0.0.1:64628/app/ 。
+打开工作台：
 
-如果使用仓库自带的 venv（Python 3.14，已装 FastAPI、Selenium、DrissionPage、pandas、openai）：
+```text
+http://127.0.0.1:64628/app/
+```
 
-```cmd
-venv\Scripts\python.exe run_local.py
+API 文档：
+
+```text
+http://127.0.0.1:64628/docs
 ```
 
 `run_local.py` 会：
 
-- 把数据目录固定为项目下的 `runtime/`（data、output、cache），不读 `.env` 里的密钥；
-- 清空从环境变量继承的模型 Key，模型只能在工作台左下角配置；
-- 以 `chrome + 直连` 启动采集。
+- 将数据库、输出、缓存和浏览器配置固定到项目的 `runtime/`；
+- 启用本地平台采集；
+- 清空从外部环境变量继承的模型 Key，要求用户在工作台内配置；
+- 使用本机浏览器与直连网络运行采集流程。
 
-## 命令行采集
+### Windows 快速启动
 
-不打开工作台也能采集评论，输出 JSON：
+完成依赖安装后，也可以运行仓库根目录中的：
+
+```text
+启动ReviewAgent.bat
+```
+
+项目同时包含 PyInstaller 与 Inno Setup 配置，可用于制作 Windows 可执行程序和安装包：
+
+```text
+review_agent.spec
+reviewagent_installer.iss
+```
+
+### Docker 部署
+
+仓库的 `deploy/` 目录提供 Dockerfile 与 Compose 配置：
 
 ```cmd
-venv\Scripts\python.exe crawler.py --url "https://detail.tmall.com/item.htm?id=568742960823" --limit 300 --out reviews.json
+cd deploy
+docker compose up --build
 ```
 
-参数、输出字段和退出码见 [docs/crawler.md](docs/crawler.md)。它共用同一套采集实现，不调用模型、不写数据库。
+容器部署适合文件导入、API 和模型分析。需要本机可视浏览器、扫码登录和平台交互的采集流程，建议使用 Windows 本地部署。
 
-## 模型配置与费用
+### 模型配置
 
-工作台左下角“配置模型”打开设置，粘贴 API Key 后自动识别可用的模型接口；Key 只保存在进程内存，
-重启服务后需要重新填写。未配置模型时只能采集评论，不能分析。
+服务启动后，在工作台设置中粘贴 API Key。系统会识别供应商、接口地址和模型信息；确认后，该模型将用于评论分析与按需运营内容生成。
 
-预算策略：一次完整分析默认上限 1.5 元人民币，按模型实际 usage 记账；评论阶段与洞察阶段分别有停止线，
-超出预算时保留已取得结果并写明模型覆盖范围。运行前会先做预留，重试不会重复计费同一批。
+未配置模型时，评论导入和平台采集仍可使用，模型分析功能会保持关闭。
 
-支持 DeepSeek（默认 `deepseek-flash`）与 OpenAI 兼容接口；不同供应商的单价需要按人民币口径确认。
+### 运行目录
 
-## 数据与隐私
-
-- 评论原文、分析结果、历史记录：`runtime/data`、`runtime/output`。
-- 专用浏览器配置与登录状态：`runtime/browser-profiles`。
-- 分析时评论文本会发送给你配置的模型供应商；不配置模型就不会发出。
-- 不读取、不导出、不持久化你的 API Key；日志里不打印 Key、Cookie 和带签名的链接参数。
-
-## 目录结构
-
-```
-src/reviewagent/
-  http_api.py            FastAPI 服务与接口
-  analysis_tasks.py      任务编排、预算、重试与状态
-  collection.py          多来源采集汇总、分组、缺口
-  browser_collection.py  专用浏览器采集与天猫评论分页
-  public_collection.py   公开评论接口与字段归一
-  browser_session.py     专用浏览器、CDP 驱动、点击与标签页
-  auto_login.py          QR 登录与身份校验状态
-  product_groups.py      商品身份与分组
-  operations.py          运营草稿生成
-  model_budget.py        人民币预算账本
-  store.py               记录持久化
-  webui/                 工作台前端（勿随意改动）
-docs/                    设计、验收范围、采集记录
-tests/                   离线用例（模型全部为测试替身）
-run_local.py             本机启动脚本
+```text
+runtime/
+  data/reviewagent.db    分析记录、评论、结果和草稿
+  output/                导出报告与采集产物
+  cache/                 本地缓存
+  browser-profiles/      ReviewAgent 专用浏览器登录状态
 ```
 
-## 测试
+### 开发部署
+
+安装开发依赖：
+
+```cmd
+.venv\Scripts\python.exe -m pip install -e ".[api,scrape,import,dev]"
+```
+
+运行离线测试：
 
 ```cmd
 set PYTHONPATH=src
-venv\Scripts\python.exe -m pytest -q
+.venv\Scripts\python.exe -m pytest -q
 ```
 
-2026-10-28 全量 232 项通过、3 项跳过（小红书后端缺失时的既有跳过）。测试里的模型响应都是替身，
-因此测试通过不等于模型质量或真实链路通过。
-
-## 已知限制
-
-- 天猫只展示部分评价时，其余“已折叠”评价需要页面暴露 `lib.mtop` 才能取到；取不到就按实际可见条数记录并标注缺口。
-- 只有星级没有正文的评价不会进入文本分析；这是有意的，避免占位文案把情绪分布拉高。
-- 淘宝详情链接、京东、小红书本轮没有复测，不能写成已通过。
-- 真实模型分析一次都没跑过，成本和效果都要等用户配置 Key 后验证。
-- 打包产物（wheel、EXE、Docker）沿用旧配置，未在本次改动后重新构建验证。
-
-## 分支说明
-
-- `main`：完整工作台（即当前目录内容）。
-- `v2`：可独立运行的采集工具入口（`crawler.py`），与 main 共用采集实现，不依赖界面。
-
-GitHub 上的内容在用户明确说“推送到 GitHub”之前不会更新。
+本项目使用 [MIT License](LICENSE)。

@@ -109,6 +109,8 @@ def public_reviews(source, limit, cancelled, *, on_state=None, on_batch=None):
                     body = b"".join(chunks).decode(response.encoding or "utf-8", errors="replace")
             except requests.RequestException:
                 break
+            if len(body) < 300 and re.search(r"活动太火爆|请稍微再试|访问频繁", body):
+                raise CollectionPaused("公开评论接口返回平台限流提示，已停止该平台请求", code="rate_limited")
             rows = comment_rows(body, platform)
             if not rows:
                 break

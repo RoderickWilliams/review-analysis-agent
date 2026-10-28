@@ -95,6 +95,11 @@ def cmd_serve(args: argparse.Namespace) -> int:
         return _fail("缺少 uvicorn，请执行 pip install -e .[api]")
     if args.host not in {"127.0.0.1", "localhost", "::1"} and not os.environ.get("REVIEWAGENT_ACCESS_TOKEN"):
         return _fail("非本机监听需要设置 REVIEWAGENT_ACCESS_TOKEN；本机使用 --host 127.0.0.1")
+    from reviewagent.analysis_tasks import recover_interrupted
+
+    recovered = recover_interrupted()
+    if recovered:
+        print("已将 %d 个中断的旧任务标记为可继续" % len(recovered))
     print(f"启动工作台：http://{args.host}:{args.port}/app/（文档 /docs）")
     uvicorn.run("reviewagent.http_api:app", host=args.host, port=args.port, reload=args.reload)
     return 0
