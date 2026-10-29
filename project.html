@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReviewAgent · 项目说明</title>
+<style>
+:root{--paper:#f3f2ec;--card:#fbfaf6;--ink:#1b2a25;--muted:#5f6f68;--line:#dcd9cc;--green:#1f5c45;--green-2:#2c7a5b;--mint:#dcebe0;--sans:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;--serif:"Iowan Old Style","Songti SC",Georgia,serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+.top{background:#fff;border-bottom:1px solid #dfe8e1}
+.top-in{max-width:900px;margin:0 auto;height:52px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 20px}
+.brand{font-weight:700;font-size:15px}
+.back{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#fff;border-radius:4px;padding:7px 13px;font-size:13px;font-weight:600}
+.back:hover{background:#18563d;text-decoration:none}
+main{max-width:900px;margin:0 auto;padding:40px 20px 70px}
+.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--green);font-weight:600;text-transform:uppercase}
+h1{font-family:var(--serif);font-size:clamp(30px,4vw,44px);line-height:1.15;margin:10px 0 14px;letter-spacing:-.02em}
+.lede{font-size:17px;color:#394743;margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin:16px 0}
+h2{font-size:20px;margin:0 0 12px;font-family:var(--serif)}
+h3{font-size:15px;margin:18px 0 6px}
+p{margin:0 0 12px}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin:5px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mini{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}
+.mini b{display:block;font-family:var(--serif);font-size:22px}
+.mini span{font-size:12px;color:var(--muted)}
+pre{background:#10201a;color:#cfe6d6;border-radius:10px;padding:14px;overflow:auto;font-size:13px;line-height:1.7;margin:0}
+.repo{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.code{flex:1;min-width:260px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:Consolas,monospace;font-size:13px;color:#394743;overflow:auto;white-space:nowrap}
+button{font:inherit;border:0;cursor:pointer}
+.copy{background:var(--green);color:#fff;border-radius:6px;padding:9px 14px;font-size:13px;font-weight:600}
+.copy:hover{background:#18563d}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.small{font-size:13px;color:var(--muted)}
+.tag{display:inline-block;background:var(--mint);color:#20543f;border-radius:99px;padding:2px 9px;font-size:12px;margin:0 6px 6px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:#1b2a25;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+footer{max-width:900px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:12.5px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><span class="brand">ReviewAgent · 项目说明</span><a class="back" href="./">← 返回演示</a></div></header>
+<main>
+  <div class="eyebrow">Review Intelligence · 本地优先</div>
+  <h1>评论区里的问题，能不能一路追到原句？</h1>
+  <p class="lede">ReviewAgent 是一个面向电商运营的本地评论研究工作台：采集跨平台评论，做情绪与刷评信号判断，再把每条痛点、每个动作绑回评论原句。</p>
+
+  <div class="grid">
+    <div class="mini"><b>9 类</b><span>情绪分类（含反讽、明褒暗贬、评分矛盾）</span></div>
+    <div class="mini"><b>5 项</b><span>统计信号：时间突发、近重复、评分异常、长度均匀度、重复短语</span></div>
+    <div class="mini"><b>18+</b><span>评论溯源字段，6 个关键字段做完整性校验</span></div>
+    <div class="mini"><b>3 个</b><span>已跑通入口：CLI、HTTP API、Web 工作台</span></div>
+  </div>
+
+  <div class="card">
+    <h2>它是怎么工作的</h2>
+    <ul>
+      <li><b>采集</b>：DrissionPage 驱动专用浏览器读公开评论，京东用 Patchright 做 DOM 回退，可选 Scrapling 后端；按平台“接口 → 浏览器 → DOM”降级，采不到就记录缺口，不补造数据。</li>
+      <li><b>判断</b>：模型逐条给情绪与内容疑点；统计引擎独立算评论可信度，两者交叉验证，不把模型输出当唯一结论。</li>
+      <li><b>落地</b>：痛点必须对上评论原句；再生成运营动作、商品卖点、客服话术和小红书种草模板。卖点只取正向原句，缺陷说明进入客服与行动。</li>
+      <li><b>回查</b>：每条结论带评论编号、原句、来源和定位；未通过原句校验的提议单独列出，不计入结论。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>技术结构</h2>
+    <div>
+      <span class="tag">Python / FastAPI</span><span class="tag">SQLite</span><span class="tag">DeepSeek / OpenAI 兼容 API</span><span class="tag">DrissionPage</span><span class="tag">Patchright</span><span class="tag">Scrapling（可选）</span><span class="tag">多 Key 轮换</span><span class="tag">人民币预算上限</span>
+    </div>
+    <p class="small" style="margin-top:12px">工作台是单页前端，服务只监听 127.0.0.1；模型 Key 只存在进程内存里，评论、报告和人工标注默认保存在本机。仓库同时附带 DSH 插件与 Agent Skill 的接入代码，桌面安装包只有构建配置。</p>
+  </div>
+
+  <div class="card">
+    <h2>本地运行</h2>
+    <pre>git clone https://github.com/RoderickWilliams/review-analysis-agent.git
+cd review-analysis-agent
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -e ".[api,scrape,import]"
+.venv\Scripts\python.exe run_local.py --port 64628
+# 打开 http://127.0.0.1:64628/app/</pre>
+    <p class="hint">需要 Python 3.10+、Windows 10/11 和 Chrome/Edge；模型 Key 在本地工作台里配置。</p>
+  </div>
+
+  <div class="card">
+    <h2>源码与项目主页</h2>
+    <p>完整源码、README 和提交记录在 GitHub。国内无代理时 GitHub 加载可能较慢，可以先复制地址，在网络条件合适时打开。</p>
+    <div class="repo">
+      <div class="code" id="repo-url">https://github.com/RoderickWilliams/review-analysis-agent</div>
+      <button class="copy" id="copy-btn" type="button">复制地址</button>
+    </div>
+    <p class="hint"><a href="https://github.com/RoderickWilliams/review-analysis-agent" target="_blank" rel="noopener">在 GitHub 打开（需代理/网络条件）↗</a></p>
+  </div>
+</main>
+<footer>页面为静态说明，演示数据均为虚构样例；不表示真实平台评论或分析结论。</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+  var toast=document.getElementById('toast'),timer=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(timer);timer=setTimeout(function(){toast.classList.remove('show')},1800)}
+  var btn=document.getElementById('copy-btn');
+  btn.addEventListener('click',function(){
+    var url=document.getElementById('repo-url').textContent.trim();
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){show('已复制 GitHub 地址')},function(){fallback(url)})}else{fallback(url)}
+    function fallback(value){var input=document.createElement('textarea');input.value=value;document.body.appendChild(input);input.select();try{document.execCommand('copy');show('已复制 GitHub 地址')}catch(e){show('复制失败，请手动选择地址')}input.remove()}
+  });
+})();
+</script>
+</body>
+</html>
